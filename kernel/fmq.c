@@ -254,7 +254,7 @@ rt_err_t rt_fmq_send(rt_mailbox_t mb, void *value, rt_int32_t pos, rt_int32_t ti
     RT_OBJECT_HOOK_CALL(rt_object_put_hook, (&(mb->parent.parent)));
 
     rt_enter_critical();
-    
+
 
     /* for non-blocking call */
     if ((mb->entry == mb->size && pos != queueOVERWRITE) && timeout == 0)

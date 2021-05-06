@@ -65,7 +65,7 @@ void DlInsertNodeBefore(DlNode_t *Marker,
 }
 
 
-void DlAddNodeToHead(   DlNode_t *Head, 
+void DlAddNodeToHead(   DlNode_t *Head,
                         DlNode_t *Node)
 {
     DlInsertNodeAfter(Head, Node);
@@ -100,7 +100,7 @@ DlNode_t *DlRemoveNodeFromHead(DlNode_t *Head)
 
     if (DlIsListEmpty(Head))
         return NULL;
-    
+
     Node = Head->Next;
 
     DlRemoveNode(Node);

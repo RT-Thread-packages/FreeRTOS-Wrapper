@@ -48,7 +48,7 @@ typedef void * ReadWriteLock_t;
 
 
 /**
- *  Create a Reader/Writer lock that offers preference 
+ *  Create a Reader/Writer lock that offers preference
  *  to all readers.
  *
  *  @return A handle to the lock, or NULL on failure.
@@ -57,7 +57,7 @@ ReadWriteLock_t *CreateReadWriteLockPreferReader(void);
 
 
 /**
- *  Create a Reader/Writer lock that offers preference 
+ *  Create a Reader/Writer lock that offers preference
  *  to all writers.
  *
  *  @return A handle to the lock, or NULL on failure.
@@ -76,7 +76,7 @@ void FreeReadWriteLock(ReadWriteLock_t *lock);
 /**
  *  Lock as a Reader.
  *
- *  This allows you shared read only access to whatever is being 
+ *  This allows you shared read only access to whatever is being
  *  protected by this lock.
  *
  *  @param Lock The lock you are taking.
@@ -84,7 +84,7 @@ void FreeReadWriteLock(ReadWriteLock_t *lock);
 void ReaderLock(ReadWriteLock_t *Lock);
 
 /**
- *  Unlock as a Reader. 
+ *  Unlock as a Reader.
  *
  *  You should have already locked this using ReaderLock().
  *
@@ -103,7 +103,7 @@ void ReaderUnlock(ReadWriteLock_t *Lock);
 void WriterLock(ReadWriteLock_t *Lock);
 
 /**
- *  Unlock as a Writer. 
+ *  Unlock as a Writer.
  *
  *  You should have already locked this using WriterLock().
  *

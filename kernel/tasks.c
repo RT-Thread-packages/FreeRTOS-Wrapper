@@ -89,8 +89,8 @@ portSTACK_TYPE * volatile pxSaveTCB[ portNUM_PROCESSORS ] = { NULL };
 
 /* File private functions. --------------------------------*/
 
-BaseType_t xTaskGenericCreate( TaskFunction_t pxTaskCode, const char * const pcName, 
-    const uint16_t usStackDepth, void * const pvParameters, UBaseType_t uxPriority, 
+BaseType_t xTaskGenericCreate( TaskFunction_t pxTaskCode, const char * const pcName,
+    const uint16_t usStackDepth, void * const pvParameters, UBaseType_t uxPriority,
     TaskHandle_t * const pxCreatedTask, StackType_t * const puxStackBuffer, const MemoryRegion_t * const xRegions ) /*lint !e971 Unqualified char types are allowed for strings and single characters only. */
 {
     BaseType_t xReturn = pdFAIL;

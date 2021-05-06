@@ -42,9 +42,9 @@
 
 
 /**
- *  Handle for ZeroCopyQueues. 
+ *  Handle for ZeroCopyQueues.
  *
- *  These queues only copy a single pointer instead of the 
+ *  These queues only copy a single pointer instead of the
  *  entire data structure, which is how FreeRTOS works by default.
  */
 typedef void * ZeroCopyQueue_t;
@@ -55,7 +55,7 @@ typedef void * ZeroCopyQueue_t;
  *
  *  @param itemSize Maximum size of the item.
  *  @param itemCount What's the maximum number of items allowed?
- *  @param Alignment Power of 2 value denoting on which address boundary the 
+ *  @param Alignment Power of 2 value denoting on which address boundary the
  *  memory will be aligned to. Must be at least sizeof(unsigned char *).
  *  @return A Handle to the ZeroCopyQueue, or NULL on failure.
  */

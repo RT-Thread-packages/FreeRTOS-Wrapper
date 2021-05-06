@@ -58,8 +58,8 @@ ReadWriteLock::ReadWriteLock()
     //
     //  ResourceLock CANNOT be a mutex. In FreeRTOS, as in most OS's,
     //  a thread is not allowed to unlock another thread's mutex. But
-    //  the very nature of a Reader Lock allows an arbitrary ordering 
-    //  of unlocks when multiple threads hold the reader lock. 
+    //  the very nature of a Reader Lock allows an arbitrary ordering
+    //  of unlocks when multiple threads hold the reader lock.
     //  Semaphores are not subject to this constraint.
     //
     ResourceLock = xSemaphoreCreateBinary();
@@ -140,8 +140,8 @@ ReadWriteLockPreferWriter::ReadWriteLockPreferWriter()
     //
     //  BlockReadersLock CANNOT be a mutex. In FreeRTOS, as in most OS's,
     //  a thread is not allowed to unlock another thread's mutex. But
-    //  the very nature of a Reader Lock allows an arbitrary ordering 
-    //  of unlocks when multiple threads hold the reader lock. 
+    //  the very nature of a Reader Lock allows an arbitrary ordering
+    //  of unlocks when multiple threads hold the reader lock.
     //  Semaphores are not subject to this constraint.
     //
     BlockReadersLock = xSemaphoreCreateBinary();

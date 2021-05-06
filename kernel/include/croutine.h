@@ -10,12 +10,12 @@
     the terms of the GNU General Public License (version 2) as published by the
     Free Software Foundation >>!AND MODIFIED BY!<< the FreeRTOS exception.
 
-	***************************************************************************
+    ***************************************************************************
     >>!   NOTE: The modification to the GPL is included to allow you to     !<<
     >>!   distribute a combined work that includes FreeRTOS without being   !<<
     >>!   obliged to provide the source code for proprietary components     !<<
     >>!   outside of the FreeRTOS kernel.                                   !<<
-	***************************************************************************
+    ***************************************************************************
 
     FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
     WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
@@ -37,17 +37,17 @@
     ***************************************************************************
 
     http://www.FreeRTOS.org/FAQHelp.html - Having a problem?  Start by reading
-	the FAQ page "My application does not run, what could be wrong?".  Have you
-	defined configASSERT()?
+    the FAQ page "My application does not run, what could be wrong?".  Have you
+    defined configASSERT()?
 
-	http://www.FreeRTOS.org/support - In return for receiving this top quality
-	embedded software for free we request you assist our global community by
-	participating in the support forum.
+    http://www.FreeRTOS.org/support - In return for receiving this top quality
+    embedded software for free we request you assist our global community by
+    participating in the support forum.
 
-	http://www.FreeRTOS.org/training - Investing in training allows your team to
-	be as productive as possible as early as possible.  Now you can receive
-	FreeRTOS training directly from Richard Barry, CEO of Real Time Engineers
-	Ltd, and the world's leading authority on the world's leading RTOS.
+    http://www.FreeRTOS.org/training - Investing in training allows your team to
+    be as productive as possible as early as possible.  Now you can receive
+    FreeRTOS training directly from Richard Barry, CEO of Real Time Engineers
+    Ltd, and the world's leading authority on the world's leading RTOS.
 
     http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
     including FreeRTOS+Trace - an indispensable productivity tool, a DOS
@@ -71,7 +71,7 @@
 #define CO_ROUTINE_H
 
 #ifndef INC_FREERTOS_H
-	#error "include FreeRTOS.h must appear in source files before include croutine.h"
+    #error "include FreeRTOS.h must appear in source files before include croutine.h"
 #endif
 
 #include "list.h"
@@ -90,12 +90,12 @@ typedef void (*crCOROUTINE_CODE)( CoRoutineHandle_t, UBaseType_t );
 
 typedef struct corCoRoutineControlBlock
 {
-	crCOROUTINE_CODE 	pxCoRoutineFunction;
-	ListItem_t			xGenericListItem;	/*< List item used to place the CRCB in ready and blocked queues. */
-	ListItem_t			xEventListItem;		/*< List item used to place the CRCB in event lists. */
-	UBaseType_t 		uxPriority;			/*< The priority of the co-routine in relation to other co-routines. */
-	UBaseType_t 		uxIndex;			/*< Used to distinguish between co-routines when multiple co-routines use the same co-routine function. */
-	uint16_t 			uxState;			/*< Used internally by the co-routine implementation. */
+    crCOROUTINE_CODE    pxCoRoutineFunction;
+    ListItem_t          xGenericListItem;   /*< List item used to place the CRCB in ready and blocked queues. */
+    ListItem_t          xEventListItem;     /*< List item used to place the CRCB in event lists. */
+    UBaseType_t         uxPriority;         /*< The priority of the co-routine in relation to other co-routines. */
+    UBaseType_t         uxIndex;            /*< Used to distinguish between co-routines when multiple co-routines use the same co-routine function. */
+    uint16_t            uxState;            /*< Used internally by the co-routine implementation. */
 } CRCB_t; /* Co-routine control block.  Note must be identical in size down to uxPriority with TCB_t. */
 
 /**
@@ -195,7 +195,7 @@ BaseType_t xCoRoutineCreate( crCOROUTINE_CODE pxCoRoutineCode, UBaseType_t uxPri
  // The rest of the idle task will execute between co-routine calls.
  void vApplicationIdleHook( void )
  {
-	vCoRoutineSchedule();
+    vCoRoutineSchedule();
  }
 
  // Alternatively, if you do not require any other part of the idle task to
@@ -329,12 +329,12 @@ void vCoRoutineSchedule( void );
  * \defgroup crDELAY crDELAY
  * \ingroup Tasks
  */
-#define crDELAY( xHandle, xTicksToDelay )												\
-	if( ( xTicksToDelay ) > 0 )															\
-	{																					\
-		vCoRoutineAddToDelayedList( ( xTicksToDelay ), NULL );							\
-	}																					\
-	crSET_STATE0( ( xHandle ) );
+#define crDELAY( xHandle, xTicksToDelay )                                               \
+    if( ( xTicksToDelay ) > 0 )                                                         \
+    {                                                                                   \
+        vCoRoutineAddToDelayedList( ( xTicksToDelay ), NULL );                          \
+    }                                                                                   \
+    crSET_STATE0( ( xHandle ) );
 
 /**
  * <pre>
@@ -419,19 +419,19 @@ void vCoRoutineSchedule( void );
  * \defgroup crQUEUE_SEND crQUEUE_SEND
  * \ingroup Tasks
  */
-#define crQUEUE_SEND( xHandle, pxQueue, pvItemToQueue, xTicksToWait, pxResult )			\
-{																						\
-	*( pxResult ) = xQueueCRSend( ( pxQueue) , ( pvItemToQueue) , ( xTicksToWait ) );	\
-	if( *( pxResult ) == errQUEUE_BLOCKED )												\
-	{																					\
-		crSET_STATE0( ( xHandle ) );													\
-		*pxResult = xQueueCRSend( ( pxQueue ), ( pvItemToQueue ), 0 );					\
-	}																					\
-	if( *pxResult == errQUEUE_YIELD )													\
-	{																					\
-		crSET_STATE1( ( xHandle ) );													\
-		*pxResult = pdPASS;																\
-	}																					\
+#define crQUEUE_SEND( xHandle, pxQueue, pvItemToQueue, xTicksToWait, pxResult )         \
+{                                                                                       \
+    *( pxResult ) = xQueueCRSend( ( pxQueue) , ( pvItemToQueue) , ( xTicksToWait ) );   \
+    if( *( pxResult ) == errQUEUE_BLOCKED )                                             \
+    {                                                                                   \
+        crSET_STATE0( ( xHandle ) );                                                    \
+        *pxResult = xQueueCRSend( ( pxQueue ), ( pvItemToQueue ), 0 );                  \
+    }                                                                                   \
+    if( *pxResult == errQUEUE_YIELD )                                                   \
+    {                                                                                   \
+        crSET_STATE1( ( xHandle ) );                                                    \
+        *pxResult = pdPASS;                                                             \
+    }                                                                                   \
 }
 
 /**
@@ -511,19 +511,19 @@ void vCoRoutineSchedule( void );
  * \defgroup crQUEUE_RECEIVE crQUEUE_RECEIVE
  * \ingroup Tasks
  */
-#define crQUEUE_RECEIVE( xHandle, pxQueue, pvBuffer, xTicksToWait, pxResult )			\
-{																						\
-	*( pxResult ) = xQueueCRReceive( ( pxQueue) , ( pvBuffer ), ( xTicksToWait ) );		\
-	if( *( pxResult ) == errQUEUE_BLOCKED ) 											\
-	{																					\
-		crSET_STATE0( ( xHandle ) );													\
-		*( pxResult ) = xQueueCRReceive( ( pxQueue) , ( pvBuffer ), 0 );				\
-	}																					\
-	if( *( pxResult ) == errQUEUE_YIELD )												\
-	{																					\
-		crSET_STATE1( ( xHandle ) );													\
-		*( pxResult ) = pdPASS;															\
-	}																					\
+#define crQUEUE_RECEIVE( xHandle, pxQueue, pvBuffer, xTicksToWait, pxResult )           \
+{                                                                                       \
+    *( pxResult ) = xQueueCRReceive( ( pxQueue) , ( pvBuffer ), ( xTicksToWait ) );     \
+    if( *( pxResult ) == errQUEUE_BLOCKED )                                             \
+    {                                                                                   \
+        crSET_STATE0( ( xHandle ) );                                                    \
+        *( pxResult ) = xQueueCRReceive( ( pxQueue) , ( pvBuffer ), 0 );                \
+    }                                                                                   \
+    if( *( pxResult ) == errQUEUE_YIELD )                                               \
+    {                                                                                   \
+        crSET_STATE1( ( xHandle ) );                                                    \
+        *( pxResult ) = pdPASS;                                                         \
+    }                                                                                   \
 }
 
 /**
@@ -687,25 +687,25 @@ void vCoRoutineSchedule( void );
          {
              // The character was successfully posted to the queue.
          }
-		 else
-		 {
-			// Could not post the character to the queue.
-		 }
+         else
+         {
+            // Could not post the character to the queue.
+         }
 
          // Enable the UART Tx interrupt to cause an interrupt in this
-		 // hypothetical UART.  The interrupt will obtain the character
-		 // from the queue and send it.
-		 ENABLE_RX_INTERRUPT();
+         // hypothetical UART.  The interrupt will obtain the character
+         // from the queue and send it.
+         ENABLE_RX_INTERRUPT();
 
-		 // Increment to the next character then block for a fixed period.
-		 // cCharToTx will maintain its value across the delay as it is
-		 // declared static.
-		 cCharToTx++;
-		 if( cCharToTx > 'x' )
-		 {
-			cCharToTx = 'a';
-		 }
-		 crDELAY( 100 );
+         // Increment to the next character then block for a fixed period.
+         // cCharToTx will maintain its value across the delay as it is
+         // declared static.
+         cCharToTx++;
+         if( cCharToTx > 'x' )
+         {
+            cCharToTx = 'a';
+         }
+         crDELAY( 100 );
      }
 
      // All co-routines must end with a call to crEND().
@@ -721,13 +721,13 @@ void vCoRoutineSchedule( void );
      while( UART_TX_REG_EMPTY() )
      {
          // Are there any characters in the queue waiting to be sent?
-		 // xCRWokenByPost will automatically be set to pdTRUE if a co-routine
-		 // is woken by the post - ensuring that only a single co-routine is
-		 // woken no matter how many times we go around this loop.
+         // xCRWokenByPost will automatically be set to pdTRUE if a co-routine
+         // is woken by the post - ensuring that only a single co-routine is
+         // woken no matter how many times we go around this loop.
          if( crQUEUE_RECEIVE_FROM_ISR( pxQueue, &cCharToTx, &xCRWokenByPost ) )
-		 {
-			 SEND_CHARACTER( cCharToTx );
-		 }
+         {
+             SEND_CHARACTER( cCharToTx );
+         }
      }
  }</pre>
  * \defgroup crQUEUE_RECEIVE_FROM_ISR crQUEUE_RECEIVE_FROM_ISR

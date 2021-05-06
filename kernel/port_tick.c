@@ -615,7 +615,7 @@ void vPortSetupTimerInterrupt(void)
 #endif /* configUSE_TICKLESS_IDLE  != 0*/
 
 /**
- * move 'os_gpt_init' to drv_common.c, will exec before 'rt_sheduler_start'. 
+ * move 'os_gpt_init' to drv_common.c, will exec before 'rt_sheduler_start'.
  * Designed to provide a system clock base os gpt timer.
 */
 #if 0 /* move to drv_common.c by rt-thread */

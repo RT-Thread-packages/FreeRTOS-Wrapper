@@ -66,7 +66,7 @@ WorkQueue::WorkQueue(   const char * const Name,
                         UBaseType_t maxWorkItems)
 {
     //
-    //  Build the Queue first, since the Thread is going to access 
+    //  Build the Queue first, since the Thread is going to access
     //  it as soon as it can, maybe before we leave this ctor.
     //
     WorkItemQueue = new Queue(maxWorkItems, sizeof(WorkItem *));
@@ -84,7 +84,7 @@ WorkQueue::WorkQueue(   uint16_t StackDepth,
                         UBaseType_t maxWorkItems)
 {
     //
-    //  Build the Queue first, since the Thread is going to access 
+    //  Build the Queue first, since the Thread is going to access
     //  it as soon as it can, maybe before we leave this ctor.
     //
     WorkItemQueue = new Queue(maxWorkItems, sizeof(WorkItem *));
@@ -102,14 +102,14 @@ WorkQueue::WorkQueue(   uint16_t StackDepth,
 WorkQueue::~WorkQueue()
 {
     //
-    //  This dtor is tricky, because of the multiple objects in 
+    //  This dtor is tricky, because of the multiple objects in
     //  play, and the multithreaded nature of this specific object.
     //
 
     //
-    //  Note that we cannot flush the queue. If there are items 
-    //  in the queue maked freeAfterComplete, we would leak the 
-    //  memory. 
+    //  Note that we cannot flush the queue. If there are items
+    //  in the queue maked freeAfterComplete, we would leak the
+    //  memory.
     //
 
     //
@@ -190,7 +190,7 @@ void WorkQueue::CWorkerThread::Run()
         work->Run();
 
         //
-        //  If this was a dynamic, fire and forget item and we were 
+        //  If this was a dynamic, fire and forget item and we were
         //  requested to clean it up, do so.
         //
         if (work->FreeAfterRun()) {

@@ -55,7 +55,7 @@ typedef struct MemPool_t_ {
      *  We need a lock to make this thread safe.
      */
     SemaphoreHandle_t Lock;
-    
+
     /**
      *  Memory blocks are stored on a stack.
      */
@@ -97,7 +97,7 @@ static int CalculateAndVerifyAlignment(int Alignment)
         if (Alignment == alignmentBit) {
             break;
         }
-        alignmentBit <<= 1; 
+        alignmentBit <<= 1;
     }
 
     if (i >= 31) {
@@ -132,10 +132,10 @@ static int CalculateItemSize(   int ItemSize,
          */
         ItemSize = ((alignmentCount + 1) * Alignment);
     }
-    
+
     return ItemSize;
 }
-    
+
 
 MemoryPool_t CreateMemoryPool(  int ItemSize,
                                 int ItemCount,
@@ -178,19 +178,19 @@ MemoryPool_t CreateMemoryPool(  int ItemSize,
     ptr = MemPool->Buffer;
 
     for (i = 0; i < ItemCount; i++) {
-        
+
         Node = (SlNode_t *)ptr;
-    
+
         PushOnStack(&MemPool->Stack, Node);
 
         ptr += MemPool->ItemSize;
     }
-    
+
     return (MemoryPool_t)MemPool;
 }
 
 
-int AddExtraMemoryToPool(   MemoryPool_t pool, 
+int AddExtraMemoryToPool(   MemoryPool_t pool,
                             int ItemCount)
 {
     /*********************************/
@@ -211,15 +211,15 @@ int AddExtraMemoryToPool(   MemoryPool_t pool,
     }
 
     for (i = 0; i < ItemCount; i++) {
-        
+
         Node = (SlNode_t *)ptr;
-    
+
         xSemaphoreTake(MemPool->Lock, portMAX_DELAY);
-        
+
         PushOnStack(&MemPool->Stack, Node);
 
         xSemaphoreGive(MemPool->Lock);
-    
+
         ptr += MemPool->ItemSize;
     }
 
@@ -267,18 +267,18 @@ MemoryPool_t CreateMemoryPoolStatic(int ItemSize,
     ptr = (unsigned char *)PreallocatedMemory;
 
     while (PreallocatedMemorySize >= ItemSize) {
-        
+
         Node = (SlNode_t *)ptr;
         PushOnStack(&MemPool->Stack, Node);
         ptr += MemPool->ItemSize;
         PreallocatedMemorySize -= MemPool->ItemSize;
     }
-    
+
     return (MemoryPool_t)MemPool;
 }
 
 
-int AddExtraMemoryToPoolStatic( MemoryPool_t pool, 
+int AddExtraMemoryToPoolStatic( MemoryPool_t pool,
                                 void *PreallocatedMemory,
                                 int PreallocatedMemorySize)
 {
@@ -296,7 +296,7 @@ int AddExtraMemoryToPoolStatic( MemoryPool_t pool,
         Node = (SlNode_t *)ptr;
 
         xSemaphoreTake(MemPool->Lock, portMAX_DELAY);
-        
+
         PushOnStack(&MemPool->Stack, Node);
 
         xSemaphoreGive(MemPool->Lock);

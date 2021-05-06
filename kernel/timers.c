@@ -87,12 +87,12 @@ BaseType_t xTimerGenericCommand( TimerHandle_t xTimer, const BaseType_t xCommand
 
 BaseType_t xTimerIsTimerActive( TimerHandle_t xTimer )
 {
-	rt_timer_t timer = (rt_timer_t)xTimer;
-	if (!timer)
-		return pdFALSE;
+    rt_timer_t timer = (rt_timer_t)xTimer;
+    if (!timer)
+        return pdFALSE;
     if (!(timer->parent.flag & RT_TIMER_FLAG_ACTIVATED))
         return pdFALSE;
-	return pdTRUE;
+    return pdTRUE;
 } /*lint !e818 Can't be pointer to const due to the typedef. */
 /*-----------------------------------------------------------*/
 

@@ -73,20 +73,20 @@ void InitStack(Stack_t *Stack);
 /**
  *  Push an item onto the stack.
  *
- *  Note that you have to have embedded an SListNode inside your data 
+ *  Note that you have to have embedded an SListNode inside your data
  *  structure.
  *
  *  @param Stack Pointer to your stack structure.
  *  @param Node The SListNode you want on the stack.
  */
-void PushOnStack(   Stack_t *Stack, 
+void PushOnStack(   Stack_t *Stack,
                     SlNode_t *Node);
 
 
 /**
  *  Pop an item off the stack.
  *
- *  Note that you have to have embedded an SListNode inside your data 
+ *  Note that you have to have embedded an SListNode inside your data
  *  structure.
  *
  *  @param Stack Pointer to your stack structure.

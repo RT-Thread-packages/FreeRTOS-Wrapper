@@ -111,7 +111,7 @@ bool Tasklet::ScheduleFromISR(  uint32_t parameter,
     if (rc != pdTRUE) {
         return false;
     }
-    
+
     rc = xTimerPendFunctionCallFromISR( TaskletAdapterFunction,
                                         this,
                                         parameter,

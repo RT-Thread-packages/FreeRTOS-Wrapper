@@ -44,7 +44,7 @@
 
 /**
  *  Deliberately insert the Node link in the middle of the struct.
- *  This is worst case and tests that we can recover the data after 
+ *  This is worst case and tests that we can recover the data after
  *  dealing with the Nodes.
  */
 typedef struct TestDataNode_t_ {
@@ -91,7 +91,7 @@ void PrintStack(const char *Title, Stack_t *Stack)
     SlForEachNode(&Stack->Head, Cur) {
         Node = CONTAINING_RECORD(Cur, TestDataNode_t, Node);
         printf("DATA: (%d, %d)\n", Node->Data1, Node->Data2);
-    } 
+    }
 }
 
 
@@ -120,7 +120,7 @@ void FreeTestDataNode(SlNode_t *Node)
 int main (void)
 {
     Stack_t Stack;
-    TestDataNode_t *n[5];    
+    TestDataNode_t *n[5];
     int i;
     SlNode_t *Node1;
     SlNode_t *Node2;
@@ -169,7 +169,7 @@ int main (void)
     PrintStack("Test 3", &Stack);
 
     FreeStack(&Stack);
-    
+
     return 0;
 }
 

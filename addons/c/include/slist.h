@@ -44,14 +44,14 @@
 /**
  *  The singly linked list structure.
  *
- *  This is designed to be embedded within your data 
+ *  This is designed to be embedded within your data
  *  structure(s).
  *
  *  These lists offer the smallest storage overhead (one pointer per item),
  *  but many operations may take O(n) time.
  */
 typedef struct SlNode_t_ {
-    
+
     /**
      *  A pointer to ourselves.
      */
@@ -83,7 +83,7 @@ typedef struct SlNode_t_ {
 /**
  *  Add a node to the list tail.
  *  Runs in O(n) time.
- *  
+ *
  *  @param Head A pointer to the existing list head.
  *  @param Node A pointer to the node you are adding.
  */
@@ -104,7 +104,7 @@ SlNode_t *SlRemoveNodeFromHead(SlNode_t *Head);
 /**
  *  Removes the node from the list tail.
  *  Runs in O(n) time.
- *  
+ *
  *  @param Head A pointer to the existing list head.
  *  @return The node removed, or NULL for an empty list.
  */
@@ -140,8 +140,8 @@ void SlInsertNodeAfter( SlNode_t *Marker,
  *  @param Marker Node you are inserting before. Cannot be NULL.
  *  @param Node The node you are inserting. Cannot be NULL.
  */
-void SlInsertNodeBefore(SlNode_t *Head, 
-                        SlNode_t *Marker, 
+void SlInsertNodeBefore(SlNode_t *Head,
+                        SlNode_t *Marker,
                         SlNode_t *Node);
 
 
@@ -152,7 +152,7 @@ void SlInsertNodeBefore(SlNode_t *Head,
  *  @param Head Pointer to the list head.
  *  @param Node The node you are removing.
  */
-void SlRemoveNode(  SlNode_t *Head, 
+void SlRemoveNode(  SlNode_t *Head,
                     SlNode_t *Node);
 
 
@@ -173,7 +173,7 @@ void SlRemoveNode(  SlNode_t *Head,
  *  @param _address The real address of the _field you have.
  *  @param _type The structure type.
  *  @param _field The name of the field you want the offset to.
- *  @returns A typed pointer to the structure containing the _field 
+ *  @returns A typed pointer to the structure containing the _field
  *  at _address.
  */
 #ifndef CONTAINING_RECORD

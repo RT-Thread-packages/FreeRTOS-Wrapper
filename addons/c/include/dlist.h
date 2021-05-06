@@ -44,10 +44,10 @@
 /**
  *  The doubly linked list structure.
  *
- *  This is designed to be embedded within your data 
+ *  This is designed to be embedded within your data
  *  structure(s).
  *
- *  These lists require more storage overhead than a singly linked list 
+ *  These lists require more storage overhead than a singly linked list
  *  (two pointers per item), but almost all operations take O(1) time.
  */
 typedef struct DlNode_t_ {
@@ -84,14 +84,14 @@ typedef struct DlNode_t_ {
  *  @param Head A pointer to the existing list head.
  *  @param Node A pointer to the node you are adding.
  */
-void DlAddNodeToHead(   DlNode_t *Head, 
+void DlAddNodeToHead(   DlNode_t *Head,
                         DlNode_t *Node);
 
 
 /**
  *  Add a node to the list tail.
  *  Runs in O(1) time.
- *  
+ *
  *  @param Head A pointer to the existing list head.
  *  @param Node A pointer to the node you are adding.
  */
@@ -112,7 +112,7 @@ DlNode_t *DlRemoveNodeFromHead(DlNode_t *Head);
 /**
  *  Removes the node from the list tail.
  *  Runs in O(1) time.
- *  
+ *
  *  @param Head A pointer to the existing list head.
  *  @return The node removed, or NULL for an empty list.
  */
@@ -147,7 +147,7 @@ void DlInsertNodeAfter( DlNode_t *Marker,
  *  @param Marker Node you are inserting before. Cannot be NULL.
  *  @param Node The node you are inserting. Cannot be NULL.
  */
-void DlInsertNodeBefore(DlNode_t *Marker, 
+void DlInsertNodeBefore(DlNode_t *Marker,
                         DlNode_t *Node);
 
 
@@ -177,7 +177,7 @@ void DlRemoveNode(DlNode_t *Node);
  *  @param _address The real address of the _field you have.
  *  @param _type The structure type.
  *  @param _field The name of the field you want the offset to.
- *  @returns A typed pointer to the structure containing the _field 
+ *  @returns A typed pointer to the structure containing the _field
  *  at _address.
  */
 #ifndef CONTAINING_RECORD

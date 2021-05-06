@@ -44,7 +44,7 @@
 
 /**
  *  Deliberately insert the Node link in the middle of the struct.
- *  This is worst case and tests that we can recover the data after 
+ *  This is worst case and tests that we can recover the data after
  *  dealing with the Nodes.
  */
 typedef struct TestDataNode_t_ {
@@ -113,7 +113,7 @@ void PrintList(const char *Title, DlNode_t *Head)
     DlForEachNode(Head, Cur) {
         Node = CONTAINING_RECORD(Cur, TestDataNode_t, Node);
         printf("DATA: (%d, %d)\n", Node->Data1, Node->Data2);
-    } 
+    }
 }
 
 
@@ -126,7 +126,7 @@ void TestMacros(void)
     printf("OFFSET_OF(Data1) = %d\n", (int)OFFSET_OF(TestDataNode_t, Data1));
     printf("OFFSET_OF(Node)  = %d\n", (int)OFFSET_OF(TestDataNode_t, Node));
     printf("OFFSET_OF(Data2) = %d\n", (int)OFFSET_OF(TestDataNode_t, Data2));
-    
+
     printf("&T       = %p\n", (void *)&T);
     printf("&T.Data1 = %p\n", (void *)&T.Data1);
     printf("&T.Node  = %p\n", (void *)&T.Node);
@@ -264,7 +264,7 @@ int main (void)
         n[i] = CreateTestDataNode(i + 1,  10 + (i + 1));
         DlAddNodeToTail(&Head, &n[i]->Node);
     }
-    
+
     PrintList("Test 11", &Head);
 
     for (i = 0; i < 6; i++) {
@@ -287,7 +287,7 @@ int main (void)
         n[i] = CreateTestDataNode(i + 1,  10 + (i + 1));
         DlAddNodeToTail(&Head, &n[i]->Node);
     }
-    
+
     PrintList("Test 12", &Head);
 
     for (i = 0; i < 6; i++) {
@@ -303,7 +303,7 @@ int main (void)
             free(TestDataNode);
         PrintList("Test 12 - cont", &Head);
     }
-    
+
 
     FreeList(&Head);
 

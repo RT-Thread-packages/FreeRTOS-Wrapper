@@ -44,7 +44,7 @@
 
 /**
  *  Deliberately insert the Node link in the middle of the struct.
- *  This is worst case and tests that we can recover the data after 
+ *  This is worst case and tests that we can recover the data after
  *  dealing with the Nodes.
  */
 typedef struct TestDataNode_t_ {
@@ -83,8 +83,8 @@ TestDataNode_t *CreateTestDataNode(int d1, int d2)
  *  We cheat and use the internal DList to iterate the Queue.
  *
  *  @note! The internal structure of the queue actually stores items
- *  in reverse order. This isn't a problem, unless you cheat (like 
- *  we are) and peek inside. In this case, just use the reverse 
+ *  in reverse order. This isn't a problem, unless you cheat (like
+ *  we are) and peek inside. In this case, just use the reverse
  *  iterator.
  */
 void PrintQueue(const char *Title, Queue_t *Queue)
@@ -127,7 +127,7 @@ void FreeTestDataNode(DlNode_t *Node)
 int main (void)
 {
     Queue_t Queue;
-    TestDataNode_t *n[5];    
+    TestDataNode_t *n[5];
     int i;
     DlNode_t *Node1;
     DlNode_t *Node2;
@@ -176,7 +176,7 @@ int main (void)
     PrintQueue("Test 3", &Queue);
 
     FreeQueue(&Queue);
-    
+
     return 0;
 }
 

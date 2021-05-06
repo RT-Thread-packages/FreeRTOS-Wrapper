@@ -48,7 +48,7 @@ void InitStack(Stack_t *Stack)
 }
 
 
-void PushOnStack(   Stack_t *Stack, 
+void PushOnStack(   Stack_t *Stack,
                     SlNode_t *Node)
 {
     if (!Stack)
@@ -64,7 +64,7 @@ void PushOnStack(   Stack_t *Stack,
 
 SlNode_t *PopOffStack(Stack_t *Stack)
 {
-    SlNode_t *Node;    
+    SlNode_t *Node;
 
     if (!Stack)
         return NULL;
@@ -77,7 +77,7 @@ SlNode_t *PopOffStack(Stack_t *Stack)
     }
 
     Node = SlRemoveNodeFromHead(&Stack->Head);
-    
+
     return Node;
 }
 

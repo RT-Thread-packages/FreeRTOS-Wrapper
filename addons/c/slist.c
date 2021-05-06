@@ -41,7 +41,7 @@
 #include "slist.h"
 
 
-void SlAddNodeToTail(   SlNode_t *Head, 
+void SlAddNodeToTail(   SlNode_t *Head,
                         SlNode_t *Node)
 {
     /********************/
@@ -84,8 +84,8 @@ void SlInsertNodeAfter( SlNode_t *Marker,
 }
 
 
-void SlInsertNodeBefore(SlNode_t *Head, 
-                        SlNode_t *Marker, 
+void SlInsertNodeBefore(SlNode_t *Head,
+                        SlNode_t *Marker,
                         SlNode_t *Node)
 {
     /********************/
@@ -124,7 +124,7 @@ void SlInsertNodeBefore(SlNode_t *Head,
 }
 
 
-void SlRemoveNode ( SlNode_t *Head, 
+void SlRemoveNode ( SlNode_t *Head,
                     SlNode_t *Node)
 {
     /********************/
@@ -164,7 +164,7 @@ SlNode_t *SlRemoveNodeFromHead(SlNode_t *Head)
     /********************/
     SlNode_t *Node;
     /********************/
-    
+
     if (Head == NULL)
         return NULL;
 

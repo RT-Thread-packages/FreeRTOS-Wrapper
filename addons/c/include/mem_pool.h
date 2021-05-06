@@ -42,7 +42,7 @@
 
 
 /**
- *  Handle for memory pools. 
+ *  Handle for memory pools.
  *
  *  These are fixed allocation size memory areas.
  */
@@ -54,11 +54,11 @@ typedef void * MemoryPool_t;
  *
  *  @param itemSize How big is an allocation.
  *  @param itemCount What's the maximum number of allocations allowed?
- *  @param Alignment Power of 2 value denoting on which address boundary the 
+ *  @param Alignment Power of 2 value denoting on which address boundary the
  *  memory will be aligned to. Must be at least sizeof(unsigned char *).
  *  @return A Handle to the pool, or NULL on failure.
  */
-MemoryPool_t CreateMemoryPool(  int itemSize, 
+MemoryPool_t CreateMemoryPool(  int itemSize,
                                 int itemCount,
                                 int Alignment);
 
@@ -75,7 +75,7 @@ MemoryPool_t CreateMemoryPool(  int itemSize,
  *  @param ItemCount How many more items you want to add.
  *  @return pdPASS on success, pdFAIL on error.
  */
-int AddExtraMemoryToPool(   MemoryPool_t pool, 
+int AddExtraMemoryToPool(   MemoryPool_t pool,
                             int ItemCount);
 
 
@@ -87,7 +87,7 @@ int AddExtraMemoryToPool(   MemoryPool_t pool,
  *  you are dedicating to this pool.
  *  @param PreallocatedMemorySize How big is the buffer you are
  *  passing in.
- *  @param Alignment Power of 2 value denoting on which address boundary the 
+ *  @param Alignment Power of 2 value denoting on which address boundary the
  *  memory will be aligned to. Must be at least sizeof(unsigned char *).
  *  @return A Handle to the pool, or NULL on failure.
  */
@@ -107,7 +107,7 @@ MemoryPool_t CreateMemoryPoolStatic(int ItemSize,
  *  passing in.
  *  @return pdPASS on success, pdFAIL on error.
  */
-int AddExtraMemoryToPoolStatic( MemoryPool_t pool, 
+int AddExtraMemoryToPoolStatic( MemoryPool_t pool,
                                 void *PreallocatedMemory,
                                 int PreallocatedMemorySize);
 

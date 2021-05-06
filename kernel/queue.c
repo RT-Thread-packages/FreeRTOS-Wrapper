@@ -109,7 +109,7 @@ QueueHandle_t xQueueGenericCreate( const UBaseType_t uxQueueLength, const UBaseT
         QueueHandle_t obj;
         obj = xQueueGenericCreate(1, 0, ucQueueType);
 
-        return obj; 
+        return obj;
     }
 
 #endif /* configUSE_MUTEXES */
@@ -163,7 +163,7 @@ BaseType_t xQueueGenericSend( QueueHandle_t xQueue, const void * const pvItemToQ
 
     if (!obj)
     {
-        LOG_E("In param (xQueue) is NULL!");         
+        LOG_E("In param (xQueue) is NULL!");
         configASSERT(obj);
     }
 
@@ -194,7 +194,7 @@ BaseType_t xQueueGenericSendFromISR( QueueHandle_t xQueue, const void * const pv
 
     if (!obj)
     {
-        LOG_E("In param (xQueue) is NULL!");         
+        LOG_E("In param (xQueue) is NULL!");
         configASSERT(obj);
     }
 
@@ -232,7 +232,7 @@ BaseType_t xQueueGenericReceive( QueueHandle_t xQueue, void * const pvBuffer, Ti
 
     if (!obj)
     {
-        LOG_E("In param (xQueue) is NULL!");         
+        LOG_E("In param (xQueue) is NULL!");
         configASSERT(obj);
     }
 
@@ -271,7 +271,7 @@ BaseType_t xQueueReceiveFromISR( QueueHandle_t xQueue, void * const pvBuffer, Ba
 
     if (!obj)
     {
-        LOG_E("In param (xQueue) is NULL!");         
+        LOG_E("In param (xQueue) is NULL!");
         configASSERT(obj);
     }
 
@@ -305,7 +305,7 @@ UBaseType_t uxQueueMessagesWaiting( const QueueHandle_t xQueue )
 
     if (!obj)
     {
-        LOG_E("In param (xQueue) is NULL!");         
+        LOG_E("In param (xQueue) is NULL!");
         configASSERT(obj);
     }
 
@@ -327,7 +327,7 @@ UBaseType_t uxQueueSpacesAvailable( const QueueHandle_t xQueue )
 
     if (!obj)
     {
-        LOG_E("In param (xQueue) is NULL!");         
+        LOG_E("In param (xQueue) is NULL!");
         configASSERT(obj);
     }
 

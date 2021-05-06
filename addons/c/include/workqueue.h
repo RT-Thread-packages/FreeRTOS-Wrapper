@@ -46,7 +46,7 @@
 
 
 /**
- *  All your work items are actually functions that take a 
+ *  All your work items are actually functions that take a
  *  void * parameter.
  */
 typedef void (* WorkItem_t)(void *UserData);
@@ -113,8 +113,8 @@ void DestroyWorkQueue(WorkQueue_t WorkQueue);
  *  @param UserData A value passed back to you.
  *  @return pdPASS on success, pdFAIL on error.
  */
-int QueueWorkItem(  WorkQueue_t WorkQueue, 
-                    WorkItem_t WorkItem, 
+int QueueWorkItem(  WorkQueue_t WorkQueue,
+                    WorkItem_t WorkItem,
                     void *UserData);
 
 

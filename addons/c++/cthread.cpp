@@ -56,8 +56,8 @@ MutexStandard Thread::StartGuardLock;
 Thread::Thread( const std::string pcName,
                 uint16_t usStackDepth,
                 UBaseType_t uxPriority)
-    :   Name(pcName), 
-        StackDepth(usStackDepth), 
+    :   Name(pcName),
+        StackDepth(usStackDepth),
         Priority(uxPriority),
         ThreadStarted(false)
 {
@@ -69,8 +69,8 @@ Thread::Thread( const std::string pcName,
 
 Thread::Thread( uint16_t usStackDepth,
                 UBaseType_t uxPriority)
-    :   Name("Default"), 
-        StackDepth(usStackDepth), 
+    :   Name("Default"),
+        StackDepth(usStackDepth),
         Priority(uxPriority),
         ThreadStarted(false)
 {
@@ -124,9 +124,9 @@ bool Thread::Start()
 {
     //
     //  If the Scheduler is on, we need to lock before checking
-    //  the ThreadStarted variable. We'll leverage the LockGuard 
-    //  pattern, so we can create the guard and just forget it. 
-    //  Leaving scope, including the return, will automatically 
+    //  the ThreadStarted variable. We'll leverage the LockGuard
+    //  pattern, so we can create the guard and just forget it.
+    //  Leaving scope, including the return, will automatically
     //  unlock it.
     //
     if (SchedulerActive) {
@@ -135,7 +135,7 @@ bool Thread::Start()
 
         if (ThreadStarted)
             return false;
-        else 
+        else
             ThreadStarted = true;
     }
     //
@@ -145,7 +145,7 @@ bool Thread::Start()
 
         if (ThreadStarted)
             return false;
-        else 
+        else
             ThreadStarted = true;
     }
 
@@ -157,7 +157,7 @@ bool Thread::Start()
                                 this,
                                 Priority,
                                 &handle);
-#else 
+#else
 
     BaseType_t rc = xTaskCreate(TaskFunctionAdapter,
                                 Name,
@@ -257,7 +257,7 @@ bool Thread::Wait(  ConditionVariable &Cv,
     //  will call Thread::Signal, which will release the semaphore.
     //
     bool timed_out = ThreadWaitSem.Take(Timeout);
-    
+
     //
     //  Grab the external lock again, as per cv semantics.
     //

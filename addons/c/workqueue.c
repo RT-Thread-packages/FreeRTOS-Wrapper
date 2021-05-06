@@ -89,7 +89,7 @@ typedef struct pvtWorkQueue_t_ {
 #if (INCLUDE_vTaskDelete == 1)
     /**
      *  Flag if we are tearing down the WorkQueue.
-     */    
+     */
     int ExitThread;
 
 #endif
@@ -139,7 +139,7 @@ static void WorkerThread(void *parameters)
             Node = Dequeue(&WorkQueue->Queue);
 
             /**
-             *  Unlock the queue, the lock is really only for 
+             *  Unlock the queue, the lock is really only for
              *  the Queue struct.
              */
             xSemaphoreGive(WorkQueue->Lock);
@@ -160,12 +160,12 @@ static void WorkerThread(void *parameters)
             free(WorkItem);
 
             /**
-             *  Lock the queue again so we can check if the 
+             *  Lock the queue again so we can check if the
              *  Queue is empty yet.
              */
             xSemaphoreTake(WorkQueue->Lock, portMAX_DELAY);
         }
-    
+
 #if (INCLUDE_vTaskDelete == 1)
         /**
          *  Are we being asked to exit? We want to do this while
@@ -191,7 +191,7 @@ static void WorkerThread(void *parameters)
     }
 
 #if (INCLUDE_vTaskDelete == 1)
-    
+
     /**
      *  Thread cleanup here.
      */
@@ -205,7 +205,7 @@ static void WorkerThread(void *parameters)
      *  Drain the queue and free everything.
      */
     while ( !IsQueueEmpty(&WorkQueue->Queue)) {
-        
+
         /**
          *  Dequeue the node
          */
@@ -234,7 +234,7 @@ static void WorkerThread(void *parameters)
     vSemaphoreDelete(WorkQueue->Event);
 
     /**
-     *  We need to save a local copy of our handle. 
+     *  We need to save a local copy of our handle.
      */
     handle = WorkQueue->WorkerThread;
 
@@ -248,7 +248,7 @@ static void WorkerThread(void *parameters)
      */
     vTaskDelete(handle);
 
-#endif    
+#endif
 }
 
 
@@ -260,7 +260,7 @@ WorkQueue_t CreateWorkQueueEx(  const char * const Name,
     pvtWorkQueue_t *WorkQueue;
     BaseType_t rc;
     /****************************/
-    
+
     WorkQueue = (pvtWorkQueue_t *)malloc(sizeof(pvtWorkQueue_t));
 
     if (WorkQueue == NULL)
@@ -284,7 +284,7 @@ WorkQueue_t CreateWorkQueueEx(  const char * const Name,
     }
 
 #if (INCLUDE_vTaskDelete == 1)
- 
+
     WorkQueue->ExitThread = 0;
 
 #endif
@@ -326,7 +326,7 @@ void DestroyWorkQueue(WorkQueue_t wq)
      *  Flag we are all done.
      */
     WorkQueue->ExitThread = 1;
-    
+
     /**
      *  Signal the Worker thead.
      */
@@ -367,7 +367,7 @@ int QueueWorkItem(WorkQueue_t wq, WorkItem_t Function, void *UserData)
      *  Put the work item on the queue.
      */
     Enqueue(&WorkQueue->Queue, &WorkItem->Node);
-    
+
     /**
      *  Wake the Worker thread up.
      */

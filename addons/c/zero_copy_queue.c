@@ -64,7 +64,7 @@ ZeroCopyQueue_t ZcqCreateQueue( int ItemSize,
     if (zcq == NULL) {
         return NULL;
     }
-    
+
     zcq->Handle = xQueueCreate(ItemCount, sizeof(void *));
     if (zcq->Handle == NULL) {
         free(zcq);
@@ -97,7 +97,7 @@ void *ZcqAllocateItem(ZeroCopyQueue_t z)
 }
 
 
-void ZcqFreeItem(   ZeroCopyQueue_t z, 
+void ZcqFreeItem(   ZeroCopyQueue_t z,
                     void *Item)
 {
     /******************************/
@@ -110,8 +110,8 @@ void ZcqFreeItem(   ZeroCopyQueue_t z,
 }
 
 
-int ZcqEnqueueItem( ZeroCopyQueue_t z, 
-                    void *Item, 
+int ZcqEnqueueItem( ZeroCopyQueue_t z,
+                    void *Item,
                     TickType_t Timeout)
 {
     /******************************/

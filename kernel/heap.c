@@ -28,7 +28,7 @@ void *pvPortMallocNC( size_t xWantedSize )
 void vPortFreeNC( void *pv )
 {
     extern void mt_noncached_free(void *ptr);;
-	mt_noncached_free(pv);
+    mt_noncached_free(pv);
 }
 
 size_t xPortGetFreeHeapSize( void )
