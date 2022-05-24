@@ -144,26 +144,26 @@ typedef struct rt_ipc_object *QueueHandle_t;
 BaseType_t xQueueGenericSend( QueueHandle_t xQueue,
                               const void * const pvItemToQueue,
                               TickType_t xTicksToWait,
-                              const BaseType_t xCopyPosition ) PRIVILEGED_FUNCTION;
+                              const BaseType_t xCopyPosition );
 
 /*
  * For internal use only.  Use xSemaphoreCreateMutex(),
  * xSemaphoreCreateCounting() or xSemaphoreGetMutexHolder() instead of calling
  * these functions directly.
  */
-QueueHandle_t xQueueCreateMutex( const uint8_t ucQueueType ) PRIVILEGED_FUNCTION;
+QueueHandle_t xQueueCreateMutex( const uint8_t ucQueueType );
 QueueHandle_t xQueueCreateMutexStatic( const uint8_t ucQueueType,
-                                       StaticQueue_t * pxStaticQueue ) PRIVILEGED_FUNCTION;
+                                       StaticQueue_t * pxStaticQueue );
 BaseType_t xQueueSemaphoreTake( QueueHandle_t xQueue,
-                                TickType_t xTicksToWait ) PRIVILEGED_FUNCTION;
+                                TickType_t xTicksToWait );
 
 /*
  * For internal use only.  Use xSemaphoreTakeMutexRecursive() or
  * xSemaphoreGiveMutexRecursive() instead of calling these functions directly.
  */
 BaseType_t xQueueTakeMutexRecursive( QueueHandle_t xMutex,
-                                     TickType_t xTicksToWait ) PRIVILEGED_FUNCTION;
-BaseType_t xQueueGiveMutexRecursive( QueueHandle_t xMutex ) PRIVILEGED_FUNCTION;
+                                     TickType_t xTicksToWait );
+BaseType_t xQueueGiveMutexRecursive( QueueHandle_t xMutex );
 
 /*
  * Generic version of the function used to create a queue using dynamic memory
@@ -173,7 +173,7 @@ BaseType_t xQueueGiveMutexRecursive( QueueHandle_t xMutex ) PRIVILEGED_FUNCTION;
 #if ( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
     QueueHandle_t xQueueGenericCreate( const UBaseType_t uxQueueLength,
                                        const UBaseType_t uxItemSize,
-                                       const uint8_t ucQueueType ) PRIVILEGED_FUNCTION;
+                                       const uint8_t ucQueueType );
 #endif
 
 /*
@@ -186,7 +186,7 @@ BaseType_t xQueueGiveMutexRecursive( QueueHandle_t xMutex ) PRIVILEGED_FUNCTION;
                                              const UBaseType_t uxItemSize,
                                              uint8_t * pucQueueStorage,
                                              StaticQueue_t * pxStaticQueue,
-                                             const uint8_t ucQueueType ) PRIVILEGED_FUNCTION;
+                                             const uint8_t ucQueueType );
 #endif
 
 /* *INDENT-OFF* */

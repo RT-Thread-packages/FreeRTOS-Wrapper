@@ -1,0 +1,11 @@
+import os
+from building import *
+
+cwd = GetCurrentDir()
+src	= Glob('*.c')
+
+CPPPATH = [os.path.join(cwd, "include")]
+
+group = DefineGroup('FreeRTOS', src, depend = [''], CPPPATH = CPPPATH)
+
+Return('group')
