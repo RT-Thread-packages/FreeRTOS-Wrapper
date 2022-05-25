@@ -68,10 +68,10 @@ static volatile rt_uint8_t ucMutexIndex = 0;
              * but is already set. */
             pxNewQueue = ( Queue_t * ) pxStaticQueue; /*lint !e740 !e9087 Unusual cast is ok as the structures are designed to have the same alignment, and the size is checked by an assert. */
 
-            if ( (ucQueueType == queueQUEUE_TYPE_RECURSIVE_MUTEX ) )
+            if ( ( ucQueueType == queueQUEUE_TYPE_RECURSIVE_MUTEX ) )
             {
                 rt_sprintf( cName, "mutex%d", ucMutexIndex++ );
-                rt_mutex_init( ( rt_mutex_t )pxNewQueue, cName, RT_IPC_FLAG_PRIO );
+                rt_mutex_init( ( rt_mutex_t ) pxNewQueue, cName, RT_IPC_FLAG_PRIO );
             }
         }
 
@@ -99,7 +99,7 @@ static volatile rt_uint8_t ucMutexIndex = 0;
             if ( ucQueueType == queueQUEUE_TYPE_RECURSIVE_MUTEX )
             {
                 rt_sprintf( cName, "mutex%d", ucMutexIndex++ );
-                pxNewQueue = ( QueueHandle_t )rt_mutex_create( cName, RT_IPC_FLAG_PRIO );
+                pxNewQueue = ( QueueHandle_t ) rt_mutex_create( cName, RT_IPC_FLAG_PRIO );
             }
         }
 
@@ -173,7 +173,7 @@ BaseType_t xQueueGenericSend( QueueHandle_t xQueue,
     configASSERT( pxQueue );
     if ( rt_object_get_type( &pxQueue->parent ) == RT_Object_Class_Mutex )
     {
-        xReturn = rt_mutex_release( ( rt_mutex_t )pxQueue );
+        xReturn = rt_mutex_release( ( rt_mutex_t ) pxQueue );
     }
 
     return xReturn == RT_EOK ? pdPASS : errQUEUE_FULL;
@@ -190,9 +190,9 @@ BaseType_t xQueueSemaphoreTake( QueueHandle_t xQueue,
     configASSERT( ( pxQueue ) );
     if ( rt_object_get_type( &pxQueue->parent ) == RT_Object_Class_Mutex )
     {
-        xReturn = rt_mutex_take( ( rt_mutex_t )pxQueue, ( rt_int32_t)xTicksToWait );
+        xReturn = rt_mutex_take( ( rt_mutex_t ) pxQueue, ( rt_int32_t ) xTicksToWait );
     }
-    
+
     return xReturn == RT_EOK ? pdPASS : errQUEUE_EMPTY;
 }
 /*-----------------------------------------------------------*/
