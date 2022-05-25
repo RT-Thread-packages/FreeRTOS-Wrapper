@@ -38,9 +38,9 @@
 #define queueMUTEX_GIVE_BLOCK_TIME          ( ( TickType_t ) 0U )
 
 typedef struct rt_ipc_object xQUEUE;
-typedef xQueue Queue_t;
+typedef xQUEUE Queue_t;
 
-static volatile rt_uint8_t mutex_index = 0;
+static volatile rt_uint8_t ucMutexIndex = 0;
 
 /*-----------------------------------------------------------*/
 
@@ -53,7 +53,7 @@ static volatile rt_uint8_t mutex_index = 0;
                                              const uint8_t ucQueueType )
     {
         Queue_t * pxNewQueue = NULL;
-        char name[RT_NAME_MAX] = {0};
+        char cName[RT_NAME_MAX] = {0};
 
         if( ( uxQueueLength > ( UBaseType_t ) 0 ) &&
             ( pxStaticQueue != NULL ) &&
@@ -70,8 +70,8 @@ static volatile rt_uint8_t mutex_index = 0;
 
             if ( (ucQueueType == queueQUEUE_TYPE_RECURSIVE_MUTEX ) )
             {
-                rt_sprintf( name, "mutex%d", mutex_index++ );
-                rt_mutex_init( ( rt_mutex_t )pxNewQueue, name, RT_IPC_FLAG_PRIO );
+                rt_sprintf( cName, "mutex%d", ucMutexIndex++ );
+                rt_mutex_init( ( rt_mutex_t )pxNewQueue, cName, RT_IPC_FLAG_PRIO );
             }
         }
 
@@ -88,7 +88,7 @@ static volatile rt_uint8_t mutex_index = 0;
                                        const uint8_t ucQueueType )
     {
         Queue_t * pxNewQueue = NULL;
-        char name[RT_NAME_MAX] = {0};
+        char cName[RT_NAME_MAX] = {0};
 
         if( ( uxQueueLength > ( UBaseType_t ) 0 ) &&
             /* Check for multiplication overflow. */
@@ -98,8 +98,8 @@ static volatile rt_uint8_t mutex_index = 0;
         {
             if ( ucQueueType == queueQUEUE_TYPE_RECURSIVE_MUTEX )
             {
-                rt_sprintf( name, "mutex%d", mutex_index++ );
-                pxNewQueue = ( QueueHandle_t )rt_mutex_create( name, RT_IPC_FLAG_PRIO );
+                rt_sprintf( cName, "mutex%d", ucMutexIndex++ );
+                pxNewQueue = ( QueueHandle_t )rt_mutex_create( cName, RT_IPC_FLAG_PRIO );
             }
         }
 
@@ -168,13 +168,15 @@ BaseType_t xQueueGenericSend( QueueHandle_t xQueue,
                               const BaseType_t xCopyPosition )
 {
     Queue_t * const pxQueue = xQueue;
+    BaseType_t xReturn = -RT_ERROR;
 
     configASSERT( pxQueue );
     if ( rt_object_get_type( &pxQueue->parent ) == RT_Object_Class_Mutex )
     {
-        return rt_mutex_release( ( rt_mutex_t )pxQueue );
+        xReturn = rt_mutex_release( ( rt_mutex_t )pxQueue );
     }
 
+    return xReturn == RT_EOK ? pdPASS : errQUEUE_FULL;
 }
 /*-----------------------------------------------------------*/
 
@@ -182,13 +184,15 @@ BaseType_t xQueueSemaphoreTake( QueueHandle_t xQueue,
                                 TickType_t xTicksToWait )
 {
     Queue_t * const pxQueue = xQueue;
+    BaseType_t xReturn = -RT_ERROR;
 
     /* Check the queue pointer is not NULL. */
     configASSERT( ( pxQueue ) );
     if ( rt_object_get_type( &pxQueue->parent ) == RT_Object_Class_Mutex )
     {
-        return rt_mutex_take( ( rt_mutex_t )pxQueue, ( rt_int32_t)xTicksToWait );
+        xReturn = rt_mutex_take( ( rt_mutex_t )pxQueue, ( rt_int32_t)xTicksToWait );
     }
-
+    
+    return xReturn == RT_EOK ? pdPASS : errQUEUE_EMPTY;
 }
 /*-----------------------------------------------------------*/
