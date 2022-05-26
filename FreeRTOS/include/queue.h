@@ -41,7 +41,8 @@
  * returns an QueueHandle_t variable that can then be used as a parameter to
  * xQueueSend(), xQueueReceive(), etc.
  */
-typedef struct rt_ipc_object *QueueHandle_t;
+struct QueueDefinition; /* Using old naming convention so as not to break kernel aware debuggers. */
+typedef struct QueueDefinition   * QueueHandle_t;
 
 /* For internal use only. */
 #define queueSEND_TO_BACK                     ( ( BaseType_t ) 0 )

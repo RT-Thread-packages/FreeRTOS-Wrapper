@@ -55,6 +55,8 @@
 #endif
 /* *INDENT-ON* */
 
+#include <rtthread.h>
+
 /* Application specific configuration options. */
 #include "FreeRTOSConfig.h"
 
@@ -64,17 +66,9 @@
 /* Definitions specific to the port being used. */
 #include "portable.h"
 
-#include <rtthread.h>
-#include <rthw.h>
-
 /* Must be defaulted before configUSE_NEWLIB_REENTRANT is used below. */
 #ifndef configUSE_NEWLIB_REENTRANT
     #define configUSE_NEWLIB_REENTRANT    0
-#endif
-
-/* Required if struct _reent is used. */
-#if ( configUSE_NEWLIB_REENTRANT == 1 )
-    #include <reent.h>
 #endif
 
 /*
@@ -1120,8 +1114,18 @@
     ( ( ( portUSING_MPU_WRAPPERS == 0 ) && ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) && ( configSUPPORT_STATIC_ALLOCATION == 1 ) ) || \
       ( ( portUSING_MPU_WRAPPERS == 1 ) && ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) ) )
 
-typedef struct rt_mailbox StaticQueue_t;
+typedef struct
+{
+    union
+    {
+        struct rt_mailbox mailbox;
+        struct rt_semaphore semaphore;
+        struct rt_mutex mutex;
+    } u;
+} StaticQueue_t;
 typedef StaticQueue_t StaticSemaphore_t;
+
+BaseType_t rt_err_to_freertos(rt_err_t rt_err);
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
