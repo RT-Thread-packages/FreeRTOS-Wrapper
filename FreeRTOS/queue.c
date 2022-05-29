@@ -37,7 +37,7 @@
 #define queueSEMAPHORE_QUEUE_ITEM_LENGTH    ( ( UBaseType_t ) 0 )
 #define queueMUTEX_GIVE_BLOCK_TIME          ( ( TickType_t ) 0U )
 
-typedef struct QueueDefinition /* The old naming convention is used to prevent breaking kernel aware debuggers. */
+typedef struct QueueDefinition
 {
     struct rt_ipc_object *rt_ipc;
 } xQUEUE;

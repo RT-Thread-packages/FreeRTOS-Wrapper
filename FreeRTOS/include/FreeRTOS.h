@@ -66,10 +66,8 @@
 /* Definitions specific to the port being used. */
 #include "portable.h"
 
-/* Must be defaulted before configUSE_NEWLIB_REENTRANT is used below. */
-#ifndef configUSE_NEWLIB_REENTRANT
-    #define configUSE_NEWLIB_REENTRANT    0
-#endif
+/* Read only */
+#define configUSE_NEWLIB_REENTRANT    0
 
 /*
  * Check all the required application specific macros have been defined.

@@ -50,7 +50,7 @@
     #define portDOUBLE        double
     #define portLONG          long
     #define portSHORT         short
-    #define portSTACK_TYPE    rt_uint32_t
+    #define portSTACK_TYPE    rt_ubase_t
     #define portBASE_TYPE     rt_base_t
 
     typedef portSTACK_TYPE   StackType_t;
