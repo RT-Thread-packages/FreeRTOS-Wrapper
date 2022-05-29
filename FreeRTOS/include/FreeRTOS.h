@@ -1123,8 +1123,6 @@ typedef struct
 } StaticQueue_t;
 typedef StaticQueue_t StaticSemaphore_t;
 
-BaseType_t rt_err_to_freertos(rt_err_t rt_err);
-
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     }

@@ -41,6 +41,8 @@
 #endif
 /* *INDENT-ON* */
 
+BaseType_t rt_err_to_freertos(rt_err_t rt_err);
+
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     }
