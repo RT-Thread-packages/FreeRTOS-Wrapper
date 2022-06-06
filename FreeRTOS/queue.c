@@ -240,9 +240,6 @@ void vQueueDelete( QueueHandle_t xQueue )
     Queue_t * const pxQueue = xQueue;
     struct rt_ipc_object *pipc;
     rt_uint8_t type;
-#if ( ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) && ( configSUPPORT_STATIC_ALLOCATION == 1 ) )
-    rt_bool_t is_static_object;
-#endif
 
     configASSERT( pxQueue );
 
@@ -250,9 +247,7 @@ void vQueueDelete( QueueHandle_t xQueue )
     RT_ASSERT( pipc != RT_NULL );
     type = rt_object_get_type( &pipc->parent );
 #if ( ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) && ( configSUPPORT_STATIC_ALLOCATION == 1 ) )
-    is_static_object = rt_object_is_systemobject( ( rt_object_t ) pipc );
-
-    if ( is_static_object )
+    if ( rt_object_is_systemobject( ( rt_object_t ) pipc ) )
 #endif
     {
     #if ( configSUPPORT_STATIC_ALLOCATION == 1 )
