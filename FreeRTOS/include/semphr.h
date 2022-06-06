@@ -366,4 +366,20 @@ typedef QueueHandle_t SemaphoreHandle_t;
     #define xSemaphoreCreateRecursiveMutexStatic( pxStaticSemaphore )    xQueueCreateMutexStatic( queueQUEUE_TYPE_RECURSIVE_MUTEX, pxStaticSemaphore )
 #endif /* configSUPPORT_STATIC_ALLOCATION */
 
+/**
+ * semphr. h
+ * @code{c}
+ * void vSemaphoreDelete( SemaphoreHandle_t xSemaphore );
+ * @endcode
+ *
+ * Delete a semaphore.  This function must be used with care.  For example,
+ * do not delete a mutex type semaphore if the mutex is held by a task.
+ *
+ * @param xSemaphore A handle to the semaphore to be deleted.
+ *
+ * \defgroup vSemaphoreDelete vSemaphoreDelete
+ * \ingroup Semaphores
+ */
+#define vSemaphoreDelete( xSemaphore )                   vQueueDelete( ( QueueHandle_t ) ( xSemaphore ) )
+
 #endif /* SEMAPHORE_H */

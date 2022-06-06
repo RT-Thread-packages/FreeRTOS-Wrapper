@@ -147,6 +147,22 @@ BaseType_t xQueueGenericSend( QueueHandle_t xQueue,
                               TickType_t xTicksToWait,
                               const BaseType_t xCopyPosition );
 
+/**
+ * queue. h
+ * @code{c}
+ * void vQueueDelete( QueueHandle_t xQueue );
+ * @endcode
+ *
+ * Delete a queue - freeing all the memory allocated for storing of items
+ * placed on the queue.
+ *
+ * @param xQueue A handle to the queue to be deleted.
+ *
+ * \defgroup vQueueDelete vQueueDelete
+ * \ingroup QueueManagement
+ */
+void vQueueDelete( QueueHandle_t xQueue );
+
 /*
  * For internal use only.  Use xSemaphoreCreateMutex(),
  * xSemaphoreCreateCounting() or xSemaphoreGetMutexHolder() instead of calling
