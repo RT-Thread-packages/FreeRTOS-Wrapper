@@ -234,3 +234,65 @@ BaseType_t xQueueSemaphoreTake( QueueHandle_t xQueue,
     return rt_err_to_freertos( err );
 }
 /*-----------------------------------------------------------*/
+
+void vQueueDelete( QueueHandle_t xQueue )
+{
+    Queue_t * const pxQueue = xQueue;
+    struct rt_ipc_object *pipc;
+    rt_uint8_t type;
+#if ( ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) && ( configSUPPORT_STATIC_ALLOCATION == 1 ) )
+    rt_bool_t is_static_object;
+#endif
+
+    configASSERT( pxQueue );
+
+    pipc = pxQueue->rt_ipc;
+    RT_ASSERT( pipc != RT_NULL );
+    type = rt_object_get_type( &pipc->parent );
+#if ( ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) && ( configSUPPORT_STATIC_ALLOCATION == 1 ) )
+    is_static_object = rt_object_is_systemobject( ( rt_object_t ) pipc );
+
+    if ( is_static_object )
+#endif
+    {
+    #if ( configSUPPORT_STATIC_ALLOCATION == 1 )
+        if ( type == RT_Object_Class_Mutex )
+        {
+            rt_mutex_detach( ( rt_mutex_t ) pipc );
+        }
+        else if ( type == RT_Object_Class_Semaphore )
+        {
+            rt_sem_detach( ( rt_sem_t ) pipc );
+        }
+        else if ( type == RT_Object_Class_MailBox )
+        {
+            rt_mb_detach( ( rt_mailbox_t ) pipc );
+        }
+    #endif
+#if ( ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) && ( configSUPPORT_STATIC_ALLOCATION == 1 ) )
+    }
+    else
+    {
+#endif
+    #if ( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
+        if ( type == RT_Object_Class_Mutex )
+        {
+            rt_mutex_delete( ( rt_mutex_t ) pipc );
+        }
+        else if ( type == RT_Object_Class_Semaphore )
+        {
+            rt_sem_delete( ( rt_sem_t ) pipc );
+        }
+        else if ( type == RT_Object_Class_MailBox )
+        {
+            rt_mb_delete( ( rt_mailbox_t ) pipc );
+        }
+        else
+        {
+            return;
+        }
+        RT_KERNEL_FREE( pxQueue );
+    #endif
+    }
+}
+/*-----------------------------------------------------------*/
