@@ -47,8 +47,7 @@ static volatile rt_uint8_t mutex_index = 0;
 
 /*-----------------------------------------------------------*/
 
-#if 0
-//#if ( configSUPPORT_STATIC_ALLOCATION == 1 )
+#if ( configSUPPORT_STATIC_ALLOCATION == 1 )
 
     QueueHandle_t xQueueGenericCreateStatic( const UBaseType_t uxQueueLength,
                                              const UBaseType_t uxItemSize,
@@ -67,16 +66,17 @@ static volatile rt_uint8_t mutex_index = 0;
             ( !( ( pucQueueStorage != NULL ) && ( uxItemSize == 0 ) ) ) &&
             ( !( ( pucQueueStorage == NULL ) && ( uxItemSize != 0 ) ) ) )
         {
-            /* The address of a statically allocated queue was passed in, use it.
-             * The address of a statically allocated storage area was also passed in
-             * but is already set. */
-            pxNewQueue = ( Queue_t * ) pxStaticQueue; /*lint !e740 !e9087 Unusual cast is ok as the structures are designed to have the same alignment, and the size is checked by an assert. */
-
             if ( ( ucQueueType == queueQUEUE_TYPE_RECURSIVE_MUTEX ) )
             {
                 rt_snprintf( name, RT_NAME_MAX - 1, "mutex%02d", mutex_index++ );
-                rt_mutex_init( ( rt_mutex_t ) &pxNewQueue->u.mutex, name, RT_IPC_FLAG_PRIO );
+                rt_mutex_init( ( rt_mutex_t ) &( ( StaticSemaphore_t * ) pxStaticQueue )->ipc_obj.mutex, name, RT_IPC_FLAG_PRIO );
             }
+            else
+            {
+                return pxNewQueue;
+            }
+            pxStaticQueue->rt_ipc = ( struct rt_ipc_object * ) &pxStaticQueue->ipc_obj;
+            pxNewQueue = ( QueueHandle_t ) pxStaticQueue;
         }
 
         return pxNewQueue;
@@ -93,6 +93,7 @@ static volatile rt_uint8_t mutex_index = 0;
     {
         Queue_t * pxNewQueue = NULL;
         char name[RT_NAME_MAX] = {0};
+        struct rt_ipc_object * pipc = RT_NULL;
 
         if( ( uxQueueLength > ( UBaseType_t ) 0 ) &&
             /* Check for multiplication overflow. */
@@ -100,16 +101,22 @@ static volatile rt_uint8_t mutex_index = 0;
             /* Check for addition overflow. */
             ( ( SIZE_MAX - sizeof( Queue_t ) ) >= ( uxQueueLength * uxItemSize ) ) )
         {
+            pxNewQueue = ( Queue_t * ) RT_KERNEL_MALLOC( sizeof( Queue_t ) );
+            if ( pxNewQueue == NULL )
+            {
+                return ( QueueHandle_t ) pxNewQueue;
+            }
             if ( ucQueueType == queueQUEUE_TYPE_RECURSIVE_MUTEX )
             {
                 rt_snprintf( name, RT_NAME_MAX - 1, "mutex%02d", mutex_index++ );
-                pxNewQueue = (Queue_t *) RT_KERNEL_MALLOC( sizeof( Queue_t ) );
-                if ( pxNewQueue == NULL)
-                {
-                    return ( QueueHandle_t ) pxNewQueue;
-                }
-                pxNewQueue->rt_ipc = ( struct rt_ipc_object * ) rt_mutex_create( name, RT_IPC_FLAG_PRIO );
+                pipc = ( struct rt_ipc_object * ) rt_mutex_create( name, RT_IPC_FLAG_PRIO );
             }
+            if ( pipc == RT_NULL )
+            {
+                RT_KERNEL_FREE( pxNewQueue );
+                return NULL;
+            }
+            pxNewQueue->rt_ipc = pipc;
         }
 
         return ( QueueHandle_t ) pxNewQueue;
@@ -132,8 +139,7 @@ static volatile rt_uint8_t mutex_index = 0;
 #endif /* configUSE_MUTEXES */
 /*-----------------------------------------------------------*/
 
-#if 0
-//#if ( ( configUSE_MUTEXES == 1 ) && ( configSUPPORT_STATIC_ALLOCATION == 1 ) )
+#if ( ( configUSE_MUTEXES == 1 ) && ( configSUPPORT_STATIC_ALLOCATION == 1 ) )
 
     QueueHandle_t xQueueCreateMutexStatic( const uint8_t ucQueueType,
                                            StaticQueue_t * pxStaticQueue )

@@ -1114,14 +1114,19 @@
 
 typedef struct
 {
+    struct rt_ipc_object *rt_ipc;
+    struct rt_mailbox ipc_obj;
+} StaticQueue_t;
+
+typedef struct
+{
+    struct rt_ipc_object *rt_ipc;
     union
     {
-        struct rt_mailbox mailbox;
         struct rt_semaphore semaphore;
         struct rt_mutex mutex;
-    } u;
-} StaticQueue_t;
-typedef StaticQueue_t StaticSemaphore_t;
+    } ipc_obj;
+} StaticSemaphore_t;
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
