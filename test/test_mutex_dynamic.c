@@ -37,7 +37,7 @@ static void rt_thread_entry1(void *parameter)
     while (1)
     {
         /* pending the mutex */
-        xSemaphoreTakeRecursive(dynamic_mutex, portMAX_DELAY);
+        xSemaphoreTake(dynamic_mutex, portMAX_DELAY);
         /* protect and deal with public variables */
         number1++;
         rt_thread_mdelay(10);
@@ -51,7 +51,7 @@ static void rt_thread_entry1(void *parameter)
             rt_kprintf("mutex protect ,number1 = mumber2 is %d\n", number1);
         }
         /* release the mutex */
-        xSemaphoreGiveRecursive(dynamic_mutex);
+        xSemaphoreGive(dynamic_mutex);
 
         if (number1 >= 100)
         {
@@ -68,10 +68,10 @@ static void rt_thread_entry2(void *parameter)
 {
     while (1)
     {
-        xSemaphoreTakeRecursive(dynamic_mutex, portMAX_DELAY);
+        xSemaphoreTake(dynamic_mutex, portMAX_DELAY);
         number1++;
         number2++;
-        xSemaphoreGiveRecursive(dynamic_mutex);
+        xSemaphoreGive(dynamic_mutex);
 
         if (number1 >= 50)
             return;
@@ -82,7 +82,7 @@ static void rt_thread_entry2(void *parameter)
 int mutex_dynamic(void)
 {
     /* 创建一个动态互斥量 */
-    dynamic_mutex = xSemaphoreCreateRecursiveMutex();
+    dynamic_mutex = xSemaphoreCreateMutex();
     if (dynamic_mutex == RT_NULL)
     {
         rt_kprintf("create dynamic mutex failed.\n");

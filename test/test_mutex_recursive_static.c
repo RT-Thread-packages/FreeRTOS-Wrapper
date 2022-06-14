@@ -38,7 +38,7 @@ static void rt_thread_entry1(void *parameter)
     while (1)
     {
         /* pending the mutex */
-        xSemaphoreTake(static_mutex, portMAX_DELAY);
+        xSemaphoreTakeRecursive(static_mutex, portMAX_DELAY);
         /* protect and deal with public variables */
         number1++;
         rt_thread_mdelay(10);
@@ -52,7 +52,7 @@ static void rt_thread_entry1(void *parameter)
             rt_kprintf("mutex protect ,number1 = mumber2 is %d\n", number1);
         }
         /* release the mutex */
-        xSemaphoreGive(static_mutex);
+        xSemaphoreGiveRecursive(static_mutex);
 
         if (number1 >= 100)
         {
@@ -69,10 +69,10 @@ static void rt_thread_entry2(void *parameter)
 {
     while (1)
     {
-        xSemaphoreTake(static_mutex, portMAX_DELAY);
+        xSemaphoreTakeRecursive(static_mutex, portMAX_DELAY);
         number1++;
         number2++;
-        xSemaphoreGive(static_mutex);
+        xSemaphoreGiveRecursive(static_mutex);
 
         if (number1 >= 50)
             return;
@@ -80,10 +80,10 @@ static void rt_thread_entry2(void *parameter)
 }
 
 /* 互斥量示例的初始化 */
-int mutex_static(void)
+int mutex_recursive_static(void)
 {
     /* 创建一个动态互斥量 */
-    static_mutex = xSemaphoreCreateMutexStatic(&xMutexBuffer);
+    static_mutex = xSemaphoreCreateRecursiveMutexStatic(&xMutexBuffer);
     if (static_mutex == RT_NULL)
     {
         rt_kprintf("create dynamic mutex failed.\n");
@@ -111,4 +111,4 @@ int mutex_static(void)
 }
 
 /* 导出到 msh 命令列表中 */
-MSH_CMD_EXPORT(mutex_static, mutex sample);
+MSH_CMD_EXPORT(mutex_recursive_static, mutex sample);

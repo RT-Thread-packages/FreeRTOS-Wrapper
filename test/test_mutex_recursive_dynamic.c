@@ -26,8 +26,7 @@
 #define THREAD_TIMESLICE        5
 
 /* mutex handler */
-static SemaphoreHandle_t static_mutex = RT_NULL;
-static StaticSemaphore_t xMutexBuffer;
+static SemaphoreHandle_t dynamic_mutex = RT_NULL;
 static rt_uint8_t number1, number2 = 0;
 
 ALIGN(RT_ALIGN_SIZE)
@@ -38,7 +37,7 @@ static void rt_thread_entry1(void *parameter)
     while (1)
     {
         /* pending the mutex */
-        xSemaphoreTake(static_mutex, portMAX_DELAY);
+        xSemaphoreTakeRecursive(dynamic_mutex, portMAX_DELAY);
         /* protect and deal with public variables */
         number1++;
         rt_thread_mdelay(10);
@@ -52,11 +51,11 @@ static void rt_thread_entry1(void *parameter)
             rt_kprintf("mutex protect ,number1 = mumber2 is %d\n", number1);
         }
         /* release the mutex */
-        xSemaphoreGive(static_mutex);
+        xSemaphoreGiveRecursive(dynamic_mutex);
 
         if (number1 >= 100)
         {
-            vSemaphoreDelete(static_mutex);
+            vSemaphoreDelete(dynamic_mutex);
             return;
         }
     }
@@ -69,10 +68,10 @@ static void rt_thread_entry2(void *parameter)
 {
     while (1)
     {
-        xSemaphoreTake(static_mutex, portMAX_DELAY);
+        xSemaphoreTakeRecursive(dynamic_mutex, portMAX_DELAY);
         number1++;
         number2++;
-        xSemaphoreGive(static_mutex);
+        xSemaphoreGiveRecursive(dynamic_mutex);
 
         if (number1 >= 50)
             return;
@@ -80,11 +79,11 @@ static void rt_thread_entry2(void *parameter)
 }
 
 /* 互斥量示例的初始化 */
-int mutex_static(void)
+int mutex_recursive_dynamic(void)
 {
     /* 创建一个动态互斥量 */
-    static_mutex = xSemaphoreCreateMutexStatic(&xMutexBuffer);
-    if (static_mutex == RT_NULL)
+    dynamic_mutex = xSemaphoreCreateRecursiveMutex();
+    if (dynamic_mutex == RT_NULL)
     {
         rt_kprintf("create dynamic mutex failed.\n");
         return -1;
@@ -111,4 +110,4 @@ int mutex_static(void)
 }
 
 /* 导出到 msh 命令列表中 */
-MSH_CMD_EXPORT(mutex_static, mutex sample);
+MSH_CMD_EXPORT(mutex_recursive_dynamic, mutex sample);

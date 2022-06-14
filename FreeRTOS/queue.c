@@ -44,6 +44,7 @@ typedef struct QueueDefinition
 typedef xQUEUE Queue_t;
 
 static volatile rt_uint8_t mutex_index = 0;
+static volatile rt_uint8_t sem_index = 0;
 
 /*-----------------------------------------------------------*/
 
@@ -58,6 +59,10 @@ static volatile rt_uint8_t mutex_index = 0;
         Queue_t * pxNewQueue = NULL;
         char name[RT_NAME_MAX] = {0};
 
+        /* The StaticQueue_t structure and the queue storage area must be
+         * supplied. */
+        configASSERT( pxStaticQueue );
+
         if( ( uxQueueLength > ( UBaseType_t ) 0 ) &&
             ( pxStaticQueue != NULL ) &&
 
@@ -66,16 +71,25 @@ static volatile rt_uint8_t mutex_index = 0;
             ( !( ( pucQueueStorage != NULL ) && ( uxItemSize == 0 ) ) ) &&
             ( !( ( pucQueueStorage == NULL ) && ( uxItemSize != 0 ) ) ) )
         {
-            if ( ( ucQueueType == queueQUEUE_TYPE_RECURSIVE_MUTEX ) )
+            if ( ucQueueType == queueQUEUE_TYPE_RECURSIVE_MUTEX || ucQueueType == queueQUEUE_TYPE_MUTEX )
             {
                 rt_snprintf( name, RT_NAME_MAX - 1, "mutex%02d", mutex_index++ );
                 rt_mutex_init( ( rt_mutex_t ) &( ( StaticSemaphore_t * ) pxStaticQueue )->ipc_obj.mutex, name, RT_IPC_FLAG_PRIO );
+            }
+            else if ( ucQueueType == queueQUEUE_TYPE_BINARY_SEMAPHORE || ucQueueType == queueQUEUE_TYPE_COUNTING_SEMAPHORE )
+            {
+                rt_snprintf( name, RT_NAME_MAX - 1, "sem%02d", sem_index++ );
+                rt_sem_init( ( rt_sem_t ) &( ( StaticSemaphore_t * ) pxStaticQueue )->ipc_obj.semaphore, name, 0, RT_IPC_FLAG_PRIO );
             }
             else
             {
                 return pxNewQueue;
             }
             pxStaticQueue->rt_ipc = ( struct rt_ipc_object * ) &pxStaticQueue->ipc_obj;
+            if ( ucQueueType == queueQUEUE_TYPE_BINARY_SEMAPHORE || ucQueueType == queueQUEUE_TYPE_COUNTING_SEMAPHORE )
+            {
+                ( ( rt_sem_t ) ( pxStaticQueue->rt_ipc ) )->reserved = uxQueueLength;
+            }
             pxNewQueue = ( QueueHandle_t ) pxStaticQueue;
         }
 
@@ -106,15 +120,24 @@ static volatile rt_uint8_t mutex_index = 0;
             {
                 return ( QueueHandle_t ) pxNewQueue;
             }
-            if ( ucQueueType == queueQUEUE_TYPE_RECURSIVE_MUTEX )
+            if ( ucQueueType == queueQUEUE_TYPE_RECURSIVE_MUTEX || ucQueueType == queueQUEUE_TYPE_MUTEX )
             {
                 rt_snprintf( name, RT_NAME_MAX - 1, "mutex%02d", mutex_index++ );
                 pipc = ( struct rt_ipc_object * ) rt_mutex_create( name, RT_IPC_FLAG_PRIO );
+            }
+            else if ( ucQueueType == queueQUEUE_TYPE_BINARY_SEMAPHORE || ucQueueType == queueQUEUE_TYPE_COUNTING_SEMAPHORE )
+            {
+                rt_snprintf( name, RT_NAME_MAX - 1, "sem%02d", sem_index++ );
+                pipc = ( struct rt_ipc_object * ) rt_sem_create( name, 0, RT_IPC_FLAG_PRIO );
             }
             if ( pipc == RT_NULL )
             {
                 RT_KERNEL_FREE( pxNewQueue );
                 return NULL;
+            }
+            if ( ucQueueType == queueQUEUE_TYPE_BINARY_SEMAPHORE || ucQueueType == queueQUEUE_TYPE_COUNTING_SEMAPHORE )
+            {
+                ( ( rt_sem_t ) pipc )->reserved = uxQueueLength;
             }
             pxNewQueue->rt_ipc = pipc;
         }
@@ -180,6 +203,63 @@ static volatile rt_uint8_t mutex_index = 0;
 #endif /* configUSE_RECURSIVE_MUTEXES */
 /*-----------------------------------------------------------*/
 
+#if ( ( configUSE_COUNTING_SEMAPHORES == 1 ) && ( configSUPPORT_STATIC_ALLOCATION == 1 ) )
+
+    QueueHandle_t xQueueCreateCountingSemaphoreStatic( const UBaseType_t uxMaxCount,
+                                                       const UBaseType_t uxInitialCount,
+                                                       StaticQueue_t * pxStaticQueue )
+    {
+        QueueHandle_t xHandle = NULL;
+
+        if( ( uxMaxCount != 0 ) &&
+            ( uxInitialCount <= uxMaxCount ) )
+        {
+            xHandle = xQueueGenericCreateStatic( uxMaxCount, queueSEMAPHORE_QUEUE_ITEM_LENGTH, NULL, pxStaticQueue, queueQUEUE_TYPE_COUNTING_SEMAPHORE );
+
+            if( xHandle != NULL )
+            {
+                ( ( rt_sem_t ) ( ( Queue_t * ) xHandle )->rt_ipc )->value = uxInitialCount;
+            }
+        }
+        else
+        {
+            configASSERT( xHandle );
+        }
+
+        return xHandle;
+    }
+
+#endif /* ( ( configUSE_COUNTING_SEMAPHORES == 1 ) && ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) ) */
+/*-----------------------------------------------------------*/
+
+#if ( ( configUSE_COUNTING_SEMAPHORES == 1 ) && ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) )
+
+    QueueHandle_t xQueueCreateCountingSemaphore( const UBaseType_t uxMaxCount,
+                                                 const UBaseType_t uxInitialCount )
+    {
+        QueueHandle_t xHandle = NULL;
+
+        if( ( uxMaxCount != 0 ) &&
+            ( uxInitialCount <= uxMaxCount ) )
+        {
+            xHandle = xQueueGenericCreate( uxMaxCount, queueSEMAPHORE_QUEUE_ITEM_LENGTH, queueQUEUE_TYPE_COUNTING_SEMAPHORE );
+
+            if( xHandle != NULL )
+            {
+                ( ( rt_sem_t ) ( ( Queue_t * ) xHandle )->rt_ipc )->value = uxInitialCount;
+            }
+        }
+        else
+        {
+            configASSERT( xHandle );
+        }
+
+        return xHandle;
+    }
+
+#endif /* ( ( configUSE_COUNTING_SEMAPHORES == 1 ) && ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) ) */
+/*-----------------------------------------------------------*/
+
 BaseType_t xQueueGenericSend( QueueHandle_t xQueue,
                               const void * const pvItemToQueue,
                               TickType_t xTicksToWait,
@@ -188,6 +268,7 @@ BaseType_t xQueueGenericSend( QueueHandle_t xQueue,
     Queue_t * const pxQueue = xQueue;
     struct rt_ipc_object *pipc;
     rt_uint8_t type;
+    rt_base_t level;
     rt_err_t err = -RT_ERROR;
 
     configASSERT( pxQueue );
@@ -205,6 +286,15 @@ BaseType_t xQueueGenericSend( QueueHandle_t xQueue,
     if ( type == RT_Object_Class_Mutex )
     {
         err = rt_mutex_release( ( rt_mutex_t ) pipc );
+    }
+    else if ( type == RT_Object_Class_Semaphore )
+    {
+        level = rt_hw_interrupt_disable();
+        if ( ( ( rt_sem_t ) pipc )->value < ( ( rt_sem_t ) pipc )->reserved )
+        {
+            err = rt_sem_release( ( rt_sem_t ) pipc );
+        }
+        rt_hw_interrupt_enable( level );
     }
 
     return rt_err_to_freertos( err );
@@ -235,6 +325,10 @@ BaseType_t xQueueSemaphoreTake( QueueHandle_t xQueue,
     if ( type == RT_Object_Class_Mutex )
     {
         err = rt_mutex_take( ( rt_mutex_t ) pipc, ( rt_int32_t ) xTicksToWait );
+    }
+    else if ( type == RT_Object_Class_Semaphore )
+    {
+        err = rt_sem_take( ( rt_sem_t ) pipc, ( rt_int32_t ) xTicksToWait );
     }
 
     return rt_err_to_freertos( err );
