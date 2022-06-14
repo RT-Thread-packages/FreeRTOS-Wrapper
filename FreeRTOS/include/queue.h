@@ -171,6 +171,11 @@ void vQueueDelete( QueueHandle_t xQueue );
 QueueHandle_t xQueueCreateMutex( const uint8_t ucQueueType );
 QueueHandle_t xQueueCreateMutexStatic( const uint8_t ucQueueType,
                                        StaticQueue_t * pxStaticQueue );
+QueueHandle_t xQueueCreateCountingSemaphore( const UBaseType_t uxMaxCount,
+                                             const UBaseType_t uxInitialCount );
+QueueHandle_t xQueueCreateCountingSemaphoreStatic( const UBaseType_t uxMaxCount,
+                                                   const UBaseType_t uxInitialCount,
+                                                   StaticQueue_t * pxStaticQueue );
 BaseType_t xQueueSemaphoreTake( QueueHandle_t xQueue,
                                 TickType_t xTicksToWait );
 

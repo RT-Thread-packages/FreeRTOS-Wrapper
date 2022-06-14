@@ -10,12 +10,10 @@
  */
 
 /*
- * Demo: mutex(es)
+ * Demo: mutex
  *
- * This demo demonstrates how the mutex manage the shared resource.
+ * This demo demonstrates statically creating a mutex and using it to manage shared resources.
  *
- * read more:
- *    https://www.rt-thread.io/document/site/thread-sync/thread-sync/#mutex
  */
 
 #include <rtthread.h>
@@ -27,7 +25,8 @@
 
 /* mutex handler */
 static SemaphoreHandle_t static_mutex = RT_NULL;
-StaticSemaphore_t xMutexBuffer;
+/* Buffer to store mutex structure */
+static StaticSemaphore_t xMutexBuffer;
 static rt_uint8_t number1, number2 = 0;
 
 ALIGN(RT_ALIGN_SIZE)
@@ -38,7 +37,7 @@ static void rt_thread_entry1(void *parameter)
     while (1)
     {
         /* pending the mutex */
-        xSemaphoreTakeRecursive(static_mutex, portMAX_DELAY);
+        xSemaphoreTake(static_mutex, portMAX_DELAY);
         /* protect and deal with public variables */
         number1++;
         rt_thread_mdelay(10);
@@ -52,7 +51,7 @@ static void rt_thread_entry1(void *parameter)
             rt_kprintf("mutex protect ,number1 = mumber2 is %d\n", number1);
         }
         /* release the mutex */
-        xSemaphoreGiveRecursive(static_mutex);
+        xSemaphoreGive(static_mutex);
 
         if (number1 >= 100)
         {
@@ -69,24 +68,23 @@ static void rt_thread_entry2(void *parameter)
 {
     while (1)
     {
-        xSemaphoreTakeRecursive(static_mutex, portMAX_DELAY);
+        xSemaphoreTake(static_mutex, portMAX_DELAY);
         number1++;
         number2++;
-        xSemaphoreGiveRecursive(static_mutex);
+        xSemaphoreGive(static_mutex);
 
         if (number1 >= 50)
             return;
     }
 }
 
-/* 互斥量示例的初始化 */
 int mutex_static(void)
 {
-    /* 创建一个动态互斥量 */
-    static_mutex = xSemaphoreCreateRecursiveMutexStatic(&xMutexBuffer);
+    /* Create a mutex statically */
+    static_mutex = xSemaphoreCreateMutexStatic(&xMutexBuffer);
     if (static_mutex == RT_NULL)
     {
-        rt_kprintf("create dynamic mutex failed.\n");
+        rt_kprintf("create static mutex failed.\n");
         return -1;
     }
 
@@ -110,5 +108,4 @@ int mutex_static(void)
     return 0;
 }
 
-/* 导出到 msh 命令列表中 */
 MSH_CMD_EXPORT(mutex_static, mutex sample);

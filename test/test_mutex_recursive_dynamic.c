@@ -10,9 +10,9 @@
  */
 
 /*
- * Demo: mutex
+ * Demo: recursive mutex
  *
- * This demo demonstrates dynamically creating a mutex and using it to manage shared resources.
+ * This demo demonstrates dynamically creating a recursive mutex and using it to manage shared resources.
  *
  */
 
@@ -35,7 +35,7 @@ static void rt_thread_entry1(void *parameter)
     while (1)
     {
         /* pending the mutex */
-        xSemaphoreTake(dynamic_mutex, portMAX_DELAY);
+        xSemaphoreTakeRecursive(dynamic_mutex, portMAX_DELAY);
         /* protect and deal with public variables */
         number1++;
         rt_thread_mdelay(10);
@@ -49,7 +49,7 @@ static void rt_thread_entry1(void *parameter)
             rt_kprintf("mutex protect ,number1 = mumber2 is %d\n", number1);
         }
         /* release the mutex */
-        xSemaphoreGive(dynamic_mutex);
+        xSemaphoreGiveRecursive(dynamic_mutex);
 
         if (number1 >= 100)
         {
@@ -66,20 +66,20 @@ static void rt_thread_entry2(void *parameter)
 {
     while (1)
     {
-        xSemaphoreTake(dynamic_mutex, portMAX_DELAY);
+        xSemaphoreTakeRecursive(dynamic_mutex, portMAX_DELAY);
         number1++;
         number2++;
-        xSemaphoreGive(dynamic_mutex);
+        xSemaphoreGiveRecursive(dynamic_mutex);
 
         if (number1 >= 50)
             return;
     }
 }
 
-int mutex_dynamic(void)
+int mutex_recursive_dynamic(void)
 {
-    /* Create a mutex dynamically */
-    dynamic_mutex = xSemaphoreCreateMutex();
+    /* Create a recursive mutex dynamically */
+    dynamic_mutex = xSemaphoreCreateRecursiveMutex();
     if (dynamic_mutex == RT_NULL)
     {
         rt_kprintf("create dynamic mutex failed.\n");
@@ -106,4 +106,4 @@ int mutex_dynamic(void)
     return 0;
 }
 
-MSH_CMD_EXPORT(mutex_dynamic, mutex sample);
+MSH_CMD_EXPORT(mutex_recursive_dynamic, mutex sample);

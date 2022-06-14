@@ -56,6 +56,7 @@
 /* *INDENT-ON* */
 
 #include <rtthread.h>
+#include <rthw.h>
 
 /* Application specific configuration options. */
 #include "FreeRTOSConfig.h"

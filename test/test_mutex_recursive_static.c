@@ -10,9 +10,9 @@
  */
 
 /*
- * Demo: mutex
+ * Demo: recursive mutex
  *
- * This demo demonstrates dynamically creating a mutex and using it to manage shared resources.
+ * This demo demonstrates statically creating a recursive mutex and using it to manage shared resources.
  *
  */
 
@@ -24,7 +24,9 @@
 #define THREAD_TIMESLICE        5
 
 /* mutex handler */
-static SemaphoreHandle_t dynamic_mutex = RT_NULL;
+static SemaphoreHandle_t static_mutex = RT_NULL;
+/* Buffer to store mutex structure */
+static StaticSemaphore_t xMutexBuffer;
 static rt_uint8_t number1, number2 = 0;
 
 ALIGN(RT_ALIGN_SIZE)
@@ -35,7 +37,7 @@ static void rt_thread_entry1(void *parameter)
     while (1)
     {
         /* pending the mutex */
-        xSemaphoreTake(dynamic_mutex, portMAX_DELAY);
+        xSemaphoreTakeRecursive(static_mutex, portMAX_DELAY);
         /* protect and deal with public variables */
         number1++;
         rt_thread_mdelay(10);
@@ -49,11 +51,11 @@ static void rt_thread_entry1(void *parameter)
             rt_kprintf("mutex protect ,number1 = mumber2 is %d\n", number1);
         }
         /* release the mutex */
-        xSemaphoreGive(dynamic_mutex);
+        xSemaphoreGiveRecursive(static_mutex);
 
         if (number1 >= 100)
         {
-            vSemaphoreDelete(dynamic_mutex);
+            vSemaphoreDelete(static_mutex);
             return;
         }
     }
@@ -66,23 +68,23 @@ static void rt_thread_entry2(void *parameter)
 {
     while (1)
     {
-        xSemaphoreTake(dynamic_mutex, portMAX_DELAY);
+        xSemaphoreTakeRecursive(static_mutex, portMAX_DELAY);
         number1++;
         number2++;
-        xSemaphoreGive(dynamic_mutex);
+        xSemaphoreGiveRecursive(static_mutex);
 
         if (number1 >= 50)
             return;
     }
 }
 
-int mutex_dynamic(void)
+int mutex_recursive_static(void)
 {
-    /* Create a mutex dynamically */
-    dynamic_mutex = xSemaphoreCreateMutex();
-    if (dynamic_mutex == RT_NULL)
+    /* Create a recursive mutex statically */
+    static_mutex = xSemaphoreCreateRecursiveMutexStatic(&xMutexBuffer);
+    if (static_mutex == RT_NULL)
     {
-        rt_kprintf("create dynamic mutex failed.\n");
+        rt_kprintf("create static mutex failed.\n");
         return -1;
     }
 
@@ -106,4 +108,4 @@ int mutex_dynamic(void)
     return 0;
 }
 
-MSH_CMD_EXPORT(mutex_dynamic, mutex sample);
+MSH_CMD_EXPORT(mutex_recursive_static, mutex sample);
