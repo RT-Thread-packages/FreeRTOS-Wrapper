@@ -9,11 +9,14 @@
  */
 
 /*
- * 程序清单：信号量例程
+ * Demo: semaphore
+ * This demo creates one binary semaphore statically
+ * It creates two threads:
+ *    1) thread #1: give the semaphore
+ *    2) thread #2: take the semaphore
  *
- * 该例程创建了一个动态信号量，初始化两个线程，线程1在count每计数10次时，
- * 发送一个信号量，线程2在接收信号量后，对number进行加1操作
  */
+
 #include <rtthread.h>
 #include <FreeRTOS.h>
 #include <semphr.h>
@@ -21,8 +24,9 @@
 #define THREAD_PRIORITY         25
 #define THREAD_TIMESLICE        5
 
-/* 指向信号量的指针 */
+/* Semaphore handle */
 static SemaphoreHandle_t static_sem = RT_NULL;
+/* Buffer to store semaphore structure */
 static StaticSemaphore_t xMutexBuffer;
 
 ALIGN(RT_ALIGN_SIZE)
@@ -42,7 +46,7 @@ static void rt_thread1_entry(void *parameter)
         else
             return;
 
-        /* count每计数10次，就释放一次信号量 */
+        /* Release the semaphore when count is incremented by 10 */
         if (0 == (count % 10))
         {
             rt_kprintf("thread1 release a static semaphore.\n");
@@ -65,7 +69,7 @@ static void rt_thread2_entry(void *parameter)
     static rt_uint8_t number = 0;
     while (1)
     {
-        /* 永久方式等待信号量，获取到信号量，则执行number自加的操作 */
+        /* Block on the semaphore indefinitely. Increment number after taking the semaphore */
         result = xSemaphoreTake(static_sem, portMAX_DELAY);
         if (result != pdPASS)
         {
@@ -80,10 +84,9 @@ static void rt_thread2_entry(void *parameter)
     }
 }
 
-/* 信号量示例的初始化 */
 int semaphore_binary_static()
 {
-    /* 创建一个动态信号量，初始值是0 */
+    /* Create a binary semaphore statically */
     static_sem = xSemaphoreCreateBinaryStatic(&xMutexBuffer);
     if (static_sem == RT_NULL)
     {
@@ -111,5 +114,4 @@ int semaphore_binary_static()
     return 0;
 }
 
-/* 导出到 msh 命令列表中 */
 MSH_CMD_EXPORT(semaphore_binary_static, semaphore sample);

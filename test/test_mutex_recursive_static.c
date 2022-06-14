@@ -10,12 +10,10 @@
  */
 
 /*
- * Demo: mutex(es)
+ * Demo: recursive mutex
  *
- * This demo demonstrates how the mutex manage the shared resource.
+ * This demo demonstrates statically creating a recursive mutex and using it to manage shared resources.
  *
- * read more:
- *    https://www.rt-thread.io/document/site/thread-sync/thread-sync/#mutex
  */
 
 #include <rtthread.h>
@@ -27,6 +25,7 @@
 
 /* mutex handler */
 static SemaphoreHandle_t static_mutex = RT_NULL;
+/* Buffer to store mutex structure */
 static StaticSemaphore_t xMutexBuffer;
 static rt_uint8_t number1, number2 = 0;
 
@@ -79,10 +78,9 @@ static void rt_thread_entry2(void *parameter)
     }
 }
 
-/* 互斥量示例的初始化 */
 int mutex_recursive_static(void)
 {
-    /* 创建一个动态互斥量 */
+    /* Create a static recursive mutex */
     static_mutex = xSemaphoreCreateRecursiveMutexStatic(&xMutexBuffer);
     if (static_mutex == RT_NULL)
     {
@@ -110,5 +108,4 @@ int mutex_recursive_static(void)
     return 0;
 }
 
-/* 导出到 msh 命令列表中 */
 MSH_CMD_EXPORT(mutex_recursive_static, mutex sample);

@@ -9,11 +9,14 @@
  */
 
 /*
- * 程序清单：信号量例程
+ * Demo: semaphore
+ * This demo creates one counting semaphore dynamically
+ * It creates two threads:
+ *    1) thread #1: take the semaphore until its value reaches 0
+ *    2) thread #2: give the semaphore until its value reaches maximum
  *
- * 该例程创建了一个动态信号量，初始化两个线程，线程1在count每计数10次时，
- * 发送一个信号量，线程2在接收信号量后，对number进行加1操作
  */
+
 #include <rtthread.h>
 #include <FreeRTOS.h>
 #include <semphr.h>
@@ -21,7 +24,7 @@
 #define THREAD_PRIORITY         25
 #define THREAD_TIMESLICE        5
 
-/* 指向信号量的指针 */
+/* Semaphore handle */
 static SemaphoreHandle_t dynamic_sem = RT_NULL;
 
 ALIGN(RT_ALIGN_SIZE)
@@ -33,6 +36,7 @@ static void rt_thread1_entry(void *parameter)
     static rt_uint8_t number = 0;
     while (1)
     {
+        /* Thread1 starts when thread2 is delayed. Semaphore value is 5. Should take it successfully for five times */
         for (number = 0; number < 5; number++)
         {
             result = xSemaphoreTake(dynamic_sem, portMAX_DELAY);
@@ -46,6 +50,7 @@ static void rt_thread1_entry(void *parameter)
                 rt_kprintf("thread1 take a dynamic semaphore. number = %d\n", number);
             }
         }
+        /* Cannot take the semaphore for the sixth time because the value is 0 */
         result = xSemaphoreTake(dynamic_sem, 0);
         if (result != errQUEUE_EMPTY)
         {
@@ -64,6 +69,7 @@ static void rt_thread2_entry(void *parameter)
     static rt_uint8_t number = 0;
     while (1)
     {
+        /* Thread2 runs before thread1. The semaphore value is 0. Should give the semaphore 5 times successfully */
         for (number = 0; number < 5; number++)
         {
             result = xSemaphoreGive(dynamic_sem);
@@ -77,6 +83,7 @@ static void rt_thread2_entry(void *parameter)
                 rt_kprintf("thread2 release a dynamic semaphore. number = %d\n", number);
             }
         }
+        /* Cannot give the semaphore for the sixth time because the max value is reached */
         result = xSemaphoreGive(dynamic_sem);
         if (result != errQUEUE_FULL)
         {
@@ -86,10 +93,9 @@ static void rt_thread2_entry(void *parameter)
     }
 }
 
-/* 信号量示例的初始化 */
 int semaphore_counting_dynamic()
 {
-    /* 创建一个动态信号量，初始值是0 */
+    /* Create a counting semaphore dynamically. Max value is 5. Initial value is 0. */
     dynamic_sem = xSemaphoreCreateCounting(5, 0);
     if (dynamic_sem == RT_NULL)
     {
@@ -117,5 +123,4 @@ int semaphore_counting_dynamic()
     return 0;
 }
 
-/* 导出到 msh 命令列表中 */
 MSH_CMD_EXPORT(semaphore_counting_dynamic, semaphore sample);

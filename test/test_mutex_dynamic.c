@@ -10,12 +10,10 @@
  */
 
 /*
- * Demo: mutex(es)
+ * Demo: mutex
  *
- * This demo demonstrates how the mutex manage the shared resource.
+ * This demo demonstrates dynamically creating a mutex and using it to manage shared resources.
  *
- * read more:
- *    https://www.rt-thread.io/document/site/thread-sync/thread-sync/#mutex
  */
 
 #include <rtthread.h>
@@ -78,10 +76,9 @@ static void rt_thread_entry2(void *parameter)
     }
 }
 
-/* 互斥量示例的初始化 */
 int mutex_dynamic(void)
 {
-    /* 创建一个动态互斥量 */
+    /* Create a mutex dynamically */
     dynamic_mutex = xSemaphoreCreateMutex();
     if (dynamic_mutex == RT_NULL)
     {
@@ -109,5 +106,4 @@ int mutex_dynamic(void)
     return 0;
 }
 
-/* 导出到 msh 命令列表中 */
 MSH_CMD_EXPORT(mutex_dynamic, mutex sample);
