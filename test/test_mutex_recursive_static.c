@@ -80,11 +80,11 @@ static void rt_thread_entry2(void *parameter)
 
 int mutex_recursive_static(void)
 {
-    /* Create a static recursive mutex */
+    /* Create a recursive mutex statically */
     static_mutex = xSemaphoreCreateRecursiveMutexStatic(&xMutexBuffer);
     if (static_mutex == RT_NULL)
     {
-        rt_kprintf("create dynamic mutex failed.\n");
+        rt_kprintf("create static mutex failed.\n");
         return -1;
     }
 
