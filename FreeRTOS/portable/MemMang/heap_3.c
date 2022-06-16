@@ -53,7 +53,7 @@ void * pvPortMalloc( size_t xWantedSize )
 {
     void * pvReturn;
 
-    pvReturn = malloc( xWantedSize );
+    pvReturn = RT_KERNEL_MALLOC( xWantedSize );
 
     #if ( configUSE_MALLOC_FAILED_HOOK == 1 )
         {
@@ -73,6 +73,6 @@ void vPortFree( void * pv )
 {
     if( pv )
     {
-        free( pv );
+        RT_KERNEL_FREE( pv );
     }
 }

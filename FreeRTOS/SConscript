@@ -4,7 +4,7 @@ from building import *
 cwd = GetCurrentDir()
 src	= Glob('*.c')
 src += Glob(os.path.join("portable", "rt-thread", "*.c"))
-src += Glob(os.path.join("portable", "MemMang", "heap_1.c"))
+src += Glob(os.path.join("portable", "MemMang", "heap_3.c"))
 
 CPPPATH = [os.path.join(cwd, "include"), os.path.join(cwd, "portable", "rt-thread")]
 

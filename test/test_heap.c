@@ -20,7 +20,7 @@
 #include <FreeRTOS.h>
 
 // Set to 1 if using heap_5.c
-#define USE_HEAP_5     1
+#define USE_HEAP_5     0
 
 #if USE_HEAP_5 == 1
 rt_uint8_t heap[512];
