@@ -61,6 +61,23 @@
 
 /*-----------------------------------------------------------*/
 
+/* Architecture specifics. */
+    #define portBYTE_ALIGNMENT      RT_ALIGN_SIZE
+    #define portPOINTER_SIZE_TYPE   rt_size_t
+/*-----------------------------------------------------------*/
+
+/* Critical section management. */
+    extern void vPortEnterCritical( void );
+    extern void vPortExitCritical( void );
+    #define portSET_INTERRUPT_MASK_FROM_ISR()         rt_hw_interrupt_disable()
+    #define portCLEAR_INTERRUPT_MASK_FROM_ISR( x )    rt_hw_interrupt_enable( x )
+    #define portDISABLE_INTERRUPTS()                  vPortEnterCritical()
+    #define portENABLE_INTERRUPTS()                   vPortExitCritical()
+    #define portENTER_CRITICAL()                      vPortEnterCritical()
+    #define portEXIT_CRITICAL()                       vPortExitCritical()
+
+/*-----------------------------------------------------------*/
+
     #ifdef __cplusplus
         }
     #endif
