@@ -1116,12 +1116,14 @@
 typedef struct
 {
     struct rt_ipc_object *rt_ipc;
+    rt_uint16_t max_value;
     struct rt_mailbox ipc_obj;
 } StaticQueue_t;
 
 typedef struct
 {
     struct rt_ipc_object *rt_ipc;
+    rt_uint16_t max_value;
     union
     {
         struct rt_semaphore semaphore;
