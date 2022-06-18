@@ -59,6 +59,12 @@
     typedef rt_tick_t        TickType_t;
     #define portMAX_DELAY    ( TickType_t ) RT_TICK_MAX
 
+    struct rt_semaphore_wrapper
+    {
+        struct rt_semaphore sem;
+        rt_uint16_t max_value;
+    };
+
 /*-----------------------------------------------------------*/
 
 /* Architecture specifics. */
@@ -77,6 +83,8 @@
     #define portEXIT_CRITICAL()                       vPortExitCritical()
 
 /*-----------------------------------------------------------*/
+
+    BaseType_t rt_err_to_freertos(rt_err_t rt_err);
 
     #ifdef __cplusplus
         }

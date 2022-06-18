@@ -1124,7 +1124,7 @@ typedef struct
     struct rt_ipc_object *rt_ipc;
     union
     {
-        struct rt_semaphore semaphore;
+        struct rt_semaphore_wrapper semaphore;
         struct rt_mutex mutex;
     } ipc_obj;
 } StaticSemaphore_t;

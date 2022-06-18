@@ -80,16 +80,13 @@ static volatile rt_uint8_t sem_index = 0;
             {
                 rt_snprintf( name, RT_NAME_MAX - 1, "sem%02d", sem_index++ );
                 rt_sem_init( ( rt_sem_t ) &( ( StaticSemaphore_t * ) pxStaticQueue )->ipc_obj.semaphore, name, 0, RT_IPC_FLAG_PRIO );
+                ( ( StaticSemaphore_t * ) pxStaticQueue )->ipc_obj.semaphore.max_value = uxQueueLength;
             }
             else
             {
                 return pxNewQueue;
             }
             pxStaticQueue->rt_ipc = ( struct rt_ipc_object * ) &pxStaticQueue->ipc_obj;
-            if ( ucQueueType == queueQUEUE_TYPE_BINARY_SEMAPHORE || ucQueueType == queueQUEUE_TYPE_COUNTING_SEMAPHORE )
-            {
-                ( ( rt_sem_t ) ( pxStaticQueue->rt_ipc ) )->reserved = uxQueueLength;
-            }
             pxNewQueue = ( QueueHandle_t ) pxStaticQueue;
         }
 
@@ -128,16 +125,19 @@ static volatile rt_uint8_t sem_index = 0;
             else if ( ucQueueType == queueQUEUE_TYPE_BINARY_SEMAPHORE || ucQueueType == queueQUEUE_TYPE_COUNTING_SEMAPHORE )
             {
                 rt_snprintf( name, RT_NAME_MAX - 1, "sem%02d", sem_index++ );
-                pipc = ( struct rt_ipc_object * ) rt_sem_create( name, 0, RT_IPC_FLAG_PRIO );
+                pipc = ( struct rt_ipc_object * ) RT_KERNEL_MALLOC( sizeof( struct rt_semaphore_wrapper ) );
+                if ( pipc != RT_NULL )
+                {
+                    rt_sem_init( ( rt_sem_t ) pipc, name, 0, RT_IPC_FLAG_PRIO );
+                    ( ( struct rt_semaphore_wrapper * ) pipc )->max_value = uxQueueLength;
+                    /* Mark as static so we can distinguish in vQueueDelete */
+                    pipc->parent.type &= ~RT_Object_Class_Static;
+                }
             }
             if ( pipc == RT_NULL )
             {
                 RT_KERNEL_FREE( pxNewQueue );
                 return NULL;
-            }
-            if ( ucQueueType == queueQUEUE_TYPE_BINARY_SEMAPHORE || ucQueueType == queueQUEUE_TYPE_COUNTING_SEMAPHORE )
-            {
-                ( ( rt_sem_t ) pipc )->reserved = uxQueueLength;
             }
             pxNewQueue->rt_ipc = pipc;
         }
@@ -290,7 +290,7 @@ BaseType_t xQueueGenericSend( QueueHandle_t xQueue,
     else if ( type == RT_Object_Class_Semaphore )
     {
         level = rt_hw_interrupt_disable();
-        if ( ( ( rt_sem_t ) pipc )->value < ( ( rt_sem_t ) pipc )->reserved )
+        if ( ( ( rt_sem_t ) pipc )->value < ( ( struct rt_semaphore_wrapper * ) pipc )->max_value )
         {
             err = rt_sem_release( ( rt_sem_t ) pipc );
         }
@@ -376,7 +376,10 @@ void vQueueDelete( QueueHandle_t xQueue )
         }
         else if ( type == RT_Object_Class_Semaphore )
         {
-            rt_sem_delete( ( rt_sem_t ) pipc );
+            /* Allocated with rt_sem_init in xQueueGenericCreate */
+            pipc->parent.type |= RT_Object_Class_Static;
+            rt_sem_detach( ( rt_sem_t ) pipc );
+            RT_KERNEL_FREE( pipc );
         }
         else if ( type == RT_Object_Class_MailBox )
         {
