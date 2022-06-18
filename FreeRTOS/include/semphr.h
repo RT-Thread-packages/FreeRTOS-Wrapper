@@ -550,6 +550,133 @@ typedef QueueHandle_t SemaphoreHandle_t;
 /**
  * semphr. h
  * @code{c}
+ * xSemaphoreGiveFromISR(
+ *                        SemaphoreHandle_t xSemaphore,
+ *                        BaseType_t *pxHigherPriorityTaskWoken
+ *                    );
+ * @endcode
+ *
+ * <i>Macro</i> to  release a semaphore.  The semaphore must have previously been
+ * created with a call to xSemaphoreCreateBinary() or xSemaphoreCreateCounting().
+ *
+ * Mutex type semaphores (those created using a call to xSemaphoreCreateMutex())
+ * must not be used with this macro.
+ *
+ * This macro can be used from an ISR.
+ *
+ * @param xSemaphore A handle to the semaphore being released.  This is the
+ * handle returned when the semaphore was created.
+ *
+ * @param pxHigherPriorityTaskWoken xSemaphoreGiveFromISR() will set
+ * *pxHigherPriorityTaskWoken to pdTRUE if giving the semaphore caused a task
+ * to unblock, and the unblocked task has a priority higher than the currently
+ * running task.  If xSemaphoreGiveFromISR() sets this value to pdTRUE then
+ * a context switch should be requested before the interrupt is exited.
+ *
+ * @return pdTRUE if the semaphore was successfully given, otherwise errQUEUE_FULL.
+ *
+ * Example usage:
+ * @code{c}
+ \#define LONG_TIME 0xffff
+ \#define TICKS_TO_WAIT 10
+ * SemaphoreHandle_t xSemaphore = NULL;
+ *
+ * // Repetitive task.
+ * void vATask( void * pvParameters )
+ * {
+ *  for( ;; )
+ *  {
+ *      // We want this task to run every 10 ticks of a timer.  The semaphore
+ *      // was created before this task was started.
+ *
+ *      // Block waiting for the semaphore to become available.
+ *      if( xSemaphoreTake( xSemaphore, LONG_TIME ) == pdTRUE )
+ *      {
+ *          // It is time to execute.
+ *
+ *          // ...
+ *
+ *          // We have finished our task.  Return to the top of the loop where
+ *          // we will block on the semaphore until it is time to execute
+ *          // again.  Note when using the semaphore for synchronisation with an
+ *          // ISR in this manner there is no need to 'give' the semaphore back.
+ *      }
+ *  }
+ * }
+ *
+ * // Timer ISR
+ * void vTimerISR( void * pvParameters )
+ * {
+ * static uint8_t ucLocalTickCount = 0;
+ * static BaseType_t xHigherPriorityTaskWoken;
+ *
+ *  // A timer tick has occurred.
+ *
+ *  // ... Do other time functions.
+ *
+ *  // Is it time for vATask () to run?
+ *  xHigherPriorityTaskWoken = pdFALSE;
+ *  ucLocalTickCount++;
+ *  if( ucLocalTickCount >= TICKS_TO_WAIT )
+ *  {
+ *      // Unblock the task by releasing the semaphore.
+ *      xSemaphoreGiveFromISR( xSemaphore, &xHigherPriorityTaskWoken );
+ *
+ *      // Reset the count so we release the semaphore again in 10 ticks time.
+ *      ucLocalTickCount = 0;
+ *  }
+ *
+ *  if( xHigherPriorityTaskWoken != pdFALSE )
+ *  {
+ *      // We can force a context switch here.  Context switching from an
+ *      // ISR uses port specific syntax.  Check the demo task for your port
+ *      // to find the syntax required.
+ *  }
+ * }
+ * @endcode
+ * \defgroup xSemaphoreGiveFromISR xSemaphoreGiveFromISR
+ * \ingroup Semaphores
+ */
+#define xSemaphoreGiveFromISR( xSemaphore, pxHigherPriorityTaskWoken )    xQueueGiveFromISR( ( QueueHandle_t ) ( xSemaphore ), ( pxHigherPriorityTaskWoken ) )
+
+/**
+ * semphr. h
+ * @code{c}
+ * xSemaphoreTakeFromISR(
+ *                        SemaphoreHandle_t xSemaphore,
+ *                        BaseType_t *pxHigherPriorityTaskWoken
+ *                    );
+ * @endcode
+ *
+ * <i>Macro</i> to  take a semaphore from an ISR.  The semaphore must have
+ * previously been created with a call to xSemaphoreCreateBinary() or
+ * xSemaphoreCreateCounting().
+ *
+ * Mutex type semaphores (those created using a call to xSemaphoreCreateMutex())
+ * must not be used with this macro.
+ *
+ * This macro can be used from an ISR, however taking a semaphore from an ISR
+ * is not a common operation.  It is likely to only be useful when taking a
+ * counting semaphore when an interrupt is obtaining an object from a resource
+ * pool (when the semaphore count indicates the number of resources available).
+ *
+ * @param xSemaphore A handle to the semaphore being taken.  This is the
+ * handle returned when the semaphore was created.
+ *
+ * @param pxHigherPriorityTaskWoken xSemaphoreTakeFromISR() will set
+ * *pxHigherPriorityTaskWoken to pdTRUE if taking the semaphore caused a task
+ * to unblock, and the unblocked task has a priority higher than the currently
+ * running task.  If xSemaphoreTakeFromISR() sets this value to pdTRUE then
+ * a context switch should be requested before the interrupt is exited.
+ *
+ * @return pdTRUE if the semaphore was successfully taken, otherwise
+ * pdFALSE
+ */
+#define xSemaphoreTakeFromISR( xSemaphore, pxHigherPriorityTaskWoken )    xQueueReceiveFromISR( ( QueueHandle_t ) ( xSemaphore ), NULL, ( pxHigherPriorityTaskWoken ) )
+
+/**
+ * semphr. h
+ * @code{c}
  * SemaphoreHandle_t xSemaphoreCreateMutex( void );
  * @endcode
  *

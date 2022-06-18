@@ -130,7 +130,7 @@ static volatile rt_uint8_t sem_index = 0;
                 {
                     rt_sem_init( ( rt_sem_t ) pipc, name, 0, RT_IPC_FLAG_PRIO );
                     ( ( struct rt_semaphore_wrapper * ) pipc )->max_value = uxQueueLength;
-                    /* Mark as static so we can distinguish in vQueueDelete */
+                    /* Mark as dynamic so we can distinguish in vQueueDelete */
                     pipc->parent.type &= ~RT_Object_Class_Static;
                 }
             }
@@ -301,6 +301,39 @@ BaseType_t xQueueGenericSend( QueueHandle_t xQueue,
 }
 /*-----------------------------------------------------------*/
 
+BaseType_t xQueueGiveFromISR( QueueHandle_t xQueue,
+                              BaseType_t * const pxHigherPriorityTaskWoken )
+{
+    Queue_t * const pxQueue = xQueue;
+    struct rt_ipc_object *pipc;
+    rt_uint8_t type;
+    rt_base_t level;
+    rt_err_t err = -RT_ERROR
+
+    configASSERT( pxQueue );
+
+    pipc = pxQueue->rt_ipc;
+    RT_ASSERT( pipc != RT_NULL );
+    type = rt_object_get_type( &pipc->parent );
+    RT_ASSERT( type != RT_Object_Class_Mutex );
+    if ( type == RT_Object_Class_Semaphore )
+    {
+        level = rt_hw_interrupt_disable();
+        if ( ( ( rt_sem_t ) pipc )->value < ( ( struct rt_semaphore_wrapper * ) pipc )->max_value )
+        {
+            err = rt_sem_release( ( rt_sem_t ) pipc );
+        }
+        rt_hw_interrupt_enable( level );
+    }
+    if ( pxHigherPriorityTaskWoken != NULL )
+    {
+        *pxHigherPriorityTaskWoken = pdFALSE;
+    }
+
+    return rt_err_to_freertos( err );
+}
+/*-----------------------------------------------------------*/
+
 BaseType_t xQueueSemaphoreTake( QueueHandle_t xQueue,
                                 TickType_t xTicksToWait )
 {
@@ -329,6 +362,34 @@ BaseType_t xQueueSemaphoreTake( QueueHandle_t xQueue,
     else if ( type == RT_Object_Class_Semaphore )
     {
         err = rt_sem_take( ( rt_sem_t ) pipc, ( rt_int32_t ) xTicksToWait );
+    }
+
+    return rt_err_to_freertos( err );
+}
+/*-----------------------------------------------------------*/
+
+BaseType_t xQueueReceiveFromISR( QueueHandle_t xQueue,
+                                 void * const pvBuffer,
+                                 BaseType_t * const pxHigherPriorityTaskWoken )
+{
+    Queue_t * const pxQueue = xQueue;
+    struct rt_ipc_object *pipc;
+    rt_uint8_t type;
+    rt_err_t err = -RT_ERROR
+
+    configASSERT( pxQueue );
+
+    pipc = pxQueue->rt_ipc;
+    RT_ASSERT( pipc != RT_NULL );
+    type = rt_object_get_type( &pipc->parent );
+    RT_ASSERT( type != RT_Object_Class_Mutex );
+    if ( type == RT_Object_Class_Semaphore )
+    {
+        err = rt_sem_take( ( rt_sem_t ) pipc, RT_WAITING_NO );
+    }
+    if ( pxHigherPriorityTaskWoken != NULL )
+    {
+        *pxHigherPriorityTaskWoken = pdFALSE;
     }
 
     return rt_err_to_freertos( err );
