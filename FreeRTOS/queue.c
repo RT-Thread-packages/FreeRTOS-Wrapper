@@ -130,6 +130,7 @@ static volatile rt_uint8_t sem_index = 0;
                 {
                     rt_sem_init( ( rt_sem_t ) pipc, name, 0, RT_IPC_FLAG_PRIO );
                     ( ( struct rt_semaphore_wrapper * ) pipc )->max_value = uxQueueLength;
+                    /* Mark as static so we can distinguish in vQueueDelete */
                     pipc->parent.type &= ~RT_Object_Class_Static;
                 }
             }
@@ -375,6 +376,7 @@ void vQueueDelete( QueueHandle_t xQueue )
         }
         else if ( type == RT_Object_Class_Semaphore )
         {
+            /* Allocated with rt_sem_init in xQueueGenericCreate */
             pipc->parent.type |= RT_Object_Class_Static;
             rt_sem_detach( ( rt_sem_t ) pipc );
             RT_KERNEL_FREE( pipc );
