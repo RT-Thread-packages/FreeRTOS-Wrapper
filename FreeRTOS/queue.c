@@ -385,7 +385,7 @@ BaseType_t xQueueReceiveFromISR( QueueHandle_t xQueue,
     RT_ASSERT( type != RT_Object_Class_Mutex );
     if ( type == RT_Object_Class_Semaphore )
     {
-        err = rt_sem_take( ( rt_sem_t ) pipc, 0 );
+        err = rt_sem_take( ( rt_sem_t ) pipc, RT_WAITING_NO );
     }
     if ( pxHigherPriorityTaskWoken != NULL )
     {
