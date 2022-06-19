@@ -10,13 +10,12 @@
  */
 
 /*
- * Demo: mutex
+ * Demo: heap
  *
  * This demo demonstrates allocating memory from the heap
  *
  */
 
-#include <rtthread.h>
 #include <FreeRTOS.h>
 
 // Set to 1 if using heap_5.c

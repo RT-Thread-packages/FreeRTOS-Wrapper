@@ -72,6 +72,12 @@
     #define portPOINTER_SIZE_TYPE   rt_size_t
 /*-----------------------------------------------------------*/
 
+/* Scheduler utilities. */
+    #define portYIELD()                 rt_thread_yield()
+    #define portYIELD_FROM_ISR( x )     rt_thread_yield()
+
+/*-----------------------------------------------------------*/
+
 /* Critical section management. */
     extern void vPortEnterCritical( void );
     extern void vPortExitCritical( void );
