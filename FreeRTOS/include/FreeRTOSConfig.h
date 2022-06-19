@@ -86,11 +86,8 @@ FreeRTOS/Source/tasks.c for limitations. */
 to exclude the API function. */
 #define INCLUDE_vTaskPrioritySet        1
 #define INCLUDE_uxTaskPriorityGet       1
-#define INCLUDE_vTaskDelete             1
 #define INCLUDE_vTaskCleanUpResources   1
 #define INCLUDE_vTaskSuspend            1
-#define INCLUDE_vTaskDelayUntil         1
-#define INCLUDE_vTaskDelay              1
 #define INCLUDE_eTaskGetState           1
 #define INCLUDE_xTimerPendFunctionCall  1
 
@@ -133,5 +130,8 @@ standard names. */
 #define configTOTAL_HEAP_SIZE                   ( ( size_t ) ( 46 * 1024 ) )
 #define configUSE_COUNTING_SEMAPHORES           1
 #define configUSE_MALLOC_FAILED_HOOK            0
+#define INCLUDE_vTaskDelete                     1
+#define INCLUDE_vTaskDelayUntil                 1
+#define INCLUDE_vTaskDelay                      1
 
 #endif /* FREERTOS_CONFIG_H */

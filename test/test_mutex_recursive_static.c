@@ -16,23 +16,21 @@
  *
  */
 
-#include <rtthread.h>
 #include <FreeRTOS.h>
 #include <semphr.h>
+#include <task.h>
 
-#define THREAD_PRIORITY         8
-#define THREAD_TIMESLICE        5
+#define TASK_PRIORITY         8
 
 /* mutex handler */
-static SemaphoreHandle_t static_mutex = RT_NULL;
+static SemaphoreHandle_t static_mutex = NULL;
 /* Buffer to store mutex structure */
 static StaticSemaphore_t xMutexBuffer;
-static rt_uint8_t number1, number2 = 0;
+static TaskHandle_t TaskHandle1 = NULL;
+static TaskHandle_t TaskHandle2 = NULL;
+static BaseType_t number1, number2 = 0;
 
-ALIGN(RT_ALIGN_SIZE)
-static char thread1_stack[1024];
-static struct rt_thread thread1;
-static void rt_thread_entry1(void *parameter)
+static void vTask1Code(void *pvParameters)
 {
     while (1)
     {
@@ -40,7 +38,7 @@ static void rt_thread_entry1(void *parameter)
         xSemaphoreTakeRecursive(static_mutex, portMAX_DELAY);
         /* protect and deal with public variables */
         number1++;
-        rt_thread_mdelay(10);
+        vTaskDelay(pdMS_TO_TICKS(10));
         number2++;
         if (number1 != number2)
         {
@@ -61,10 +59,7 @@ static void rt_thread_entry1(void *parameter)
     }
 }
 
-ALIGN(RT_ALIGN_SIZE)
-static char thread2_stack[1024];
-static struct rt_thread thread2;
-static void rt_thread_entry2(void *parameter)
+static void vTask2Code(void * pvParameters)
 {
     while (1)
     {
@@ -82,29 +77,24 @@ int mutex_recursive_static(void)
 {
     /* Create a recursive mutex statically */
     static_mutex = xSemaphoreCreateRecursiveMutexStatic(&xMutexBuffer);
-    if (static_mutex == RT_NULL)
+    if (static_mutex == NULL)
     {
         rt_kprintf("create static mutex failed.\n");
         return -1;
     }
+    xTaskCreate( vTask1Code, "Task1", configMINIMAL_STACK_SIZE, NULL, TASK_PRIORITY, &TaskHandle1 );
+    if (TaskHandle1 == NULL)
+    {
+        rt_kprintf("Create task 1 failed\n");
+        return -1;
+    }
+    xTaskCreate( vTask2Code, "Task2", configMINIMAL_STACK_SIZE, NULL, TASK_PRIORITY, &TaskHandle2 );
+    if (TaskHandle2 == NULL)
+    {
+        rt_kprintf("Create task 2 failed\n");
+        return -1;
+    }
 
-    rt_thread_init(&thread1,
-                   "thread1",
-                   rt_thread_entry1,
-                   RT_NULL,
-                   &thread1_stack[0],
-                   sizeof(thread1_stack),
-                   THREAD_PRIORITY, THREAD_TIMESLICE);
-    rt_thread_startup(&thread1);
-
-    rt_thread_init(&thread2,
-                   "thread2",
-                   rt_thread_entry2,
-                   RT_NULL,
-                   &thread2_stack[0],
-                   sizeof(thread2_stack),
-                   THREAD_PRIORITY, THREAD_TIMESLICE);
-    rt_thread_startup(&thread2);
     return 0;
 }
 
