@@ -65,6 +65,12 @@
         rt_uint16_t max_value;
     };
 
+    struct rt_mq_wrapper
+    {
+        struct rt_messagequeue mq;
+        rt_ubase_t item_size;
+    };
+
 /*-----------------------------------------------------------*/
 
 /* Architecture specifics. */
@@ -89,6 +95,11 @@
     #define portEXIT_CRITICAL()                       vPortExitCritical()
 
 /*-----------------------------------------------------------*/
+
+/* Use this macro to calculate the buffer size when allocating a queue statically
+ * To ensure the buffer can fit the desired number of messages
+ */
+    #define QUEUE_BUFFER_SIZE( uxQueueLength, uxItemSize )  ( ( RT_ALIGN( uxItemSize, RT_ALIGN_SIZE ) + sizeof( void * ) ) * uxQueueLength )
 
     BaseType_t rt_err_to_freertos(rt_err_t rt_err);
 

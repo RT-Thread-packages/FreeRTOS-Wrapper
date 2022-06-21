@@ -60,6 +60,413 @@ typedef struct QueueDefinition   * QueueHandle_t;
 /**
  * queue. h
  * @code{c}
+ * QueueHandle_t xQueueCreate(
+ *                            UBaseType_t uxQueueLength,
+ *                            UBaseType_t uxItemSize
+ *                        );
+ * @endcode
+ *
+ * Creates a new queue instance, and returns a handle by which the new queue
+ * can be referenced.
+ *
+ * Internally, within the FreeRTOS implementation, queues use two blocks of
+ * memory.  The first block is used to hold the queue's data structures.  The
+ * second block is used to hold items placed into the queue.  If a queue is
+ * created using xQueueCreate() then both blocks of memory are automatically
+ * dynamically allocated inside the xQueueCreate() function.  (see
+ * https://www.FreeRTOS.org/a00111.html).  If a queue is created using
+ * xQueueCreateStatic() then the application writer must provide the memory that
+ * will get used by the queue.  xQueueCreateStatic() therefore allows a queue to
+ * be created without using any dynamic memory allocation.
+ *
+ * https://www.FreeRTOS.org/Embedded-RTOS-Queues.html
+ *
+ * @param uxQueueLength The maximum number of items that the queue can contain.
+ *
+ * @param uxItemSize The number of bytes each item in the queue will require.
+ * Items are queued by copy, not by reference, so this is the number of bytes
+ * that will be copied for each posted item.  Each item on the queue must be
+ * the same size.
+ *
+ * @return If the queue is successfully create then a handle to the newly
+ * created queue is returned.  If the queue cannot be created then 0 is
+ * returned.
+ *
+ * Example usage:
+ * @code{c}
+ * struct AMessage
+ * {
+ *  char ucMessageID;
+ *  char ucData[ 20 ];
+ * };
+ *
+ * void vATask( void *pvParameters )
+ * {
+ * QueueHandle_t xQueue1, xQueue2;
+ *
+ *  // Create a queue capable of containing 10 uint32_t values.
+ *  xQueue1 = xQueueCreate( 10, sizeof( uint32_t ) );
+ *  if( xQueue1 == 0 )
+ *  {
+ *      // Queue was not created and must not be used.
+ *  }
+ *
+ *  // Create a queue capable of containing 10 pointers to AMessage structures.
+ *  // These should be passed by pointer as they contain a lot of data.
+ *  xQueue2 = xQueueCreate( 10, sizeof( struct AMessage * ) );
+ *  if( xQueue2 == 0 )
+ *  {
+ *      // Queue was not created and must not be used.
+ *  }
+ *
+ *  // ... Rest of task code.
+ * }
+ * @endcode
+ * \defgroup xQueueCreate xQueueCreate
+ * \ingroup QueueManagement
+ */
+#if ( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
+    #define xQueueCreate( uxQueueLength, uxItemSize )    xQueueGenericCreate( ( uxQueueLength ), ( uxItemSize ), ( queueQUEUE_TYPE_BASE ) )
+#endif
+
+/**
+ * queue. h
+ * @code{c}
+ * QueueHandle_t xQueueCreateStatic(
+ *                            UBaseType_t uxQueueLength,
+ *                            UBaseType_t uxItemSize,
+ *                            uint8_t *pucQueueStorage,
+ *                            StaticQueue_t *pxQueueBuffer
+ *                        );
+ * @endcode
+ *
+ * Creates a new queue instance, and returns a handle by which the new queue
+ * can be referenced.
+ *
+ * Internally, within the FreeRTOS implementation, queues use two blocks of
+ * memory.  The first block is used to hold the queue's data structures.  The
+ * second block is used to hold items placed into the queue.  If a queue is
+ * created using xQueueCreate() then both blocks of memory are automatically
+ * dynamically allocated inside the xQueueCreate() function.  (see
+ * https://www.FreeRTOS.org/a00111.html).  If a queue is created using
+ * xQueueCreateStatic() then the application writer must provide the memory that
+ * will get used by the queue.  xQueueCreateStatic() therefore allows a queue to
+ * be created without using any dynamic memory allocation.
+ *
+ * https://www.FreeRTOS.org/Embedded-RTOS-Queues.html
+ *
+ * @param uxQueueLength The maximum number of items that the queue can contain.
+ *
+ * @param uxItemSize The number of bytes each item in the queue will require.
+ * Items are queued by copy, not by reference, so this is the number of bytes
+ * that will be copied for each posted item.  Each item on the queue must be
+ * the same size.
+ *
+ * @param pucQueueStorage If uxItemSize is not zero then
+ * pucQueueStorage must point to a uint8_t array that is at least large
+ * enough to hold the maximum number of items that can be in the queue at any
+ * one time - which is ( uxQueueLength * uxItemsSize ) bytes.  If uxItemSize is
+ * zero then pucQueueStorage can be NULL.
+ *
+ * @param pxQueueBuffer Must point to a variable of type StaticQueue_t, which
+ * will be used to hold the queue's data structure.
+ *
+ * @return If the queue is created then a handle to the created queue is
+ * returned.  If pxQueueBuffer is NULL then NULL is returned.
+ *
+ * Example usage:
+ * @code{c}
+ * struct AMessage
+ * {
+ *  char ucMessageID;
+ *  char ucData[ 20 ];
+ * };
+ *
+ #define QUEUE_LENGTH 10
+ #define ITEM_SIZE sizeof( uint32_t )
+ *
+ * // xQueueBuffer will hold the queue structure.
+ * StaticQueue_t xQueueBuffer;
+ *
+ * // ucQueueStorage will hold the items posted to the queue.  Must be at least
+ * // [(queue length) * ( queue item size)] bytes long.
+ * uint8_t ucQueueStorage[ QUEUE_LENGTH * ITEM_SIZE ];
+ *
+ * void vATask( void *pvParameters )
+ * {
+ *  QueueHandle_t xQueue1;
+ *
+ *  // Create a queue capable of containing 10 uint32_t values.
+ *  xQueue1 = xQueueCreate( QUEUE_LENGTH, // The number of items the queue can hold.
+ *                          ITEM_SIZE     // The size of each item in the queue
+ *                          &( ucQueueStorage[ 0 ] ), // The buffer that will hold the items in the queue.
+ *                          &xQueueBuffer ); // The buffer that will hold the queue structure.
+ *
+ *  // The queue is guaranteed to be created successfully as no dynamic memory
+ *  // allocation is used.  Therefore xQueue1 is now a handle to a valid queue.
+ *
+ *  // ... Rest of task code.
+ * }
+ * @endcode
+ * \defgroup xQueueCreateStatic xQueueCreateStatic
+ * \ingroup QueueManagement
+ */
+#if ( configSUPPORT_STATIC_ALLOCATION == 1 )
+    #define xQueueCreateStatic( uxQueueLength, uxItemSize, pucQueueStorage, pxQueueBuffer )    xQueueGenericCreateStatic( ( uxQueueLength ), ( uxItemSize ), ( pucQueueStorage ), ( pxQueueBuffer ), ( queueQUEUE_TYPE_BASE ) )
+#endif /* configSUPPORT_STATIC_ALLOCATION */
+
+/**
+ * queue. h
+ * @code{c}
+ * BaseType_t xQueueSendToToFront(
+ *                                 QueueHandle_t    xQueue,
+ *                                 const void       *pvItemToQueue,
+ *                                 TickType_t       xTicksToWait
+ *                             );
+ * @endcode
+ *
+ * Post an item to the front of a queue.  The item is queued by copy, not by
+ * reference.  This function must not be called from an interrupt service
+ * routine.  See xQueueSendFromISR () for an alternative which may be used
+ * in an ISR.
+ *
+ * @param xQueue The handle to the queue on which the item is to be posted.
+ *
+ * @param pvItemToQueue A pointer to the item that is to be placed on the
+ * queue.  The size of the items the queue will hold was defined when the
+ * queue was created, so this many bytes will be copied from pvItemToQueue
+ * into the queue storage area.
+ *
+ * @param xTicksToWait The maximum amount of time the task should block
+ * waiting for space to become available on the queue, should it already
+ * be full.  The call will return immediately if this is set to 0 and the
+ * queue is full.  The time is defined in tick periods so the constant
+ * portTICK_PERIOD_MS should be used to convert to real time if this is required.
+ *
+ * @return pdTRUE if the item was successfully posted, otherwise errQUEUE_FULL.
+ *
+ * Example usage:
+ * @code{c}
+ * struct AMessage
+ * {
+ *  char ucMessageID;
+ *  char ucData[ 20 ];
+ * } xMessage;
+ *
+ * uint32_t ulVar = 10UL;
+ *
+ * void vATask( void *pvParameters )
+ * {
+ * QueueHandle_t xQueue1, xQueue2;
+ * struct AMessage *pxMessage;
+ *
+ *  // Create a queue capable of containing 10 uint32_t values.
+ *  xQueue1 = xQueueCreate( 10, sizeof( uint32_t ) );
+ *
+ *  // Create a queue capable of containing 10 pointers to AMessage structures.
+ *  // These should be passed by pointer as they contain a lot of data.
+ *  xQueue2 = xQueueCreate( 10, sizeof( struct AMessage * ) );
+ *
+ *  // ...
+ *
+ *  if( xQueue1 != 0 )
+ *  {
+ *      // Send an uint32_t.  Wait for 10 ticks for space to become
+ *      // available if necessary.
+ *      if( xQueueSendToFront( xQueue1, ( void * ) &ulVar, ( TickType_t ) 10 ) != pdPASS )
+ *      {
+ *          // Failed to post the message, even after 10 ticks.
+ *      }
+ *  }
+ *
+ *  if( xQueue2 != 0 )
+ *  {
+ *      // Send a pointer to a struct AMessage object.  Don't block if the
+ *      // queue is already full.
+ *      pxMessage = & xMessage;
+ *      xQueueSendToFront( xQueue2, ( void * ) &pxMessage, ( TickType_t ) 0 );
+ *  }
+ *
+ *  // ... Rest of task code.
+ * }
+ * @endcode
+ * \defgroup xQueueSend xQueueSend
+ * \ingroup QueueManagement
+ */
+#define xQueueSendToFront( xQueue, pvItemToQueue, xTicksToWait ) \
+    xQueueGenericSend( ( xQueue ), ( pvItemToQueue ), ( xTicksToWait ), queueSEND_TO_FRONT )
+
+/**
+ * queue. h
+ * @code{c}
+ * BaseType_t xQueueSendToBack(
+ *                                 QueueHandle_t    xQueue,
+ *                                 const void       *pvItemToQueue,
+ *                                 TickType_t       xTicksToWait
+ *                             );
+ * @endcode
+ *
+ * This is a macro that calls xQueueGenericSend().
+ *
+ * Post an item to the back of a queue.  The item is queued by copy, not by
+ * reference.  This function must not be called from an interrupt service
+ * routine.  See xQueueSendFromISR () for an alternative which may be used
+ * in an ISR.
+ *
+ * @param xQueue The handle to the queue on which the item is to be posted.
+ *
+ * @param pvItemToQueue A pointer to the item that is to be placed on the
+ * queue.  The size of the items the queue will hold was defined when the
+ * queue was created, so this many bytes will be copied from pvItemToQueue
+ * into the queue storage area.
+ *
+ * @param xTicksToWait The maximum amount of time the task should block
+ * waiting for space to become available on the queue, should it already
+ * be full.  The call will return immediately if this is set to 0 and the queue
+ * is full.  The  time is defined in tick periods so the constant
+ * portTICK_PERIOD_MS should be used to convert to real time if this is required.
+ *
+ * @return pdTRUE if the item was successfully posted, otherwise errQUEUE_FULL.
+ *
+ * Example usage:
+ * @code{c}
+ * struct AMessage
+ * {
+ *  char ucMessageID;
+ *  char ucData[ 20 ];
+ * } xMessage;
+ *
+ * uint32_t ulVar = 10UL;
+ *
+ * void vATask( void *pvParameters )
+ * {
+ * QueueHandle_t xQueue1, xQueue2;
+ * struct AMessage *pxMessage;
+ *
+ *  // Create a queue capable of containing 10 uint32_t values.
+ *  xQueue1 = xQueueCreate( 10, sizeof( uint32_t ) );
+ *
+ *  // Create a queue capable of containing 10 pointers to AMessage structures.
+ *  // These should be passed by pointer as they contain a lot of data.
+ *  xQueue2 = xQueueCreate( 10, sizeof( struct AMessage * ) );
+ *
+ *  // ...
+ *
+ *  if( xQueue1 != 0 )
+ *  {
+ *      // Send an uint32_t.  Wait for 10 ticks for space to become
+ *      // available if necessary.
+ *      if( xQueueSendToBack( xQueue1, ( void * ) &ulVar, ( TickType_t ) 10 ) != pdPASS )
+ *      {
+ *          // Failed to post the message, even after 10 ticks.
+ *      }
+ *  }
+ *
+ *  if( xQueue2 != 0 )
+ *  {
+ *      // Send a pointer to a struct AMessage object.  Don't block if the
+ *      // queue is already full.
+ *      pxMessage = & xMessage;
+ *      xQueueSendToBack( xQueue2, ( void * ) &pxMessage, ( TickType_t ) 0 );
+ *  }
+ *
+ *  // ... Rest of task code.
+ * }
+ * @endcode
+ * \defgroup xQueueSend xQueueSend
+ * \ingroup QueueManagement
+ */
+#define xQueueSendToBack( xQueue, pvItemToQueue, xTicksToWait ) \
+    xQueueGenericSend( ( xQueue ), ( pvItemToQueue ), ( xTicksToWait ), queueSEND_TO_BACK )
+
+/**
+ * queue. h
+ * @code{c}
+ * BaseType_t xQueueSend(
+ *                            QueueHandle_t xQueue,
+ *                            const void * pvItemToQueue,
+ *                            TickType_t xTicksToWait
+ *                       );
+ * @endcode
+ *
+ * This is a macro that calls xQueueGenericSend().  It is included for
+ * backward compatibility with versions of FreeRTOS.org that did not
+ * include the xQueueSendToFront() and xQueueSendToBack() macros.  It is
+ * equivalent to xQueueSendToBack().
+ *
+ * Post an item on a queue.  The item is queued by copy, not by reference.
+ * This function must not be called from an interrupt service routine.
+ * See xQueueSendFromISR () for an alternative which may be used in an ISR.
+ *
+ * @param xQueue The handle to the queue on which the item is to be posted.
+ *
+ * @param pvItemToQueue A pointer to the item that is to be placed on the
+ * queue.  The size of the items the queue will hold was defined when the
+ * queue was created, so this many bytes will be copied from pvItemToQueue
+ * into the queue storage area.
+ *
+ * @param xTicksToWait The maximum amount of time the task should block
+ * waiting for space to become available on the queue, should it already
+ * be full.  The call will return immediately if this is set to 0 and the
+ * queue is full.  The time is defined in tick periods so the constant
+ * portTICK_PERIOD_MS should be used to convert to real time if this is required.
+ *
+ * @return pdTRUE if the item was successfully posted, otherwise errQUEUE_FULL.
+ *
+ * Example usage:
+ * @code{c}
+ * struct AMessage
+ * {
+ *  char ucMessageID;
+ *  char ucData[ 20 ];
+ * } xMessage;
+ *
+ * uint32_t ulVar = 10UL;
+ *
+ * void vATask( void *pvParameters )
+ * {
+ * QueueHandle_t xQueue1, xQueue2;
+ * struct AMessage *pxMessage;
+ *
+ *  // Create a queue capable of containing 10 uint32_t values.
+ *  xQueue1 = xQueueCreate( 10, sizeof( uint32_t ) );
+ *
+ *  // Create a queue capable of containing 10 pointers to AMessage structures.
+ *  // These should be passed by pointer as they contain a lot of data.
+ *  xQueue2 = xQueueCreate( 10, sizeof( struct AMessage * ) );
+ *
+ *  // ...
+ *
+ *  if( xQueue1 != 0 )
+ *  {
+ *      // Send an uint32_t.  Wait for 10 ticks for space to become
+ *      // available if necessary.
+ *      if( xQueueSend( xQueue1, ( void * ) &ulVar, ( TickType_t ) 10 ) != pdPASS )
+ *      {
+ *          // Failed to post the message, even after 10 ticks.
+ *      }
+ *  }
+ *
+ *  if( xQueue2 != 0 )
+ *  {
+ *      // Send a pointer to a struct AMessage object.  Don't block if the
+ *      // queue is already full.
+ *      pxMessage = & xMessage;
+ *      xQueueSend( xQueue2, ( void * ) &pxMessage, ( TickType_t ) 0 );
+ *  }
+ *
+ *  // ... Rest of task code.
+ * }
+ * @endcode
+ * \defgroup xQueueSend xQueueSend
+ * \ingroup QueueManagement
+ */
+#define xQueueSend( xQueue, pvItemToQueue, xTicksToWait ) \
+    xQueueGenericSend( ( xQueue ), ( pvItemToQueue ), ( xTicksToWait ), queueSEND_TO_BACK )
+
+/**
+ * queue. h
+ * @code{c}
  * BaseType_t xQueueGenericSend(
  *                                  QueueHandle_t xQueue,
  *                                  const void * pvItemToQueue,
@@ -146,6 +553,100 @@ BaseType_t xQueueGenericSend( QueueHandle_t xQueue,
                               const void * const pvItemToQueue,
                               TickType_t xTicksToWait,
                               const BaseType_t xCopyPosition );
+
+/**
+ * queue. h
+ * @code{c}
+ * BaseType_t xQueueReceive(
+ *                               QueueHandle_t xQueue,
+ *                               void *pvBuffer,
+ *                               TickType_t xTicksToWait
+ *                          );
+ * @endcode
+ *
+ * Receive an item from a queue.  The item is received by copy so a buffer of
+ * adequate size must be provided.  The number of bytes copied into the buffer
+ * was defined when the queue was created.
+ *
+ * Successfully received items are removed from the queue.
+ *
+ * This function must not be used in an interrupt service routine.  See
+ * xQueueReceiveFromISR for an alternative that can.
+ *
+ * @param xQueue The handle to the queue from which the item is to be
+ * received.
+ *
+ * @param pvBuffer Pointer to the buffer into which the received item will
+ * be copied.
+ *
+ * @param xTicksToWait The maximum amount of time the task should block
+ * waiting for an item to receive should the queue be empty at the time
+ * of the call. xQueueReceive() will return immediately if xTicksToWait
+ * is zero and the queue is empty.  The time is defined in tick periods so the
+ * constant portTICK_PERIOD_MS should be used to convert to real time if this is
+ * required.
+ *
+ * @return pdTRUE if an item was successfully received from the queue,
+ * otherwise pdFALSE.
+ *
+ * Example usage:
+ * @code{c}
+ * struct AMessage
+ * {
+ *  char ucMessageID;
+ *  char ucData[ 20 ];
+ * } xMessage;
+ *
+ * QueueHandle_t xQueue;
+ *
+ * // Task to create a queue and post a value.
+ * void vATask( void *pvParameters )
+ * {
+ * struct AMessage *pxMessage;
+ *
+ *  // Create a queue capable of containing 10 pointers to AMessage structures.
+ *  // These should be passed by pointer as they contain a lot of data.
+ *  xQueue = xQueueCreate( 10, sizeof( struct AMessage * ) );
+ *  if( xQueue == 0 )
+ *  {
+ *      // Failed to create the queue.
+ *  }
+ *
+ *  // ...
+ *
+ *  // Send a pointer to a struct AMessage object.  Don't block if the
+ *  // queue is already full.
+ *  pxMessage = & xMessage;
+ *  xQueueSend( xQueue, ( void * ) &pxMessage, ( TickType_t ) 0 );
+ *
+ *  // ... Rest of task code.
+ * }
+ *
+ * // Task to receive from the queue.
+ * void vADifferentTask( void *pvParameters )
+ * {
+ * struct AMessage *pxRxedMessage;
+ *
+ *  if( xQueue != 0 )
+ *  {
+ *      // Receive a message on the created queue.  Block for 10 ticks if a
+ *      // message is not immediately available.
+ *      if( xQueueReceive( xQueue, &( pxRxedMessage ), ( TickType_t ) 10 ) )
+ *      {
+ *          // pcRxedMessage now points to the struct AMessage variable posted
+ *          // by vATask.
+ *      }
+ *  }
+ *
+ *  // ... Rest of task code.
+ * }
+ * @endcode
+ * \defgroup xQueueReceive xQueueReceive
+ * \ingroup QueueManagement
+ */
+BaseType_t xQueueReceive( QueueHandle_t xQueue,
+                          void * const pvBuffer,
+                          TickType_t xTicksToWait );
 
 /**
  * queue. h
