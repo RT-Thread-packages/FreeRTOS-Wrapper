@@ -158,9 +158,9 @@ static volatile rt_uint8_t queue_index = 0;
                     {
                         rt_mq_init( ( rt_mq_t ) pipc, name, msg_pool, uxItemSize, pool_size, RT_IPC_FLAG_PRIO );
                         ( ( struct rt_mq_wrapper * ) pipc )->item_size = uxItemSize;
+                        /* Mark as dynamic so we can distinguish in vQueueDelete */
+                        pipc->parent.type &= ~RT_Object_Class_Static;
                     }
-                    /* Mark as dynamic so we can distinguish in vQueueDelete */
-                    pipc->parent.type &= ~RT_Object_Class_Static;
                 }
             }
 
