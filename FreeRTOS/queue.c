@@ -74,20 +74,19 @@ static volatile rt_uint8_t queue_index = 0;
         {
             if ( ucQueueType == queueQUEUE_TYPE_RECURSIVE_MUTEX || ucQueueType == queueQUEUE_TYPE_MUTEX )
             {
-                rt_snprintf( name, RT_NAME_MAX - 1, "mutex%02d", mutex_index++ );
+                rt_snprintf( name, RT_NAME_MAX, "mutex%02d", mutex_index++ );
                 rt_mutex_init( ( rt_mutex_t ) &( ( StaticSemaphore_t * ) pxStaticQueue )->ipc_obj.mutex, name, RT_IPC_FLAG_PRIO );
             }
             else if ( ucQueueType == queueQUEUE_TYPE_BINARY_SEMAPHORE || ucQueueType == queueQUEUE_TYPE_COUNTING_SEMAPHORE )
             {
-                rt_snprintf( name, RT_NAME_MAX - 1, "sem%02d", sem_index++ );
+                rt_snprintf( name, RT_NAME_MAX, "sem%02d", sem_index++ );
                 rt_sem_init( ( rt_sem_t ) &( ( StaticSemaphore_t * ) pxStaticQueue )->ipc_obj.semaphore, name, 0, RT_IPC_FLAG_PRIO );
                 ( ( StaticSemaphore_t * ) pxStaticQueue )->ipc_obj.semaphore.max_value = uxQueueLength;
             }
             else if ( ucQueueType == queueQUEUE_TYPE_BASE )
             {
-                rt_snprintf( name, RT_NAME_MAX - 1, "queue%02d", sem_index++ );
-                rt_mq_init( ( rt_mq_t ) &( pxStaticQueue->ipc_obj ), name, pucQueueStorage, uxItemSize, QUEUE_BUFFER_SIZE( uxQueueLength, uxItemSize ), RT_IPC_FLAG_PRIO );
-                pxStaticQueue->ipc_obj.item_size = uxItemSize;
+                rt_snprintf( name, RT_NAME_MAX, "queue%02d", queue_index++ );
+                rt_mq_init( &( pxStaticQueue->ipc_obj ), name, pucQueueStorage, uxItemSize, QUEUE_BUFFER_SIZE( uxQueueLength, uxItemSize ), RT_IPC_FLAG_PRIO );
             }
             else
             {
@@ -126,12 +125,12 @@ static volatile rt_uint8_t queue_index = 0;
             }
             if ( ucQueueType == queueQUEUE_TYPE_RECURSIVE_MUTEX || ucQueueType == queueQUEUE_TYPE_MUTEX )
             {
-                rt_snprintf( name, RT_NAME_MAX - 1, "mutex%02d", mutex_index++ );
+                rt_snprintf( name, RT_NAME_MAX, "mutex%02d", mutex_index++ );
                 pipc = ( struct rt_ipc_object * ) rt_mutex_create( name, RT_IPC_FLAG_PRIO );
             }
             else if ( ucQueueType == queueQUEUE_TYPE_BINARY_SEMAPHORE || ucQueueType == queueQUEUE_TYPE_COUNTING_SEMAPHORE )
             {
-                rt_snprintf( name, RT_NAME_MAX - 1, "sem%02d", sem_index++ );
+                rt_snprintf( name, RT_NAME_MAX, "sem%02d", sem_index++ );
                 pipc = ( struct rt_ipc_object * ) RT_KERNEL_MALLOC( sizeof( struct rt_semaphore_wrapper ) );
                 if ( pipc != RT_NULL )
                 {
@@ -143,25 +142,8 @@ static volatile rt_uint8_t queue_index = 0;
             }
             else if ( ucQueueType == queueQUEUE_TYPE_BASE )
             {
-                rt_snprintf( name, RT_NAME_MAX - 1, "queue%02d", sem_index++ );
-                pipc = ( struct rt_ipc_object * ) RT_KERNEL_MALLOC( sizeof( struct rt_mq_wrapper ) );
-                if ( pipc != RT_NULL )
-                {
-                    rt_size_t pool_size = QUEUE_BUFFER_SIZE( uxQueueLength, uxItemSize );
-                    void * msg_pool = RT_KERNEL_MALLOC( pool_size );
-                    if ( msg_pool == RT_NULL )
-                    {
-                        RT_KERNEL_FREE( pipc );
-                        pipc = RT_NULL;
-                    }
-                    else
-                    {
-                        rt_mq_init( ( rt_mq_t ) pipc, name, msg_pool, uxItemSize, pool_size, RT_IPC_FLAG_PRIO );
-                        ( ( struct rt_mq_wrapper * ) pipc )->item_size = uxItemSize;
-                        /* Mark as dynamic so we can distinguish in vQueueDelete */
-                        pipc->parent.type &= ~RT_Object_Class_Static;
-                    }
-                }
+                rt_snprintf( name, RT_NAME_MAX, "queue%02d", queue_index++ );
+                pipc = ( struct rt_ipc_object * ) rt_mq_create( name, uxItemSize, uxQueueLength, RT_IPC_FLAG_PRIO);
             }
 
             if ( pipc == RT_NULL )
@@ -330,12 +312,12 @@ BaseType_t xQueueGenericSend( QueueHandle_t xQueue,
     {
         if ( xCopyPosition == queueSEND_TO_BACK )
         {
-            err = rt_mq_send_wait( ( rt_mq_t ) pipc, pvItemToQueue, ( ( struct rt_mq_wrapper *) pipc )->item_size, ( rt_int32_t ) xTicksToWait );
+            err = rt_mq_send_wait( ( rt_mq_t ) pipc, pvItemToQueue, ( ( rt_mq_t ) pipc )->msg_size, ( rt_int32_t ) xTicksToWait );
         }
         else if ( xCopyPosition == queueSEND_TO_FRONT )
         {
             // TODO: need to implement the timeout for LIFO
-            err = rt_mq_urgent( ( rt_mq_t ) pipc, pvItemToQueue, ( ( struct rt_mq_wrapper *) pipc )->item_size );
+            err = rt_mq_urgent( ( rt_mq_t ) pipc, pvItemToQueue, ( ( rt_mq_t ) pipc )->msg_size );
         }
     }
 
@@ -400,7 +382,7 @@ BaseType_t xQueueReceive( QueueHandle_t xQueue,
     type = rt_object_get_type( &pipc->parent );
     if ( type == RT_Object_Class_MessageQueue )
     {
-        err = rt_mq_recv( ( rt_mq_t ) pipc, pvBuffer, ( ( struct rt_mq_wrapper * ) pipc )->item_size, ( rt_int32_t ) xTicksToWait );
+        err = rt_mq_recv( ( rt_mq_t ) pipc, pvBuffer, ( ( rt_mq_t ) pipc )->msg_size, ( rt_int32_t ) xTicksToWait );
     }
 
     return rt_err_to_freertos( err );
@@ -517,11 +499,7 @@ void vQueueDelete( QueueHandle_t xQueue )
         }
         else if ( type == RT_Object_Class_MessageQueue )
         {
-            /* Allocated with rt_mq_init in xQueueGenericCreate */
-            pipc->parent.type |= RT_Object_Class_Static;
-            rt_mq_detach( ( rt_mq_t ) pipc );
-            RT_KERNEL_FREE( ( ( rt_mq_t ) pipc )->msg_pool );
-            RT_KERNEL_FREE( pipc );
+            rt_mq_delete( ( rt_mq_t ) pipc );
         }
         else
         {

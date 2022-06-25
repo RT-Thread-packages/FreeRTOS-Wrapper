@@ -65,12 +65,6 @@
         rt_uint16_t max_value;
     };
 
-    struct rt_mq_wrapper
-    {
-        struct rt_messagequeue mq;
-        rt_ubase_t item_size;
-    };
-
 /*-----------------------------------------------------------*/
 
 /* Architecture specifics. */
