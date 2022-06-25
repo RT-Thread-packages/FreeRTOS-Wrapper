@@ -664,6 +664,305 @@ BaseType_t xQueueReceive( QueueHandle_t xQueue,
  */
 void vQueueDelete( QueueHandle_t xQueue );
 
+/**
+ * queue. h
+ * @code{c}
+ * BaseType_t xQueueSendToFrontFromISR(
+ *                                       QueueHandle_t xQueue,
+ *                                       const void *pvItemToQueue,
+ *                                       BaseType_t *pxHigherPriorityTaskWoken
+ *                                    );
+ * @endcode
+ *
+ * This is a macro that calls xQueueGenericSendFromISR().
+ *
+ * Post an item to the front of a queue.  It is safe to use this macro from
+ * within an interrupt service routine.
+ *
+ * Items are queued by copy not reference so it is preferable to only
+ * queue small items, especially when called from an ISR.  In most cases
+ * it would be preferable to store a pointer to the item being queued.
+ *
+ * @param xQueue The handle to the queue on which the item is to be posted.
+ *
+ * @param pvItemToQueue A pointer to the item that is to be placed on the
+ * queue.  The size of the items the queue will hold was defined when the
+ * queue was created, so this many bytes will be copied from pvItemToQueue
+ * into the queue storage area.
+ *
+ * @param pxHigherPriorityTaskWoken xQueueSendToFrontFromISR() will set
+ * *pxHigherPriorityTaskWoken to pdTRUE if sending to the queue caused a task
+ * to unblock, and the unblocked task has a priority higher than the currently
+ * running task.  If xQueueSendToFromFromISR() sets this value to pdTRUE then
+ * a context switch should be requested before the interrupt is exited.
+ *
+ * @return pdTRUE if the data was successfully sent to the queue, otherwise
+ * errQUEUE_FULL.
+ *
+ * Example usage for buffered IO (where the ISR can obtain more than one value
+ * per call):
+ * @code{c}
+ * void vBufferISR( void )
+ * {
+ * char cIn;
+ * BaseType_t xHigherPrioritTaskWoken;
+ *
+ *  // We have not woken a task at the start of the ISR.
+ *  xHigherPriorityTaskWoken = pdFALSE;
+ *
+ *  // Loop until the buffer is empty.
+ *  do
+ *  {
+ *      // Obtain a byte from the buffer.
+ *      cIn = portINPUT_BYTE( RX_REGISTER_ADDRESS );
+ *
+ *      // Post the byte.
+ *      xQueueSendToFrontFromISR( xRxQueue, &cIn, &xHigherPriorityTaskWoken );
+ *
+ *  } while( portINPUT_BYTE( BUFFER_COUNT ) );
+ *
+ *  // Now the buffer is empty we can switch context if necessary.
+ *  if( xHigherPriorityTaskWoken )
+ *  {
+ *      taskYIELD ();
+ *  }
+ * }
+ * @endcode
+ *
+ * \defgroup xQueueSendFromISR xQueueSendFromISR
+ * \ingroup QueueManagement
+ */
+#define xQueueSendToFrontFromISR( xQueue, pvItemToQueue, pxHigherPriorityTaskWoken ) \
+    xQueueGenericSendFromISR( ( xQueue ), ( pvItemToQueue ), ( pxHigherPriorityTaskWoken ), queueSEND_TO_FRONT )
+
+
+/**
+ * queue. h
+ * @code{c}
+ * BaseType_t xQueueSendToBackFromISR(
+ *                                       QueueHandle_t xQueue,
+ *                                       const void *pvItemToQueue,
+ *                                       BaseType_t *pxHigherPriorityTaskWoken
+ *                                    );
+ * @endcode
+ *
+ * This is a macro that calls xQueueGenericSendFromISR().
+ *
+ * Post an item to the back of a queue.  It is safe to use this macro from
+ * within an interrupt service routine.
+ *
+ * Items are queued by copy not reference so it is preferable to only
+ * queue small items, especially when called from an ISR.  In most cases
+ * it would be preferable to store a pointer to the item being queued.
+ *
+ * @param xQueue The handle to the queue on which the item is to be posted.
+ *
+ * @param pvItemToQueue A pointer to the item that is to be placed on the
+ * queue.  The size of the items the queue will hold was defined when the
+ * queue was created, so this many bytes will be copied from pvItemToQueue
+ * into the queue storage area.
+ *
+ * @param pxHigherPriorityTaskWoken xQueueSendToBackFromISR() will set
+ * *pxHigherPriorityTaskWoken to pdTRUE if sending to the queue caused a task
+ * to unblock, and the unblocked task has a priority higher than the currently
+ * running task.  If xQueueSendToBackFromISR() sets this value to pdTRUE then
+ * a context switch should be requested before the interrupt is exited.
+ *
+ * @return pdTRUE if the data was successfully sent to the queue, otherwise
+ * errQUEUE_FULL.
+ *
+ * Example usage for buffered IO (where the ISR can obtain more than one value
+ * per call):
+ * @code{c}
+ * void vBufferISR( void )
+ * {
+ * char cIn;
+ * BaseType_t xHigherPriorityTaskWoken;
+ *
+ *  // We have not woken a task at the start of the ISR.
+ *  xHigherPriorityTaskWoken = pdFALSE;
+ *
+ *  // Loop until the buffer is empty.
+ *  do
+ *  {
+ *      // Obtain a byte from the buffer.
+ *      cIn = portINPUT_BYTE( RX_REGISTER_ADDRESS );
+ *
+ *      // Post the byte.
+ *      xQueueSendToBackFromISR( xRxQueue, &cIn, &xHigherPriorityTaskWoken );
+ *
+ *  } while( portINPUT_BYTE( BUFFER_COUNT ) );
+ *
+ *  // Now the buffer is empty we can switch context if necessary.
+ *  if( xHigherPriorityTaskWoken )
+ *  {
+ *      taskYIELD ();
+ *  }
+ * }
+ * @endcode
+ *
+ * \defgroup xQueueSendFromISR xQueueSendFromISR
+ * \ingroup QueueManagement
+ */
+#define xQueueSendToBackFromISR( xQueue, pvItemToQueue, pxHigherPriorityTaskWoken ) \
+    xQueueGenericSendFromISR( ( xQueue ), ( pvItemToQueue ), ( pxHigherPriorityTaskWoken ), queueSEND_TO_BACK )
+
+/**
+ * queue. h
+ * @code{c}
+ * BaseType_t xQueueSendFromISR(
+ *                                   QueueHandle_t xQueue,
+ *                                   const void *pvItemToQueue,
+ *                                   BaseType_t *pxHigherPriorityTaskWoken
+ *                              );
+ * @endcode
+ *
+ * This is a macro that calls xQueueGenericSendFromISR().  It is included
+ * for backward compatibility with versions of FreeRTOS.org that did not
+ * include the xQueueSendToBackFromISR() and xQueueSendToFrontFromISR()
+ * macros.
+ *
+ * Post an item to the back of a queue.  It is safe to use this function from
+ * within an interrupt service routine.
+ *
+ * Items are queued by copy not reference so it is preferable to only
+ * queue small items, especially when called from an ISR.  In most cases
+ * it would be preferable to store a pointer to the item being queued.
+ *
+ * @param xQueue The handle to the queue on which the item is to be posted.
+ *
+ * @param pvItemToQueue A pointer to the item that is to be placed on the
+ * queue.  The size of the items the queue will hold was defined when the
+ * queue was created, so this many bytes will be copied from pvItemToQueue
+ * into the queue storage area.
+ *
+ * @param pxHigherPriorityTaskWoken xQueueSendFromISR() will set
+ * *pxHigherPriorityTaskWoken to pdTRUE if sending to the queue caused a task
+ * to unblock, and the unblocked task has a priority higher than the currently
+ * running task.  If xQueueSendFromISR() sets this value to pdTRUE then
+ * a context switch should be requested before the interrupt is exited.
+ *
+ * @return pdTRUE if the data was successfully sent to the queue, otherwise
+ * errQUEUE_FULL.
+ *
+ * Example usage for buffered IO (where the ISR can obtain more than one value
+ * per call):
+ * @code{c}
+ * void vBufferISR( void )
+ * {
+ * char cIn;
+ * BaseType_t xHigherPriorityTaskWoken;
+ *
+ *  // We have not woken a task at the start of the ISR.
+ *  xHigherPriorityTaskWoken = pdFALSE;
+ *
+ *  // Loop until the buffer is empty.
+ *  do
+ *  {
+ *      // Obtain a byte from the buffer.
+ *      cIn = portINPUT_BYTE( RX_REGISTER_ADDRESS );
+ *
+ *      // Post the byte.
+ *      xQueueSendFromISR( xRxQueue, &cIn, &xHigherPriorityTaskWoken );
+ *
+ *  } while( portINPUT_BYTE( BUFFER_COUNT ) );
+ *
+ *  // Now the buffer is empty we can switch context if necessary.
+ *  if( xHigherPriorityTaskWoken )
+ *  {
+ *      // Actual macro used here is port specific.
+ *      portYIELD_FROM_ISR ();
+ *  }
+ * }
+ * @endcode
+ *
+ * \defgroup xQueueSendFromISR xQueueSendFromISR
+ * \ingroup QueueManagement
+ */
+#define xQueueSendFromISR( xQueue, pvItemToQueue, pxHigherPriorityTaskWoken ) \
+    xQueueGenericSendFromISR( ( xQueue ), ( pvItemToQueue ), ( pxHigherPriorityTaskWoken ), queueSEND_TO_BACK )
+
+/**
+ * queue. h
+ * @code{c}
+ * BaseType_t xQueueGenericSendFromISR(
+ *                                         QueueHandle_t    xQueue,
+ *                                         const    void    *pvItemToQueue,
+ *                                         BaseType_t  *pxHigherPriorityTaskWoken,
+ *                                         BaseType_t  xCopyPosition
+ *                                     );
+ * @endcode
+ *
+ * It is preferred that the macros xQueueSendFromISR(),
+ * xQueueSendToFrontFromISR() and xQueueSendToBackFromISR() be used in place
+ * of calling this function directly.  xQueueGiveFromISR() is an
+ * equivalent for use by semaphores that don't actually copy any data.
+ *
+ * Post an item on a queue.  It is safe to use this function from within an
+ * interrupt service routine.
+ *
+ * Items are queued by copy not reference so it is preferable to only
+ * queue small items, especially when called from an ISR.  In most cases
+ * it would be preferable to store a pointer to the item being queued.
+ *
+ * @param xQueue The handle to the queue on which the item is to be posted.
+ *
+ * @param pvItemToQueue A pointer to the item that is to be placed on the
+ * queue.  The size of the items the queue will hold was defined when the
+ * queue was created, so this many bytes will be copied from pvItemToQueue
+ * into the queue storage area.
+ *
+ * @param pxHigherPriorityTaskWoken xQueueGenericSendFromISR() will set
+ * *pxHigherPriorityTaskWoken to pdTRUE if sending to the queue caused a task
+ * to unblock, and the unblocked task has a priority higher than the currently
+ * running task.  If xQueueGenericSendFromISR() sets this value to pdTRUE then
+ * a context switch should be requested before the interrupt is exited.
+ *
+ * @param xCopyPosition Can take the value queueSEND_TO_BACK to place the
+ * item at the back of the queue, or queueSEND_TO_FRONT to place the item
+ * at the front of the queue (for high priority messages).
+ *
+ * @return pdTRUE if the data was successfully sent to the queue, otherwise
+ * errQUEUE_FULL.
+ *
+ * Example usage for buffered IO (where the ISR can obtain more than one value
+ * per call):
+ * @code{c}
+ * void vBufferISR( void )
+ * {
+ * char cIn;
+ * BaseType_t xHigherPriorityTaskWokenByPost;
+ *
+ *  // We have not woken a task at the start of the ISR.
+ *  xHigherPriorityTaskWokenByPost = pdFALSE;
+ *
+ *  // Loop until the buffer is empty.
+ *  do
+ *  {
+ *      // Obtain a byte from the buffer.
+ *      cIn = portINPUT_BYTE( RX_REGISTER_ADDRESS );
+ *
+ *      // Post each byte.
+ *      xQueueGenericSendFromISR( xRxQueue, &cIn, &xHigherPriorityTaskWokenByPost, queueSEND_TO_BACK );
+ *
+ *  } while( portINPUT_BYTE( BUFFER_COUNT ) );
+ *
+ *  // Now the buffer is empty we can switch context if necessary.  Note that the
+ *  // name of the yield function required is port specific.
+ *  if( xHigherPriorityTaskWokenByPost )
+ *  {
+ *      portYIELD_FROM_ISR();
+ *  }
+ * }
+ * @endcode
+ *
+ * \defgroup xQueueSendFromISR xQueueSendFromISR
+ * \ingroup QueueManagement
+ */
+BaseType_t xQueueGenericSendFromISR( QueueHandle_t xQueue,
+                                     const void * const pvItemToQueue,
+                                     BaseType_t * const pxHigherPriorityTaskWoken,
+                                     const BaseType_t xCopyPosition );
 BaseType_t xQueueGiveFromISR( QueueHandle_t xQueue,
                               BaseType_t * const pxHigherPriorityTaskWoken );
 
@@ -783,6 +1082,12 @@ BaseType_t xQueueTakeMutexRecursive( QueueHandle_t xMutex,
 BaseType_t xQueueGiveMutexRecursive( QueueHandle_t xMutex );
 
 /*
+ * Reset a queue back to its original empty state.  The return value is now
+ * obsolete and is always set to pdPASS.
+ */
+#define xQueueReset( xQueue )    xQueueGenericReset( xQueue, pdFALSE )
+
+/*
  * Generic version of the function used to create a queue using dynamic memory
  * allocation.  This is called by other functions and macros that create other
  * RTOS objects that use the queue structure as their base.
@@ -805,6 +1110,10 @@ BaseType_t xQueueGiveMutexRecursive( QueueHandle_t xMutex );
                                              StaticQueue_t * pxStaticQueue,
                                              const uint8_t ucQueueType );
 #endif
+
+/* Not public API functions. */
+BaseType_t xQueueGenericReset( QueueHandle_t xQueue,
+                               BaseType_t xNewQueue );
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
