@@ -49,6 +49,32 @@ static volatile rt_uint8_t queue_index = 0;
 
 /*-----------------------------------------------------------*/
 
+BaseType_t xQueueGenericReset( QueueHandle_t xQueue,
+                               BaseType_t xNewQueue )
+{
+    Queue_t * const pxQueue = xQueue;
+    struct rt_ipc_object *pipc;
+    rt_uint8_t type;
+
+    configASSERT( pxQueue );
+
+    pipc = pxQueue->rt_ipc;
+    RT_ASSERT( pipc != RT_NULL );
+    type = rt_object_get_type( &pipc->parent );
+
+    if ( type == RT_Object_Class_Semaphore )
+    {
+        rt_sem_control( ( rt_sem_t ) pipc, RT_IPC_CMD_RESET, ( void * ) 0);
+    }
+    else if ( type == RT_Object_Class_MessageQueue )
+    {
+        rt_mq_control( ( rt_mq_t ) pipc, RT_IPC_CMD_RESET, RT_NULL );
+    }
+
+    return pdPASS;
+}
+/*-----------------------------------------------------------*/
+
 #if ( configSUPPORT_STATIC_ALLOCATION == 1 )
 
     QueueHandle_t xQueueGenericCreateStatic( const UBaseType_t uxQueueLength,
@@ -284,8 +310,6 @@ BaseType_t xQueueGenericSend( QueueHandle_t xQueue,
     rt_err_t err = -RT_ERROR;
 
     configASSERT( pxQueue );
-    configASSERT( !( ( pvItemToQueue == NULL ) && ( pxQueue->uxItemSize != ( UBaseType_t ) 0U ) ) );
-    configASSERT( !( ( xCopyPosition == queueOVERWRITE ) && ( pxQueue->uxLength != 1 ) ) );
     #if ( ( INCLUDE_xTaskGetSchedulerState == 1 ) || ( configUSE_TIMERS == 1 ) )
         {
             configASSERT( !( ( xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED ) && ( xTicksToWait != 0 ) ) );
@@ -317,6 +341,42 @@ BaseType_t xQueueGenericSend( QueueHandle_t xQueue,
         else if ( xCopyPosition == queueSEND_TO_FRONT )
         {
             // TODO: need to implement the timeout for LIFO
+            err = rt_mq_urgent( ( rt_mq_t ) pipc, pvItemToQueue, ( ( rt_mq_t ) pipc )->msg_size );
+        }
+    }
+
+    return rt_err_to_freertos( err );
+}
+/*-----------------------------------------------------------*/
+
+BaseType_t xQueueGenericSendFromISR( QueueHandle_t xQueue,
+                                     const void * const pvItemToQueue,
+                                     BaseType_t * const pxHigherPriorityTaskWoken,
+                                     const BaseType_t xCopyPosition )
+{
+    Queue_t * const pxQueue = xQueue;
+    struct rt_ipc_object *pipc;
+    rt_uint8_t type;
+    rt_err_t err = -RT_ERROR;
+
+    configASSERT( pxQueue );
+    #if ( ( INCLUDE_xTaskGetSchedulerState == 1 ) || ( configUSE_TIMERS == 1 ) )
+        {
+            configASSERT( !( ( xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED ) && ( xTicksToWait != 0 ) ) );
+        }
+    #endif
+
+    pipc = pxQueue->rt_ipc;
+    RT_ASSERT( pipc != RT_NULL );
+    type = rt_object_get_type( &pipc->parent );
+    if ( type == RT_Object_Class_MessageQueue )
+    {
+        if ( xCopyPosition == queueSEND_TO_BACK )
+        {
+            err = rt_mq_send( ( rt_mq_t ) pipc, pvItemToQueue, ( ( rt_mq_t ) pipc )->msg_size);
+        }
+        else if ( xCopyPosition == queueSEND_TO_FRONT )
+        {
             err = rt_mq_urgent( ( rt_mq_t ) pipc, pvItemToQueue, ( ( rt_mq_t ) pipc )->msg_size );
         }
     }
@@ -441,6 +501,10 @@ BaseType_t xQueueReceiveFromISR( QueueHandle_t xQueue,
     if ( type == RT_Object_Class_Semaphore )
     {
         err = rt_sem_take( ( rt_sem_t ) pipc, RT_WAITING_NO );
+    }
+    else if ( type == RT_Object_Class_MessageQueue )
+    {
+        err = rt_mq_recv( ( rt_mq_t ) pipc, pvBuffer, ( ( rt_mq_t ) pipc )->msg_size, RT_WAITING_NO );
     }
     if ( pxHigherPriorityTaskWoken != NULL )
     {
