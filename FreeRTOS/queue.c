@@ -45,6 +45,7 @@ typedef xQUEUE Queue_t;
 
 static volatile rt_uint8_t mutex_index = 0;
 static volatile rt_uint8_t sem_index = 0;
+static volatile rt_uint8_t queue_index = 0;
 
 /*-----------------------------------------------------------*/
 
@@ -73,14 +74,19 @@ static volatile rt_uint8_t sem_index = 0;
         {
             if ( ucQueueType == queueQUEUE_TYPE_RECURSIVE_MUTEX || ucQueueType == queueQUEUE_TYPE_MUTEX )
             {
-                rt_snprintf( name, RT_NAME_MAX - 1, "mutex%02d", mutex_index++ );
+                rt_snprintf( name, RT_NAME_MAX, "mutex%02d", mutex_index++ );
                 rt_mutex_init( ( rt_mutex_t ) &( ( StaticSemaphore_t * ) pxStaticQueue )->ipc_obj.mutex, name, RT_IPC_FLAG_PRIO );
             }
             else if ( ucQueueType == queueQUEUE_TYPE_BINARY_SEMAPHORE || ucQueueType == queueQUEUE_TYPE_COUNTING_SEMAPHORE )
             {
-                rt_snprintf( name, RT_NAME_MAX - 1, "sem%02d", sem_index++ );
+                rt_snprintf( name, RT_NAME_MAX, "sem%02d", sem_index++ );
                 rt_sem_init( ( rt_sem_t ) &( ( StaticSemaphore_t * ) pxStaticQueue )->ipc_obj.semaphore, name, 0, RT_IPC_FLAG_PRIO );
                 ( ( StaticSemaphore_t * ) pxStaticQueue )->ipc_obj.semaphore.max_value = uxQueueLength;
+            }
+            else if ( ucQueueType == queueQUEUE_TYPE_BASE )
+            {
+                rt_snprintf( name, RT_NAME_MAX, "queue%02d", queue_index++ );
+                rt_mq_init( &( pxStaticQueue->ipc_obj ), name, pucQueueStorage, uxItemSize, QUEUE_BUFFER_SIZE( uxQueueLength, uxItemSize ), RT_IPC_FLAG_PRIO );
             }
             else
             {
@@ -119,12 +125,12 @@ static volatile rt_uint8_t sem_index = 0;
             }
             if ( ucQueueType == queueQUEUE_TYPE_RECURSIVE_MUTEX || ucQueueType == queueQUEUE_TYPE_MUTEX )
             {
-                rt_snprintf( name, RT_NAME_MAX - 1, "mutex%02d", mutex_index++ );
+                rt_snprintf( name, RT_NAME_MAX, "mutex%02d", mutex_index++ );
                 pipc = ( struct rt_ipc_object * ) rt_mutex_create( name, RT_IPC_FLAG_PRIO );
             }
             else if ( ucQueueType == queueQUEUE_TYPE_BINARY_SEMAPHORE || ucQueueType == queueQUEUE_TYPE_COUNTING_SEMAPHORE )
             {
-                rt_snprintf( name, RT_NAME_MAX - 1, "sem%02d", sem_index++ );
+                rt_snprintf( name, RT_NAME_MAX, "sem%02d", sem_index++ );
                 pipc = ( struct rt_ipc_object * ) RT_KERNEL_MALLOC( sizeof( struct rt_semaphore_wrapper ) );
                 if ( pipc != RT_NULL )
                 {
@@ -134,6 +140,12 @@ static volatile rt_uint8_t sem_index = 0;
                     pipc->parent.type &= ~RT_Object_Class_Static;
                 }
             }
+            else if ( ucQueueType == queueQUEUE_TYPE_BASE )
+            {
+                rt_snprintf( name, RT_NAME_MAX, "queue%02d", queue_index++ );
+                pipc = ( struct rt_ipc_object * ) rt_mq_create( name, uxItemSize, uxQueueLength, RT_IPC_FLAG_PRIO);
+            }
+
             if ( pipc == RT_NULL )
             {
                 RT_KERNEL_FREE( pxNewQueue );
@@ -296,6 +308,18 @@ BaseType_t xQueueGenericSend( QueueHandle_t xQueue,
         }
         rt_hw_interrupt_enable( level );
     }
+    else if ( type == RT_Object_Class_MessageQueue )
+    {
+        if ( xCopyPosition == queueSEND_TO_BACK )
+        {
+            err = rt_mq_send_wait( ( rt_mq_t ) pipc, pvItemToQueue, ( ( rt_mq_t ) pipc )->msg_size, ( rt_int32_t ) xTicksToWait );
+        }
+        else if ( xCopyPosition == queueSEND_TO_FRONT )
+        {
+            // TODO: need to implement the timeout for LIFO
+            err = rt_mq_urgent( ( rt_mq_t ) pipc, pvItemToQueue, ( ( rt_mq_t ) pipc )->msg_size );
+        }
+    }
 
     return rt_err_to_freertos( err );
 }
@@ -328,6 +352,37 @@ BaseType_t xQueueGiveFromISR( QueueHandle_t xQueue,
     if ( pxHigherPriorityTaskWoken != NULL )
     {
         *pxHigherPriorityTaskWoken = pdFALSE;
+    }
+
+    return rt_err_to_freertos( err );
+}
+/*-----------------------------------------------------------*/
+
+BaseType_t xQueueReceive( QueueHandle_t xQueue,
+                          void * const pvBuffer,
+                          TickType_t xTicksToWait )
+{
+    Queue_t * const pxQueue = xQueue;
+    struct rt_ipc_object *pipc;
+    rt_uint8_t type;
+    rt_err_t err = -RT_ERROR;
+
+    /* Check the queue pointer is not NULL. */
+    configASSERT( ( pxQueue ) );
+
+    /* Cannot block if the scheduler is suspended. */
+    #if ( ( INCLUDE_xTaskGetSchedulerState == 1 ) || ( configUSE_TIMERS == 1 ) )
+        {
+            configASSERT( !( ( xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED ) && ( xTicksToWait != 0 ) ) );
+        }
+    #endif
+
+    pipc = pxQueue->rt_ipc;
+    RT_ASSERT( pipc != RT_NULL );
+    type = rt_object_get_type( &pipc->parent );
+    if ( type == RT_Object_Class_MessageQueue )
+    {
+        err = rt_mq_recv( ( rt_mq_t ) pipc, pvBuffer, ( ( rt_mq_t ) pipc )->msg_size, ( rt_int32_t ) xTicksToWait );
     }
 
     return rt_err_to_freertos( err );
@@ -420,9 +475,9 @@ void vQueueDelete( QueueHandle_t xQueue )
         {
             rt_sem_detach( ( rt_sem_t ) pipc );
         }
-        else if ( type == RT_Object_Class_MailBox )
+        else if ( type == RT_Object_Class_MessageQueue )
         {
-            rt_mb_detach( ( rt_mailbox_t ) pipc );
+            rt_mq_detach( ( rt_mq_t ) pipc );
         }
     #endif
 #if ( ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) && ( configSUPPORT_STATIC_ALLOCATION == 1 ) )
@@ -442,9 +497,9 @@ void vQueueDelete( QueueHandle_t xQueue )
             rt_sem_detach( ( rt_sem_t ) pipc );
             RT_KERNEL_FREE( pipc );
         }
-        else if ( type == RT_Object_Class_MailBox )
+        else if ( type == RT_Object_Class_MessageQueue )
         {
-            rt_mb_delete( ( rt_mailbox_t ) pipc );
+            rt_mq_delete( ( rt_mq_t ) pipc );
         }
         else
         {

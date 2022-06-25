@@ -20,6 +20,10 @@ BaseType_t rt_err_to_freertos(rt_err_t rt_err)
             return pdPASS;
         case RT_ENOMEM:
             return errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY;
+        case RT_EFULL:
+            return errQUEUE_FULL;
+        case RT_EEMPTY:
+            return errQUEUE_EMPTY;
         default:
             return pdFAIL;
     }

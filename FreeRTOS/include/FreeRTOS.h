@@ -1134,7 +1134,7 @@ typedef struct xSTATIC_TCB
 typedef struct
 {
     struct rt_ipc_object *rt_ipc;
-    struct rt_mailbox ipc_obj;
+    struct rt_messagequeue ipc_obj;
 } StaticQueue_t;
 
 typedef struct

@@ -90,6 +90,11 @@
 
 /*-----------------------------------------------------------*/
 
+/* Use this macro to calculate the buffer size when allocating a queue statically
+ * To ensure the buffer can fit the desired number of messages
+ */
+    #define QUEUE_BUFFER_SIZE( uxQueueLength, uxItemSize )  ( ( RT_ALIGN( uxItemSize, RT_ALIGN_SIZE ) + sizeof( void * ) ) * uxQueueLength )
+
     BaseType_t rt_err_to_freertos(rt_err_t rt_err);
 
     #ifdef __cplusplus
