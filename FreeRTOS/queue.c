@@ -334,6 +334,7 @@ BaseType_t xQueueGenericSend( QueueHandle_t xQueue,
         }
         else if ( xCopyPosition == queueSEND_TO_FRONT )
         {
+            // TODO: need to implement the timeout for LIFO
             err = rt_mq_urgent( ( rt_mq_t ) pipc, pvItemToQueue, ( ( struct rt_mq_wrapper *) pipc )->item_size );
         }
     }
