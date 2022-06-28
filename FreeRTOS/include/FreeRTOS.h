@@ -1147,6 +1147,11 @@ typedef struct
     } ipc_obj;
 } StaticSemaphore_t;
 
+typedef struct xSTATIC_EVENT_GROUP
+{
+    struct rt_event event;
+} StaticEventGroup_t;
+
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     }
