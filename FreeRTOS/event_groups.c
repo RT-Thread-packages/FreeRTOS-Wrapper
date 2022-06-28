@@ -127,12 +127,18 @@ EventBits_t xEventGroupSetBits( EventGroupHandle_t xEventGroup,
                                 const EventBits_t uxBitsToSet )
 {
     rt_event_t event = ( rt_event_t ) xEventGroup;
+    rt_base_t level;
+    EventBits_t uxReturn;
 
     configASSERT( xEventGroup );
 
     rt_event_send( event, ( rt_uint32_t ) uxBitsToSet);
 
-    return event->set;
+    level = rt_hw_interrupt_disable();
+    uxReturn = ( EventBits_t ) event->set;
+    rt_hw_interrupt_enable(level);
+
+    return uxReturn;
 }
 /*-----------------------------------------------------------*/
 
