@@ -50,6 +50,9 @@
 typedef struct tskTaskControlBlock
 {
     struct rt_thread thread;
+    #if ( configUSE_APPLICATION_TASK_TAG == 1 )
+        TaskHookFunction_t pxTaskTag;
+    #endif
 } tskTCB;
 typedef tskTCB TCB_t;
 
@@ -96,6 +99,12 @@ typedef tskTCB TCB_t;
 
 #if ( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
 
+    static void task_cleanup( struct rt_thread *tid )
+    {
+        RT_KERNEL_FREE( tid->stack_addr );
+        RT_KERNEL_FREE( tid );
+    }
+
     BaseType_t xTaskCreate( TaskFunction_t pxTaskCode,
                             const char * const pcName,
                             const configSTACK_DEPTH_TYPE usStackDepth,
@@ -103,18 +112,30 @@ typedef tskTCB TCB_t;
                             UBaseType_t uxPriority,
                             TaskHandle_t * const pxCreatedTask )
     {
+        TCB_t * pxNewTCB;
         BaseType_t xReturn = errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY;
-        rt_thread_t thread = RT_NULL;
+        void * stack_start;
 
-        thread = rt_thread_create( pcName, pxTaskCode, pvParameters, usStackDepth * sizeof( StackType_t ), uxPriority, 1 );
-        if ( thread != RT_NULL )
+        pxNewTCB = ( TCB_t * ) RT_KERNEL_MALLOC( sizeof( TCB_t ) );
+        if ( pxNewTCB != NULL )
         {
-            rt_thread_startup( thread );
-            xReturn = pdPASS;
-        }
-        if ( pxCreatedTask != NULL )
-        {
-            *pxCreatedTask = ( TaskHandle_t ) thread;
+            stack_start = RT_KERNEL_MALLOC( usStackDepth * sizeof( StackType_t ) );
+            if ( stack_start != NULL )
+            {
+                rt_thread_init( ( struct rt_thread * ) pxNewTCB, pcName, pxTaskCode, pvParameters,
+                                stack_start, usStackDepth * sizeof( StackType_t ), uxPriority, 1 );
+                ( ( rt_thread_t ) pxNewTCB )->cleanup = task_cleanup;
+                xReturn = pdPASS;
+                if ( pxCreatedTask != NULL )
+                {
+                    *pxCreatedTask = ( TaskHandle_t ) pxNewTCB;
+                }
+                rt_thread_startup( ( rt_thread_t ) pxNewTCB );
+            }
+            else
+            {
+                RT_KERNEL_FREE( pxNewTCB );
+            }
         }
 
         return xReturn;
@@ -128,22 +149,7 @@ typedef tskTCB TCB_t;
     void vTaskDelete( TaskHandle_t xTaskToDelete )
     {
         rt_thread_t thread = ( rt_thread_t ) prvGetTCBFromHandle( xTaskToDelete );
-    #if ( ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) && ( configSUPPORT_STATIC_ALLOCATION == 1 ) )
-        if ( rt_object_is_systemobject( ( rt_object_t ) thread ) )
-    #endif
-        {
-        #if ( configSUPPORT_STATIC_ALLOCATION == 1 )
-            rt_thread_detach( thread );
-        #endif
-    #if ( ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) && ( configSUPPORT_STATIC_ALLOCATION == 1 ) )
-        }
-        else
-        {
-    #endif
-        #if ( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
-            rt_thread_delete( thread );
-        #endif
-        }
+        rt_thread_detach( thread );
 
         if ( thread == rt_thread_self() )
         {
@@ -505,11 +511,11 @@ char * pcTaskGetName( TaskHandle_t xTaskToQuery )
     void vTaskSetApplicationTaskTag( TaskHandle_t xTask,
                                      TaskHookFunction_t pxHookFunction )
     {
-        rt_thread_t thread = ( rt_thread_t ) prvGetTCBFromHandle( xTask );
+        TCB_t * xTCB = prvGetTCBFromHandle( xTask );
         rt_base_t level;
 
         level = rt_hw_interrupt_disable();
-        thread->user_data = ( rt_ubase_t ) pxHookFunction;
+        xTCB->pxTaskTag = pxHookFunction;
         rt_hw_interrupt_enable( level );
     }
 
@@ -521,11 +527,11 @@ char * pcTaskGetName( TaskHandle_t xTaskToQuery )
     TaskHookFunction_t xTaskGetApplicationTaskTag( TaskHandle_t xTask )
     {
         TaskHookFunction_t xReturn;
-        rt_thread_t thread = ( rt_thread_t ) prvGetTCBFromHandle( xTask );
+        TCB_t * xTCB = prvGetTCBFromHandle( xTask );
         rt_base_t level;
 
         level = rt_hw_interrupt_disable();
-        xReturn = ( TaskHookFunction_t ) thread->user_data;
+        xReturn = xTCB->pxTaskTag;
         rt_hw_interrupt_enable( level );
 
         return xReturn;
@@ -550,11 +556,11 @@ char * pcTaskGetName( TaskHandle_t xTaskToQuery )
                                              void * pvParameter )
     {
         BaseType_t xReturn;
-        rt_thread_t thread = ( rt_thread_t ) prvGetTCBFromHandle( xTask );
+        TCB_t * xTCB = prvGetTCBFromHandle( xTask );
 
-        if( thread->user_data != RT_NULL )
+        if( xTCB->pxTaskTag != NULL )
         {
-            xReturn = ( ( TaskHookFunction_t ) thread->user_data )( pvParameter );
+            xReturn = xTCB->pxTaskTag( pvParameter );
         }
         else
         {

@@ -1129,6 +1129,9 @@
 typedef struct xSTATIC_TCB
 {
     struct rt_thread thread;
+    #if ( configUSE_APPLICATION_TASK_TAG == 1 )
+        void * pxTaskTag;
+    #endif
 } StaticTask_t;
 
 typedef struct
