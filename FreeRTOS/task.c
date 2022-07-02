@@ -99,12 +99,6 @@ typedef tskTCB TCB_t;
 
 #if ( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
 
-    static void task_cleanup( struct rt_thread *tid )
-    {
-        RT_KERNEL_FREE( tid->stack_addr );
-        RT_KERNEL_FREE( tid );
-    }
-
     BaseType_t xTaskCreate( TaskFunction_t pxTaskCode,
                             const char * const pcName,
                             const configSTACK_DEPTH_TYPE usStackDepth,
@@ -114,22 +108,23 @@ typedef tskTCB TCB_t;
     {
         TCB_t * pxNewTCB;
         BaseType_t xReturn = errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY;
-        void * stack_start;
+        void * stack_start = RT_NULL;
 
         pxNewTCB = ( TCB_t * ) RT_KERNEL_MALLOC( sizeof( TCB_t ) );
         if ( pxNewTCB != NULL )
         {
             stack_start = RT_KERNEL_MALLOC( usStackDepth * sizeof( StackType_t ) );
-            if ( stack_start != NULL )
+            if ( stack_start != RT_NULL )
             {
                 rt_thread_init( ( struct rt_thread * ) pxNewTCB, pcName, pxTaskCode, pvParameters,
                                 stack_start, usStackDepth * sizeof( StackType_t ), uxPriority, 1 );
-                ( ( rt_thread_t ) pxNewTCB )->cleanup = task_cleanup;
                 xReturn = pdPASS;
                 if ( pxCreatedTask != NULL )
                 {
                     *pxCreatedTask = ( TaskHandle_t ) pxNewTCB;
                 }
+                /* Mark as dynamic */
+                ( ( struct rt_thread * ) pxNewTCB )->type &= ~RT_Object_Class_Static;
                 rt_thread_startup( ( rt_thread_t ) pxNewTCB );
             }
             else
@@ -149,7 +144,26 @@ typedef tskTCB TCB_t;
     void vTaskDelete( TaskHandle_t xTaskToDelete )
     {
         rt_thread_t thread = ( rt_thread_t ) prvGetTCBFromHandle( xTaskToDelete );
-        rt_thread_detach( thread );
+        if ( thread == RT_NULL )
+        {
+            thread = rt_thread_self();
+        }
+    #if ( ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) && ( configSUPPORT_STATIC_ALLOCATION == 1 ) )
+        if ( rt_object_is_systemobject( ( rt_object_t ) thread ) )
+    #endif
+        {
+        #if ( configSUPPORT_STATIC_ALLOCATION == 1 )
+            rt_thread_detach( thread );
+        #endif
+    #if ( ( configSUPPORT_DYNAMIC_ALLOCATION == 1 ) && ( configSUPPORT_STATIC_ALLOCATION == 1 ) )
+        }
+        else
+        {
+    #endif
+        #if ( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
+            rt_thread_delete( thread );
+        #endif
+        }
 
         if ( thread == rt_thread_self() )
         {
