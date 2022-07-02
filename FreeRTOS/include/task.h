@@ -69,6 +69,23 @@
 struct tskTaskControlBlock; /* The old naming convention is used to prevent breaking kernel aware debuggers. */
 typedef struct tskTaskControlBlock * TaskHandle_t;
 
+/*
+ * Defines the prototype to which the application task hook function must
+ * conform.
+ */
+typedef BaseType_t (* TaskHookFunction_t)( void * );
+
+/* Task states returned by eTaskGetState. */
+typedef enum
+{
+    eRunning = 0, /* A task is querying the state of itself, so must be running. */
+    eReady,       /* The task being queried is in a ready or pending ready list. */
+    eBlocked,     /* The task being queried is in the Blocked state. */
+    eSuspended,   /* The task being queried is in the Suspended state, or is in the Blocked state with an infinite time out. */
+    eDeleted,     /* The task being queried has been deleted, but its TCB has not yet been freed. */
+    eInvalid      /* Used as an 'invalid state' value. */
+} eTaskState;
+
 /**
  * task. h
  *
@@ -528,6 +545,300 @@ BaseType_t xTaskDelayUntil( TickType_t * const pxPreviousWakeTime,
         ( void ) xTaskDelayUntil( pxPreviousWakeTime, xTimeIncrement ); \
     }
 
+/**
+ * task. h
+ * @code{c}
+ * BaseType_t xTaskAbortDelay( TaskHandle_t xTask );
+ * @endcode
+ *
+ * INCLUDE_xTaskAbortDelay must be defined as 1 in FreeRTOSConfig.h for this
+ * function to be available.
+ *
+ * A task will enter the Blocked state when it is waiting for an event.  The
+ * event it is waiting for can be a temporal event (waiting for a time), such
+ * as when vTaskDelay() is called, or an event on an object, such as when
+ * xQueueReceive() or ulTaskNotifyTake() is called.  If the handle of a task
+ * that is in the Blocked state is used in a call to xTaskAbortDelay() then the
+ * task will leave the Blocked state, and return from whichever function call
+ * placed the task into the Blocked state.
+ *
+ * There is no 'FromISR' version of this function as an interrupt would need to
+ * know which object a task was blocked on in order to know which actions to
+ * take.  For example, if the task was blocked on a queue the interrupt handler
+ * would then need to know if the queue was locked.
+ *
+ * @param xTask The handle of the task to remove from the Blocked state.
+ *
+ * @return If the task referenced by xTask was not in the Blocked state then
+ * pdFAIL is returned.  Otherwise pdPASS is returned.
+ *
+ * \defgroup xTaskAbortDelay xTaskAbortDelay
+ * \ingroup TaskCtrl
+ */
+BaseType_t xTaskAbortDelay( TaskHandle_t xTask );
+
+/**
+ * task. h
+ * @code{c}
+ * UBaseType_t uxTaskPriorityGet( const TaskHandle_t xTask );
+ * @endcode
+ *
+ * INCLUDE_uxTaskPriorityGet must be defined as 1 for this function to be available.
+ * See the configuration section for more information.
+ *
+ * Obtain the priority of any task.
+ *
+ * @param xTask Handle of the task to be queried.  Passing a NULL
+ * handle results in the priority of the calling task being returned.
+ *
+ * @return The priority of xTask.
+ *
+ * Example usage:
+ * @code{c}
+ * void vAFunction( void )
+ * {
+ * TaskHandle_t xHandle;
+ *
+ *   // Create a task, storing the handle.
+ *   xTaskCreate( vTaskCode, "NAME", STACK_SIZE, NULL, tskIDLE_PRIORITY, &xHandle );
+ *
+ *   // ...
+ *
+ *   // Use the handle to obtain the priority of the created task.
+ *   // It was created with tskIDLE_PRIORITY, but may have changed
+ *   // it itself.
+ *   if( uxTaskPriorityGet( xHandle ) != tskIDLE_PRIORITY )
+ *   {
+ *       // The task has changed it's priority.
+ *   }
+ *
+ *   // ...
+ *
+ *   // Is our priority higher than the created task?
+ *   if( uxTaskPriorityGet( xHandle ) < uxTaskPriorityGet( NULL ) )
+ *   {
+ *       // Our priority (obtained using NULL handle) is higher.
+ *   }
+ * }
+ * @endcode
+ * \defgroup uxTaskPriorityGet uxTaskPriorityGet
+ * \ingroup TaskCtrl
+ */
+UBaseType_t uxTaskPriorityGet( const TaskHandle_t xTask );
+
+/**
+ * task. h
+ * @code{c}
+ * UBaseType_t uxTaskPriorityGetFromISR( const TaskHandle_t xTask );
+ * @endcode
+ *
+ * A version of uxTaskPriorityGet() that can be used from an ISR.
+ */
+UBaseType_t uxTaskPriorityGetFromISR( const TaskHandle_t xTask );
+
+/**
+ * task. h
+ * @code{c}
+ * eTaskState eTaskGetState( TaskHandle_t xTask );
+ * @endcode
+ *
+ * INCLUDE_eTaskGetState must be defined as 1 for this function to be available.
+ * See the configuration section for more information.
+ *
+ * Obtain the state of any task.  States are encoded by the eTaskState
+ * enumerated type.
+ *
+ * @param xTask Handle of the task to be queried.
+ *
+ * @return The state of xTask at the time the function was called.  Note the
+ * state of the task might change between the function being called, and the
+ * functions return value being tested by the calling task.
+ */
+eTaskState eTaskGetState( TaskHandle_t xTask );
+
+/**
+ * task. h
+ * @code{c}
+ * void vTaskPrioritySet( TaskHandle_t xTask, UBaseType_t uxNewPriority );
+ * @endcode
+ *
+ * INCLUDE_vTaskPrioritySet must be defined as 1 for this function to be available.
+ * See the configuration section for more information.
+ *
+ * Set the priority of any task.
+ *
+ * A context switch will occur before the function returns if the priority
+ * being set is higher than the currently executing task.
+ *
+ * @param xTask Handle to the task for which the priority is being set.
+ * Passing a NULL handle results in the priority of the calling task being set.
+ *
+ * @param uxNewPriority The priority to which the task will be set.
+ *
+ * Example usage:
+ * @code{c}
+ * void vAFunction( void )
+ * {
+ * TaskHandle_t xHandle;
+ *
+ *   // Create a task, storing the handle.
+ *   xTaskCreate( vTaskCode, "NAME", STACK_SIZE, NULL, tskIDLE_PRIORITY, &xHandle );
+ *
+ *   // ...
+ *
+ *   // Use the handle to raise the priority of the created task.
+ *   vTaskPrioritySet( xHandle, tskIDLE_PRIORITY + 1 );
+ *
+ *   // ...
+ *
+ *   // Use a NULL handle to raise our priority to the same value.
+ *   vTaskPrioritySet( NULL, tskIDLE_PRIORITY + 1 );
+ * }
+ * @endcode
+ * \defgroup vTaskPrioritySet vTaskPrioritySet
+ * \ingroup TaskCtrl
+ */
+void vTaskPrioritySet( TaskHandle_t xTask,
+                       UBaseType_t uxNewPriority );
+
+/**
+ * task. h
+ * @code{c}
+ * void vTaskSuspend( TaskHandle_t xTaskToSuspend );
+ * @endcode
+ *
+ * INCLUDE_vTaskSuspend must be defined as 1 for this function to be available.
+ * See the configuration section for more information.
+ *
+ * Suspend any task.  When suspended a task will never get any microcontroller
+ * processing time, no matter what its priority.
+ *
+ * Calls to vTaskSuspend are not accumulative -
+ * i.e. calling vTaskSuspend () twice on the same task still only requires one
+ * call to vTaskResume () to ready the suspended task.
+ *
+ * RT-Thread only supports suspending the current running thread.
+ * This function must be called with NULL as the parameter.
+ *
+ * @param xTaskToSuspend Handle to the task being suspended.  Passing a NULL
+ * handle will cause the calling task to be suspended.
+ *
+ * Example usage:
+ * @code{c}
+ * void vAFunction( void )
+ * {
+ * TaskHandle_t xHandle;
+ *
+ *   // Create a task, storing the handle.
+ *   xTaskCreate( vTaskCode, "NAME", STACK_SIZE, NULL, tskIDLE_PRIORITY, &xHandle );
+ *
+ *   // ...
+ *
+ *   // Use the handle to suspend the created task.
+ *   vTaskSuspend( xHandle );
+ *
+ *   // ...
+ *
+ *   // The created task will not run during this period, unless
+ *   // another task calls vTaskResume( xHandle ).
+ *
+ *   //...
+ *
+ *
+ *   // Suspend ourselves.
+ *   vTaskSuspend( NULL );
+ *
+ *   // We cannot get here unless another task calls vTaskResume
+ *   // with our handle as the parameter.
+ * }
+ * @endcode
+ * \defgroup vTaskSuspend vTaskSuspend
+ * \ingroup TaskCtrl
+ */
+void vTaskSuspend( TaskHandle_t xTaskToSuspend );
+
+/**
+ * task. h
+ * @code{c}
+ * void vTaskResume( TaskHandle_t xTaskToResume );
+ * @endcode
+ *
+ * INCLUDE_vTaskSuspend must be defined as 1 for this function to be available.
+ * See the configuration section for more information.
+ *
+ * Resumes a suspended task.
+ *
+ * A task that has been suspended by one or more calls to vTaskSuspend ()
+ * will be made available for running again by a single call to
+ * vTaskResume ().
+ *
+ * @param xTaskToResume Handle to the task being readied.
+ *
+ * Example usage:
+ * @code{c}
+ * void vAFunction( void )
+ * {
+ * TaskHandle_t xHandle;
+ *
+ *   // Create a task, storing the handle.
+ *   xTaskCreate( vTaskCode, "NAME", STACK_SIZE, NULL, tskIDLE_PRIORITY, &xHandle );
+ *
+ *   // ...
+ *
+ *   // Use the handle to suspend the created task.
+ *   vTaskSuspend( xHandle );
+ *
+ *   // ...
+ *
+ *   // The created task will not run during this period, unless
+ *   // another task calls vTaskResume( xHandle ).
+ *
+ *   //...
+ *
+ *
+ *   // Resume the suspended task ourselves.
+ *   vTaskResume( xHandle );
+ *
+ *   // The created task will once again get microcontroller processing
+ *   // time in accordance with its priority within the system.
+ * }
+ * @endcode
+ * \defgroup vTaskResume vTaskResume
+ * \ingroup TaskCtrl
+ */
+void vTaskResume( TaskHandle_t xTaskToResume );
+
+/**
+ * task. h
+ * @code{c}
+ * void xTaskResumeFromISR( TaskHandle_t xTaskToResume );
+ * @endcode
+ *
+ * INCLUDE_xTaskResumeFromISR must be defined as 1 for this function to be
+ * available.  See the configuration section for more information.
+ *
+ * An implementation of vTaskResume() that can be called from within an ISR.
+ *
+ * A task that has been suspended by one or more calls to vTaskSuspend ()
+ * will be made available for running again by a single call to
+ * xTaskResumeFromISR ().
+ *
+ * xTaskResumeFromISR() should not be used to synchronise a task with an
+ * interrupt if there is a chance that the interrupt could arrive prior to the
+ * task being suspended - as this can lead to interrupts being missed. Use of a
+ * semaphore as a synchronisation mechanism would avoid this eventuality.
+ *
+ * @param xTaskToResume Handle to the task being readied.
+ *
+ * @return pdTRUE if resuming the task should result in a context switch,
+ * otherwise pdFALSE. This is used by the ISR to determine if a context switch
+ * may be required following the ISR.
+ *
+ * \defgroup vTaskResumeFromISR vTaskResumeFromISR
+ * \ingroup TaskCtrl
+ */
+BaseType_t xTaskResumeFromISR( TaskHandle_t xTaskToResume );
+
 /*-----------------------------------------------------------
 * SCHEDULER CONTROL
 *----------------------------------------------------------*/
@@ -640,6 +951,225 @@ void vTaskSuspendAll( void );
  * \ingroup SchedulerControl
  */
 BaseType_t xTaskResumeAll( void );
+
+/*-----------------------------------------------------------
+* TASK UTILITIES
+*----------------------------------------------------------*/
+
+/**
+ * task. h
+ * @code{c}
+ * TickType_t xTaskGetTickCount( void );
+ * @endcode
+ *
+ * @return The count of ticks since vTaskStartScheduler was called.
+ *
+ * \defgroup xTaskGetTickCount xTaskGetTickCount
+ * \ingroup TaskUtils
+ */
+TickType_t xTaskGetTickCount( void );
+
+/**
+ * task. h
+ * @code{c}
+ * TickType_t xTaskGetTickCountFromISR( void );
+ * @endcode
+ *
+ * @return The count of ticks since vTaskStartScheduler was called.
+ *
+ * This is a version of xTaskGetTickCount() that is safe to be called from an
+ * ISR - provided that TickType_t is the natural word size of the
+ * microcontroller being used or interrupt nesting is either not supported or
+ * not being used.
+ *
+ * \defgroup xTaskGetTickCountFromISR xTaskGetTickCountFromISR
+ * \ingroup TaskUtils
+ */
+TickType_t xTaskGetTickCountFromISR( void );
+
+/**
+ * task. h
+ * @code{c}
+ * uint16_t uxTaskGetNumberOfTasks( void );
+ * @endcode
+ *
+ * @return The number of tasks that the real time kernel is currently managing.
+ * This includes all ready, blocked and suspended tasks.  A task that
+ * has been deleted but not yet freed by the idle task will also be
+ * included in the count.
+ *
+ * \defgroup uxTaskGetNumberOfTasks uxTaskGetNumberOfTasks
+ * \ingroup TaskUtils
+ */
+UBaseType_t uxTaskGetNumberOfTasks( void );
+
+/**
+ * task. h
+ * @code{c}
+ * char *pcTaskGetName( TaskHandle_t xTaskToQuery );
+ * @endcode
+ *
+ * @return The text (human readable) name of the task referenced by the handle
+ * xTaskToQuery.  A task can query its own name by either passing in its own
+ * handle, or by setting xTaskToQuery to NULL.
+ *
+ * \defgroup pcTaskGetName pcTaskGetName
+ * \ingroup TaskUtils
+ */
+char * pcTaskGetName( TaskHandle_t xTaskToQuery ); /*lint !e971 Unqualified char types are allowed for strings and single characters only. */
+
+/**
+ * task. h
+ * @code{c}
+ * TaskHandle_t xTaskGetHandle( const char *pcNameToQuery );
+ * @endcode
+ *
+ * NOTE:  This function takes a relatively long time to complete and should be
+ * used sparingly.
+ *
+ * @return The handle of the task that has the human readable name pcNameToQuery.
+ * NULL is returned if no matching name is found.  INCLUDE_xTaskGetHandle
+ * must be set to 1 in FreeRTOSConfig.h for pcTaskGetHandle() to be available.
+ *
+ * \defgroup pcTaskGetHandle pcTaskGetHandle
+ * \ingroup TaskUtils
+ */
+TaskHandle_t xTaskGetHandle( const char * pcNameToQuery ); /*lint !e971 Unqualified char types are allowed for strings and single characters only. */
+
+/**
+ * task.h
+ * @code{c}
+ * UBaseType_t uxTaskGetStackHighWaterMark( TaskHandle_t xTask );
+ * @endcode
+ *
+ * INCLUDE_uxTaskGetStackHighWaterMark must be set to 1 in FreeRTOSConfig.h for
+ * this function to be available.
+ *
+ * Returns the high water mark of the stack associated with xTask.  That is,
+ * the minimum free stack space there has been (in words, so on a 32 bit machine
+ * a value of 1 means 4 bytes) since the task started.  The smaller the returned
+ * number the closer the task has come to overflowing its stack.
+ *
+ * uxTaskGetStackHighWaterMark() and uxTaskGetStackHighWaterMark2() are the
+ * same except for their return type.  Using configSTACK_DEPTH_TYPE allows the
+ * user to determine the return type.  It gets around the problem of the value
+ * overflowing on 8-bit types without breaking backward compatibility for
+ * applications that expect an 8-bit return type.
+ *
+ * @param xTask Handle of the task associated with the stack to be checked.
+ * Set xTask to NULL to check the stack of the calling task.
+ *
+ * @return The smallest amount of free stack space there has been (in words, so
+ * actual spaces on the stack rather than bytes) since the task referenced by
+ * xTask was created.
+ */
+UBaseType_t uxTaskGetStackHighWaterMark( TaskHandle_t xTask );
+
+/**
+ * task.h
+ * @code{c}
+ * configSTACK_DEPTH_TYPE uxTaskGetStackHighWaterMark2( TaskHandle_t xTask );
+ * @endcode
+ *
+ * INCLUDE_uxTaskGetStackHighWaterMark2 must be set to 1 in FreeRTOSConfig.h for
+ * this function to be available.
+ *
+ * Returns the high water mark of the stack associated with xTask.  That is,
+ * the minimum free stack space there has been (in words, so on a 32 bit machine
+ * a value of 1 means 4 bytes) since the task started.  The smaller the returned
+ * number the closer the task has come to overflowing its stack.
+ *
+ * uxTaskGetStackHighWaterMark() and uxTaskGetStackHighWaterMark2() are the
+ * same except for their return type.  Using configSTACK_DEPTH_TYPE allows the
+ * user to determine the return type.  It gets around the problem of the value
+ * overflowing on 8-bit types without breaking backward compatibility for
+ * applications that expect an 8-bit return type.
+ *
+ * @param xTask Handle of the task associated with the stack to be checked.
+ * Set xTask to NULL to check the stack of the calling task.
+ *
+ * @return The smallest amount of free stack space there has been (in words, so
+ * actual spaces on the stack rather than bytes) since the task referenced by
+ * xTask was created.
+ */
+configSTACK_DEPTH_TYPE uxTaskGetStackHighWaterMark2( TaskHandle_t xTask );
+
+/* When using trace macros it is sometimes necessary to include task.h before
+ * FreeRTOS.h.  When this is done TaskHookFunction_t will not yet have been defined,
+ * so the following two prototypes will cause a compilation error.  This can be
+ * fixed by simply guarding against the inclusion of these two prototypes unless
+ * they are explicitly required by the configUSE_APPLICATION_TASK_TAG configuration
+ * constant. */
+#ifdef configUSE_APPLICATION_TASK_TAG
+    #if configUSE_APPLICATION_TASK_TAG == 1
+
+/**
+ * task.h
+ * @code{c}
+ * void vTaskSetApplicationTaskTag( TaskHandle_t xTask, TaskHookFunction_t pxHookFunction );
+ * @endcode
+ *
+ * Sets pxHookFunction to be the task hook function used by the task xTask.
+ * Passing xTask as NULL has the effect of setting the calling tasks hook
+ * function.
+ */
+        void vTaskSetApplicationTaskTag( TaskHandle_t xTask,
+                                         TaskHookFunction_t pxHookFunction );
+
+/**
+ * task.h
+ * @code{c}
+ * void xTaskGetApplicationTaskTag( TaskHandle_t xTask );
+ * @endcode
+ *
+ * Returns the pxHookFunction value assigned to the task xTask.  Do not
+ * call from an interrupt service routine - call
+ * xTaskGetApplicationTaskTagFromISR() instead.
+ */
+        TaskHookFunction_t xTaskGetApplicationTaskTag( TaskHandle_t xTask );
+
+/**
+ * task.h
+ * @code{c}
+ * void xTaskGetApplicationTaskTagFromISR( TaskHandle_t xTask );
+ * @endcode
+ *
+ * Returns the pxHookFunction value assigned to the task xTask.  Can
+ * be called from an interrupt service routine.
+ */
+        TaskHookFunction_t xTaskGetApplicationTaskTagFromISR( TaskHandle_t xTask );
+    #endif /* configUSE_APPLICATION_TASK_TAG ==1 */
+#endif /* ifdef configUSE_APPLICATION_TASK_TAG */
+
+/**
+ * task.h
+ * @code{c}
+ * BaseType_t xTaskCallApplicationTaskHook( TaskHandle_t xTask, void *pvParameter );
+ * @endcode
+ *
+ * Calls the hook function associated with xTask.  Passing xTask as NULL has
+ * the effect of calling the Running tasks (the calling task) hook function.
+ *
+ * pvParameter is passed to the hook function for the task to interpret as it
+ * wants.  The return value is the value returned by the task hook function
+ * registered by the user.
+ */
+BaseType_t xTaskCallApplicationTaskHook( TaskHandle_t xTask,
+                                         void * pvParameter );
+
+/**
+ * xTaskGetIdleTaskHandle() is only available if
+ * INCLUDE_xTaskGetIdleTaskHandle is set to 1 in FreeRTOSConfig.h.
+ *
+ * Simply returns the handle of the idle task.  It is not valid to call
+ * xTaskGetIdleTaskHandle() before the scheduler has been started.
+ */
+TaskHandle_t xTaskGetIdleTaskHandle( void );
+
+/*
+ * Return the handle of the calling task.
+ */
+TaskHandle_t xTaskGetCurrentTaskHandle( void );
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
