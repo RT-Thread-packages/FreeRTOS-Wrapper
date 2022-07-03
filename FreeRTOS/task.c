@@ -34,6 +34,10 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+//TODO: check configMAX_PRIORITIES == RT_THREAD_PRIORITY_MAX
+#define FREERTOS_PRIORITY_TO_RTTHREAD(priority)    ( configMAX_PRIORITIES - 1 - ( priority ) )
+#define RTTHREAD_PRIORITY_TO_FREERTOS(priority)    ( RT_THREAD_PRIORITY_MAX - 1 - ( priority ) )
+
 /*
  * Several functions take a TaskHandle_t parameter that can optionally be NULL,
  * where NULL is used to indicate that the handle of the currently executing
@@ -87,7 +91,7 @@ typedef tskTCB TCB_t;
         if( ( pxTaskBuffer != NULL ) && ( puxStackBuffer != NULL ) )
         {
             rt_thread_init( ( struct rt_thread * ) pxTaskBuffer, pcName, pxTaskCode, pvParameters,
-                            ( void * ) puxStackBuffer, ulStackDepth * sizeof( StackType_t ), uxPriority, 1 );
+                            ( void * ) puxStackBuffer, ulStackDepth * sizeof( StackType_t ), FREERTOS_PRIORITY_TO_RTTHREAD( uxPriority ), 1 );
             rt_thread_startup( ( rt_thread_t ) pxTaskBuffer );
             xReturn = ( TaskHandle_t ) pxTaskBuffer;
         }
@@ -117,7 +121,7 @@ typedef tskTCB TCB_t;
             if ( stack_start != RT_NULL )
             {
                 rt_thread_init( ( struct rt_thread * ) pxNewTCB, pcName, pxTaskCode, pvParameters,
-                                stack_start, usStackDepth * sizeof( StackType_t ), uxPriority, 1 );
+                                stack_start, usStackDepth * sizeof( StackType_t ), FREERTOS_PRIORITY_TO_RTTHREAD( uxPriority ), 1 );
                 xReturn = pdPASS;
                 if ( pxCreatedTask != NULL )
                 {
@@ -278,7 +282,7 @@ typedef tskTCB TCB_t;
         uxReturn = thread->current_priority;
         rt_hw_interrupt_enable( level );
 
-        return uxReturn;
+        return RTTHREAD_PRIORITY_TO_FREERTOS( uxReturn );
     }
 
 #endif /* INCLUDE_uxTaskPriorityGet */
@@ -312,6 +316,7 @@ typedef tskTCB TCB_t;
         {
             uxNewPriority = ( UBaseType_t ) configMAX_PRIORITIES - ( UBaseType_t ) 1U;
         }
+        uxNewPriority = FREERTOS_PRIORITY_TO_RTTHREAD( uxNewPriority );
 
         level = rt_hw_interrupt_disable();
 
