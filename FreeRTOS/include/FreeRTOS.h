@@ -1132,6 +1132,10 @@ typedef struct xSTATIC_TCB
     #if ( configUSE_APPLICATION_TASK_TAG == 1 )
         void * pxTaskTag;
     #endif
+    #if ( configUSE_TASK_NOTIFICATIONS == 1 )
+        uint32_t ulNotifiedValue[ configTASK_NOTIFICATION_ARRAY_ENTRIES ];
+        uint8_t ucNotifyState[ configTASK_NOTIFICATION_ARRAY_ENTRIES ];
+    #endif
 } StaticTask_t;
 
 typedef struct

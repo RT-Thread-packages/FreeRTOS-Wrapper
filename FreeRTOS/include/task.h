@@ -56,6 +56,13 @@
 #define tskKERNEL_VERSION_MINOR        4
 #define tskKERNEL_VERSION_BUILD        6
 
+/* The direct to task notification feature used to have only a single notification
+ * per task.  Now there is an array of notifications per task that is dimensioned by
+ * configTASK_NOTIFICATION_ARRAY_ENTRIES.  For backward compatibility, any use of the
+ * original direct to task notification defaults to using the first index in the
+ * array. */
+#define tskDEFAULT_INDEX_TO_NOTIFY     ( 0 )
+
 /**
  * task. h
  *
@@ -74,6 +81,16 @@ typedef struct tskTaskControlBlock * TaskHandle_t;
  * conform.
  */
 typedef BaseType_t (* TaskHookFunction_t)( void * );
+
+/* Actions that can be performed when vTaskNotify() is called. */
+typedef enum
+{
+    eNoAction = 0,            /* Notify the task without updating its notify value. */
+    eSetBits,                 /* Set bits in the task's notification value. */
+    eIncrement,               /* Increment the task's notification value. */
+    eSetValueWithOverwrite,   /* Set the task's notification value to a specific value even if the previous value has not yet been read by the task. */
+    eSetValueWithoutOverwrite /* Set the task's notification value if the previous value has been read by the task. */
+} eNotifyAction;
 
 /* Task states returned by eTaskGetState. */
 typedef enum
@@ -1165,6 +1182,238 @@ BaseType_t xTaskCallApplicationTaskHook( TaskHandle_t xTask,
  * xTaskGetIdleTaskHandle() before the scheduler has been started.
  */
 TaskHandle_t xTaskGetIdleTaskHandle( void );
+
+/**
+ * task. h
+ * @code{c}
+ * BaseType_t xTaskNotifyIndexed( TaskHandle_t xTaskToNotify, UBaseType_t uxIndexToNotify, uint32_t ulValue, eNotifyAction eAction );
+ * BaseType_t xTaskNotify( TaskHandle_t xTaskToNotify, uint32_t ulValue, eNotifyAction eAction );
+ * @endcode
+ *
+ * See https://www.FreeRTOS.org/RTOS-task-notifications.html for details.
+ *
+ * configUSE_TASK_NOTIFICATIONS must be undefined or defined as 1 for these
+ * functions to be available.
+ *
+ * Sends a direct to task notification to a task, with an optional value and
+ * action.
+ *
+ * Each task has a private array of "notification values" (or 'notifications'),
+ * each of which is a 32-bit unsigned integer (uint32_t).  The constant
+ * configTASK_NOTIFICATION_ARRAY_ENTRIES sets the number of indexes in the
+ * array, and (for backward compatibility) defaults to 1 if left undefined.
+ * Prior to FreeRTOS V10.4.0 there was only one notification value per task.
+ *
+ * Events can be sent to a task using an intermediary object.  Examples of such
+ * objects are queues, semaphores, mutexes and event groups.  Task notifications
+ * are a method of sending an event directly to a task without the need for such
+ * an intermediary object.
+ *
+ * A notification sent to a task can optionally perform an action, such as
+ * update, overwrite or increment one of the task's notification values.  In
+ * that way task notifications can be used to send data to a task, or be used as
+ * light weight and fast binary or counting semaphores.
+ *
+ * A task can use xTaskNotifyWaitIndexed() or ulTaskNotifyTakeIndexed() to
+ * [optionally] block to wait for a notification to be pending.  The task does
+ * not consume any CPU time while it is in the Blocked state.
+ *
+ * A notification sent to a task will remain pending until it is cleared by the
+ * task calling xTaskNotifyWaitIndexed() or ulTaskNotifyTakeIndexed() (or their
+ * un-indexed equivalents).  If the task was already in the Blocked state to
+ * wait for a notification when the notification arrives then the task will
+ * automatically be removed from the Blocked state (unblocked) and the
+ * notification cleared.
+ *
+ * **NOTE** Each notification within the array operates independently - a task
+ * can only block on one notification within the array at a time and will not be
+ * unblocked by a notification sent to any other array index.
+ *
+ * Backward compatibility information:
+ * Prior to FreeRTOS V10.4.0 each task had a single "notification value", and
+ * all task notification API functions operated on that value. Replacing the
+ * single notification value with an array of notification values necessitated a
+ * new set of API functions that could address specific notifications within the
+ * array.  xTaskNotify() is the original API function, and remains backward
+ * compatible by always operating on the notification value at index 0 in the
+ * array. Calling xTaskNotify() is equivalent to calling xTaskNotifyIndexed()
+ * with the uxIndexToNotify parameter set to 0.
+ *
+ * @param xTaskToNotify The handle of the task being notified.  The handle to a
+ * task can be returned from the xTaskCreate() API function used to create the
+ * task, and the handle of the currently running task can be obtained by calling
+ * xTaskGetCurrentTaskHandle().
+ *
+ * @param uxIndexToNotify The index within the target task's array of
+ * notification values to which the notification is to be sent.  uxIndexToNotify
+ * must be less than configTASK_NOTIFICATION_ARRAY_ENTRIES.  xTaskNotify() does
+ * not have this parameter and always sends notifications to index 0.
+ *
+ * @param ulValue Data that can be sent with the notification.  How the data is
+ * used depends on the value of the eAction parameter.
+ *
+ * @param eAction Specifies how the notification updates the task's notification
+ * value, if at all.  Valid values for eAction are as follows:
+ *
+ * eSetBits -
+ * The target notification value is bitwise ORed with ulValue.
+ * xTaskNotifyIndexed() always returns pdPASS in this case.
+ *
+ * eIncrement -
+ * The target notification value is incremented.  ulValue is not used and
+ * xTaskNotifyIndexed() always returns pdPASS in this case.
+ *
+ * eSetValueWithOverwrite -
+ * The target notification value is set to the value of ulValue, even if the
+ * task being notified had not yet processed the previous notification at the
+ * same array index (the task already had a notification pending at that index).
+ * xTaskNotifyIndexed() always returns pdPASS in this case.
+ *
+ * eSetValueWithoutOverwrite -
+ * If the task being notified did not already have a notification pending at the
+ * same array index then the target notification value is set to ulValue and
+ * xTaskNotifyIndexed() will return pdPASS.  If the task being notified already
+ * had a notification pending at the same array index then no action is
+ * performed and pdFAIL is returned.
+ *
+ * eNoAction -
+ * The task receives a notification at the specified array index without the
+ * notification value at that index being updated.  ulValue is not used and
+ * xTaskNotifyIndexed() always returns pdPASS in this case.
+ *
+ * pulPreviousNotificationValue -
+ * Can be used to pass out the subject task's notification value before any
+ * bits are modified by the notify function.
+ *
+ * @return Dependent on the value of eAction.  See the description of the
+ * eAction parameter.
+ *
+ * \defgroup xTaskNotifyIndexed xTaskNotifyIndexed
+ * \ingroup TaskNotifications
+ */
+BaseType_t xTaskGenericNotify( TaskHandle_t xTaskToNotify,
+                               UBaseType_t uxIndexToNotify,
+                               uint32_t ulValue,
+                               eNotifyAction eAction,
+                               uint32_t * pulPreviousNotificationValue );
+#define xTaskNotify( xTaskToNotify, ulValue, eAction ) \
+    xTaskGenericNotify( ( xTaskToNotify ), ( tskDEFAULT_INDEX_TO_NOTIFY ), ( ulValue ), ( eAction ), NULL )
+#define xTaskNotifyIndexed( xTaskToNotify, uxIndexToNotify, ulValue, eAction ) \
+    xTaskGenericNotify( ( xTaskToNotify ), ( uxIndexToNotify ), ( ulValue ), ( eAction ), NULL )
+
+/**
+ * task. h
+ * @code{c}
+ * BaseType_t xTaskNotifyWaitIndexed( UBaseType_t uxIndexToWaitOn, uint32_t ulBitsToClearOnEntry, uint32_t ulBitsToClearOnExit, uint32_t *pulNotificationValue, TickType_t xTicksToWait );
+ *
+ * BaseType_t xTaskNotifyWait( uint32_t ulBitsToClearOnEntry, uint32_t ulBitsToClearOnExit, uint32_t *pulNotificationValue, TickType_t xTicksToWait );
+ * @endcode
+ *
+ * Waits for a direct to task notification to be pending at a given index within
+ * an array of direct to task notifications.
+ *
+ * See https://www.FreeRTOS.org/RTOS-task-notifications.html for details.
+ *
+ * configUSE_TASK_NOTIFICATIONS must be undefined or defined as 1 for this
+ * function to be available.
+ *
+ * Each task has a private array of "notification values" (or 'notifications'),
+ * each of which is a 32-bit unsigned integer (uint32_t).  The constant
+ * configTASK_NOTIFICATION_ARRAY_ENTRIES sets the number of indexes in the
+ * array, and (for backward compatibility) defaults to 1 if left undefined.
+ * Prior to FreeRTOS V10.4.0 there was only one notification value per task.
+ *
+ * Events can be sent to a task using an intermediary object.  Examples of such
+ * objects are queues, semaphores, mutexes and event groups.  Task notifications
+ * are a method of sending an event directly to a task without the need for such
+ * an intermediary object.
+ *
+ * A notification sent to a task can optionally perform an action, such as
+ * update, overwrite or increment one of the task's notification values.  In
+ * that way task notifications can be used to send data to a task, or be used as
+ * light weight and fast binary or counting semaphores.
+ *
+ * A notification sent to a task will remain pending until it is cleared by the
+ * task calling xTaskNotifyWaitIndexed() or ulTaskNotifyTakeIndexed() (or their
+ * un-indexed equivalents).  If the task was already in the Blocked state to
+ * wait for a notification when the notification arrives then the task will
+ * automatically be removed from the Blocked state (unblocked) and the
+ * notification cleared.
+ *
+ * A task can use xTaskNotifyWaitIndexed() to [optionally] block to wait for a
+ * notification to be pending, or ulTaskNotifyTakeIndexed() to [optionally] block
+ * to wait for a notification value to have a non-zero value.  The task does
+ * not consume any CPU time while it is in the Blocked state.
+ *
+ * **NOTE** Each notification within the array operates independently - a task
+ * can only block on one notification within the array at a time and will not be
+ * unblocked by a notification sent to any other array index.
+ *
+ * Backward compatibility information:
+ * Prior to FreeRTOS V10.4.0 each task had a single "notification value", and
+ * all task notification API functions operated on that value. Replacing the
+ * single notification value with an array of notification values necessitated a
+ * new set of API functions that could address specific notifications within the
+ * array.  xTaskNotifyWait() is the original API function, and remains backward
+ * compatible by always operating on the notification value at index 0 in the
+ * array. Calling xTaskNotifyWait() is equivalent to calling
+ * xTaskNotifyWaitIndexed() with the uxIndexToWaitOn parameter set to 0.
+ *
+ * @param uxIndexToWaitOn The index within the calling task's array of
+ * notification values on which the calling task will wait for a notification to
+ * be received.  uxIndexToWaitOn must be less than
+ * configTASK_NOTIFICATION_ARRAY_ENTRIES.  xTaskNotifyWait() does
+ * not have this parameter and always waits for notifications on index 0.
+ *
+ * @param ulBitsToClearOnEntry Bits that are set in ulBitsToClearOnEntry value
+ * will be cleared in the calling task's notification value before the task
+ * checks to see if any notifications are pending, and optionally blocks if no
+ * notifications are pending.  Setting ulBitsToClearOnEntry to ULONG_MAX (if
+ * limits.h is included) or 0xffffffffUL (if limits.h is not included) will have
+ * the effect of resetting the task's notification value to 0.  Setting
+ * ulBitsToClearOnEntry to 0 will leave the task's notification value unchanged.
+ *
+ * @param ulBitsToClearOnExit If a notification is pending or received before
+ * the calling task exits the xTaskNotifyWait() function then the task's
+ * notification value (see the xTaskNotify() API function) is passed out using
+ * the pulNotificationValue parameter.  Then any bits that are set in
+ * ulBitsToClearOnExit will be cleared in the task's notification value (note
+ * *pulNotificationValue is set before any bits are cleared).  Setting
+ * ulBitsToClearOnExit to ULONG_MAX (if limits.h is included) or 0xffffffffUL
+ * (if limits.h is not included) will have the effect of resetting the task's
+ * notification value to 0 before the function exits.  Setting
+ * ulBitsToClearOnExit to 0 will leave the task's notification value unchanged
+ * when the function exits (in which case the value passed out in
+ * pulNotificationValue will match the task's notification value).
+ *
+ * @param pulNotificationValue Used to pass the task's notification value out
+ * of the function.  Note the value passed out will not be effected by the
+ * clearing of any bits caused by ulBitsToClearOnExit being non-zero.
+ *
+ * @param xTicksToWait The maximum amount of time that the task should wait in
+ * the Blocked state for a notification to be received, should a notification
+ * not already be pending when xTaskNotifyWait() was called.  The task
+ * will not consume any processing time while it is in the Blocked state.  This
+ * is specified in kernel ticks, the macro pdMS_TO_TICKS( value_in_ms ) can be
+ * used to convert a time specified in milliseconds to a time specified in
+ * ticks.
+ *
+ * @return If a notification was received (including notifications that were
+ * already pending when xTaskNotifyWait was called) then pdPASS is
+ * returned.  Otherwise pdFAIL is returned.
+ *
+ * \defgroup xTaskNotifyWaitIndexed xTaskNotifyWaitIndexed
+ * \ingroup TaskNotifications
+ */
+BaseType_t xTaskGenericNotifyWait( UBaseType_t uxIndexToWaitOn,
+                                   uint32_t ulBitsToClearOnEntry,
+                                   uint32_t ulBitsToClearOnExit,
+                                   uint32_t * pulNotificationValue,
+                                   TickType_t xTicksToWait );
+#define xTaskNotifyWait( ulBitsToClearOnEntry, ulBitsToClearOnExit, pulNotificationValue, xTicksToWait ) \
+    xTaskGenericNotifyWait( tskDEFAULT_INDEX_TO_NOTIFY, ( ulBitsToClearOnEntry ), ( ulBitsToClearOnExit ), ( pulNotificationValue ), ( xTicksToWait ) )
+#define xTaskNotifyWaitIndexed( uxIndexToWaitOn, ulBitsToClearOnEntry, ulBitsToClearOnExit, pulNotificationValue, xTicksToWait ) \
+    xTaskGenericNotifyWait( ( uxIndexToWaitOn ), ( ulBitsToClearOnEntry ), ( ulBitsToClearOnExit ), ( pulNotificationValue ), ( xTicksToWait ) )
 
 /*
  * Return the handle of the calling task.

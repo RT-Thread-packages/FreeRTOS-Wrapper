@@ -140,5 +140,6 @@ standard names. */
 #define INCLUDE_xTaskGetIdleTaskHandle          1
 #define INCLUDE_uxTaskGetStackHighWaterMark     1
 #define INCLUDE_uxTaskGetStackHighWaterMark2    1
+#define configUSE_TASK_NOTIFICATIONS            1
 
 #endif /* FREERTOS_CONFIG_H */

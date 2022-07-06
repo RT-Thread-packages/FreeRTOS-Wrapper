@@ -38,6 +38,11 @@
 #define FREERTOS_PRIORITY_TO_RTTHREAD(priority)    ( configMAX_PRIORITIES - 1 - ( priority ) )
 #define RTTHREAD_PRIORITY_TO_FREERTOS(priority)    ( RT_THREAD_PRIORITY_MAX - 1 - ( priority ) )
 
+/* Values that can be assigned to the ucNotifyState member of the TCB. */
+#define taskNOT_WAITING_NOTIFICATION              ( ( uint8_t ) 0 ) /* Must be zero as it is the initialised value. */
+#define taskWAITING_NOTIFICATION                  ( ( uint8_t ) 1 )
+#define taskNOTIFICATION_RECEIVED                 ( ( uint8_t ) 2 )
+
 /*
  * Several functions take a TaskHandle_t parameter that can optionally be NULL,
  * where NULL is used to indicate that the handle of the currently executing
@@ -56,6 +61,10 @@ typedef struct tskTaskControlBlock
     struct rt_thread thread;
     #if ( configUSE_APPLICATION_TASK_TAG == 1 )
         TaskHookFunction_t pxTaskTag;
+    #endif
+    #if ( configUSE_TASK_NOTIFICATIONS == 1 )
+        volatile uint32_t ulNotifiedValue[ configTASK_NOTIFICATION_ARRAY_ENTRIES ];
+        volatile uint8_t ucNotifyState[ configTASK_NOTIFICATION_ARRAY_ENTRIES ];
     #endif
 } tskTCB;
 typedef tskTCB TCB_t;
@@ -607,6 +616,187 @@ char * pcTaskGetName( TaskHandle_t xTaskToQuery )
     }
 
 #endif /* ( ( INCLUDE_xTaskGetCurrentTaskHandle == 1 ) || ( configUSE_MUTEXES == 1 ) ) */
+/*-----------------------------------------------------------*/
+
+#if ( configUSE_TASK_NOTIFICATIONS == 1 )
+
+    BaseType_t xTaskGenericNotifyWait( UBaseType_t uxIndexToWait,
+                                       uint32_t ulBitsToClearOnEntry,
+                                       uint32_t ulBitsToClearOnExit,
+                                       uint32_t * pulNotificationValue,
+                                       TickType_t xTicksToWait )
+    {
+        BaseType_t xReturn;
+        TCB_t * pxCurrentTCB = ( TCB_t * ) rt_thread_self();
+        rt_thread_t thread = rt_thread_self();
+        rt_base_t level;
+
+        configASSERT( uxIndexToWait < configTASK_NOTIFICATION_ARRAY_ENTRIES );
+
+        level = rt_hw_interrupt_disable();
+        /* Only block if a notification is not already pending. */
+        if( pxCurrentTCB->ucNotifyState[ uxIndexToWait ] != taskNOTIFICATION_RECEIVED )
+        {
+            /* Clear bits in the task's notification value as bits may get
+             * set  by the notifying task or interrupt.  This can be used to
+             * clear the value to zero. */
+            pxCurrentTCB->ulNotifiedValue[ uxIndexToWait ] &= ~ulBitsToClearOnEntry;
+
+            /* Mark this task as waiting for a notification. */
+            pxCurrentTCB->ucNotifyState[ uxIndexToWait ] = taskWAITING_NOTIFICATION;
+
+            if( xTicksToWait > ( TickType_t ) 0 )
+            {
+                rt_thread_suspend( thread );
+                if ( ( rt_int32_t ) xTicksToWait > 0 )
+                {
+                    rt_timer_control(&(thread->thread_timer),
+                                     RT_TIMER_CTRL_SET_TIME,
+                                     &xTicksToWait);
+                    rt_timer_start(&(thread->thread_timer));
+                }
+                rt_hw_interrupt_enable(level);
+                rt_schedule();
+                /* Clear thread error. It is not used to determine the function return value. */
+                thread->error = RT_EOK;
+            }
+            else
+            {
+                rt_hw_interrupt_enable( level );
+            }
+        }
+        else
+        {
+            rt_hw_interrupt_enable( level );
+        }
+
+        level = rt_hw_interrupt_disable();
+
+        if( pulNotificationValue != NULL )
+        {
+            /* Output the current notification value, which may or may not
+             * have changed. */
+            *pulNotificationValue = pxCurrentTCB->ulNotifiedValue[ uxIndexToWait ];
+        }
+
+        /* If ucNotifyValue is set then either the task never entered the
+         * blocked state (because a notification was already pending) or the
+         * task unblocked because of a notification.  Otherwise the task
+         * unblocked because of a timeout. */
+        if( pxCurrentTCB->ucNotifyState[ uxIndexToWait ] != taskNOTIFICATION_RECEIVED )
+        {
+            /* A notification was not received. */
+            xReturn = pdFALSE;
+        }
+        else
+        {
+            /* A notification was already pending or a notification was
+             * received while the task was waiting. */
+            pxCurrentTCB->ulNotifiedValue[ uxIndexToWait ] &= ~ulBitsToClearOnExit;
+            xReturn = pdTRUE;
+        }
+
+        pxCurrentTCB->ucNotifyState[ uxIndexToWait ] = taskNOT_WAITING_NOTIFICATION;
+        rt_hw_interrupt_enable( level );
+
+        return xReturn;
+    }
+
+#endif /* configUSE_TASK_NOTIFICATIONS */
+/*-----------------------------------------------------------*/
+
+#if ( configUSE_TASK_NOTIFICATIONS == 1 )
+
+    BaseType_t xTaskGenericNotify( TaskHandle_t xTaskToNotify,
+                                   UBaseType_t uxIndexToNotify,
+                                   uint32_t ulValue,
+                                   eNotifyAction eAction,
+                                   uint32_t * pulPreviousNotificationValue )
+    {
+        TCB_t * pxTCB;
+        BaseType_t xReturn = pdPASS;
+        uint8_t ucOriginalNotifyState;
+        rt_base_t level;
+
+        configASSERT( uxIndexToNotify < configTASK_NOTIFICATION_ARRAY_ENTRIES );
+        configASSERT( xTaskToNotify );
+        pxTCB = xTaskToNotify;
+
+        level = rt_hw_interrupt_disable();
+
+        if( pulPreviousNotificationValue != NULL )
+        {
+            *pulPreviousNotificationValue = pxTCB->ulNotifiedValue[ uxIndexToNotify ];
+        }
+
+        ucOriginalNotifyState = pxTCB->ucNotifyState[ uxIndexToNotify ];
+
+        pxTCB->ucNotifyState[ uxIndexToNotify ] = taskNOTIFICATION_RECEIVED;
+
+        switch( eAction )
+        {
+            case eSetBits:
+                pxTCB->ulNotifiedValue[ uxIndexToNotify ] |= ulValue;
+                break;
+
+            case eIncrement:
+                ( pxTCB->ulNotifiedValue[ uxIndexToNotify ] )++;
+                break;
+
+            case eSetValueWithOverwrite:
+                pxTCB->ulNotifiedValue[ uxIndexToNotify ] = ulValue;
+                break;
+
+            case eSetValueWithoutOverwrite:
+
+                if( ucOriginalNotifyState != taskNOTIFICATION_RECEIVED )
+                {
+                    pxTCB->ulNotifiedValue[ uxIndexToNotify ] = ulValue;
+                }
+                else
+                {
+                    /* The value could not be written to the task. */
+                    xReturn = pdFAIL;
+                }
+
+                break;
+
+            case eNoAction:
+
+                /* The task is being notified without its notify value being
+                 * updated. */
+                break;
+
+            default:
+
+                /* Should not get here if all enums are handled.
+                 * Artificially force an assert by testing a value the
+                 * compiler can't assume is const. */
+                configASSERT( xTaskToNotify == NULL );
+
+                break;
+        }
+
+
+        /* If the task is in the blocked state specifically to wait for a
+         * notification then unblock it now. */
+        if( ucOriginalNotifyState == taskWAITING_NOTIFICATION )
+        {
+            rt_thread_resume( ( rt_thread_t ) pxTCB );
+
+            if( ( ( rt_thread_t ) pxTCB )->current_priority < rt_thread_self()->current_priority )
+            {
+                /* The notified task has a priority above the currently
+                 * executing task so a schedule is required. */
+                rt_schedule();
+            }
+        }
+        rt_hw_interrupt_enable( level );
+
+        return xReturn;
+    }
+
+#endif /* configUSE_TASK_NOTIFICATIONS */
 /*-----------------------------------------------------------*/
 
 #if ( INCLUDE_uxTaskGetStackHighWaterMark2 == 1 )
