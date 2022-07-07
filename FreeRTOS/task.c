@@ -71,6 +71,19 @@ typedef tskTCB TCB_t;
 
 /*-----------------------------------------------------------*/
 
+/*
+ * Called after a Task_t structure has been allocated either statically or
+ * dynamically to fill in the structure's members.
+ */
+static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
+                                  const char * const pcName,
+                                  const uint32_t ulStackDepth,
+                                  void * const pvParameters,
+                                  UBaseType_t uxPriority,
+                                  TaskHandle_t * const pxCreatedTask,
+                                  TCB_t * pxNewTCB,
+                                  StackType_t * const puxStackBuffer );
+
 #if ( configSUPPORT_STATIC_ALLOCATION == 1 )
 
     TaskHandle_t xTaskCreateStatic( TaskFunction_t pxTaskCode,
@@ -81,6 +94,7 @@ typedef tskTCB TCB_t;
                                     StackType_t * const puxStackBuffer,
                                     StaticTask_t * const pxTaskBuffer )
     {
+        TCB_t * pxNewTCB;
         TaskHandle_t xReturn = NULL;
 
         configASSERT( puxStackBuffer != NULL );
@@ -99,10 +113,9 @@ typedef tskTCB TCB_t;
 
         if( ( pxTaskBuffer != NULL ) && ( puxStackBuffer != NULL ) )
         {
-            rt_thread_init( ( struct rt_thread * ) pxTaskBuffer, pcName, pxTaskCode, pvParameters,
-                            ( void * ) puxStackBuffer, ulStackDepth * sizeof( StackType_t ), FREERTOS_PRIORITY_TO_RTTHREAD( uxPriority ), 1 );
-            rt_thread_startup( ( rt_thread_t ) pxTaskBuffer );
-            xReturn = ( TaskHandle_t ) pxTaskBuffer;
+            pxNewTCB = ( TCB_t * ) pxTaskBuffer;
+            prvInitialiseNewTask( pxTaskCode, pcName, ulStackDepth, pvParameters, uxPriority, &xReturn, pxNewTCB, puxStackBuffer );
+            rt_thread_startup( ( rt_thread_t ) pxNewTCB );
         }
 
         return xReturn;
@@ -129,13 +142,8 @@ typedef tskTCB TCB_t;
             stack_start = RT_KERNEL_MALLOC( usStackDepth * sizeof( StackType_t ) );
             if ( stack_start != RT_NULL )
             {
-                rt_thread_init( ( struct rt_thread * ) pxNewTCB, pcName, pxTaskCode, pvParameters,
-                                stack_start, usStackDepth * sizeof( StackType_t ), FREERTOS_PRIORITY_TO_RTTHREAD( uxPriority ), 1 );
+                prvInitialiseNewTask( pxTaskCode, pcName, ( uint32_t ) usStackDepth, pvParameters, uxPriority, pxCreatedTask, pxNewTCB, ( StackType_t * ) stack_start );
                 xReturn = pdPASS;
-                if ( pxCreatedTask != NULL )
-                {
-                    *pxCreatedTask = ( TaskHandle_t ) pxNewTCB;
-                }
                 /* Mark as dynamic */
                 ( ( struct rt_thread * ) pxNewTCB )->type &= ~RT_Object_Class_Static;
                 rt_thread_startup( ( rt_thread_t ) pxNewTCB );
@@ -150,6 +158,42 @@ typedef tskTCB TCB_t;
     }
 
 #endif /* configSUPPORT_DYNAMIC_ALLOCATION */
+/*-----------------------------------------------------------*/
+
+static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
+                                  const char * const pcName,
+                                  const uint32_t ulStackDepth,
+                                  void * const pvParameters,
+                                  UBaseType_t uxPriority,
+                                  TaskHandle_t * const pxCreatedTask,
+                                  TCB_t * pxNewTCB,
+                                  StackType_t * const puxStackBuffer )
+{
+    /* This is used as an array index so must ensure it's not too large. */
+    configASSERT( uxPriority < configMAX_PRIORITIES );
+
+    if( uxPriority >= ( UBaseType_t ) configMAX_PRIORITIES )
+    {
+        uxPriority = ( UBaseType_t ) configMAX_PRIORITIES - ( UBaseType_t ) 1U;
+    }
+
+    rt_thread_init( ( struct rt_thread * ) pxNewTCB, pcName, pxTaskCode, pvParameters,
+                    puxStackBuffer, ulStackDepth * sizeof( StackType_t ), FREERTOS_PRIORITY_TO_RTTHREAD( uxPriority ), 1 );
+
+#if ( configUSE_APPLICATION_TASK_TAG == 1 )
+    pxNewTCB->pxTaskTag = NULL;
+#endif
+
+#if ( configUSE_TASK_NOTIFICATIONS == 1 )
+    rt_memset( ( void * ) &( pxNewTCB->ulNotifiedValue[ 0 ] ), 0x00, sizeof( pxNewTCB->ulNotifiedValue ) );
+    rt_memset( ( void * ) &( pxNewTCB->ucNotifyState[ 0 ] ), 0x00, sizeof( pxNewTCB->ucNotifyState ) );
+#endif
+
+    if ( pxCreatedTask != NULL )
+    {
+        *pxCreatedTask = ( TaskHandle_t ) pxNewTCB;
+    }
+}
 /*-----------------------------------------------------------*/
 
 #if ( INCLUDE_vTaskDelete == 1 )
@@ -396,7 +440,7 @@ typedef tskTCB TCB_t;
             {
                 need_schedule = RT_TRUE;
             }
-            rt_hw_interrupt_enable(level);
+            rt_hw_interrupt_enable( level );
         }
         if (need_schedule == RT_TRUE)
         {
@@ -620,6 +664,68 @@ char * pcTaskGetName( TaskHandle_t xTaskToQuery )
 
 #if ( configUSE_TASK_NOTIFICATIONS == 1 )
 
+    uint32_t ulTaskGenericNotifyTake( UBaseType_t uxIndexToWait,
+                                      BaseType_t xClearCountOnExit,
+                                      TickType_t xTicksToWait )
+    {
+        uint32_t ulReturn;
+        TCB_t * pxCurrentTCB = ( TCB_t * ) rt_thread_self();
+        rt_thread_t thread = ( rt_thread_t ) pxCurrentTCB;
+        rt_base_t level;
+
+        configASSERT( uxIndexToWait < configTASK_NOTIFICATION_ARRAY_ENTRIES );
+
+        level = rt_hw_interrupt_disable();
+        /* Only block if the notification count is not already non-zero. */
+        if( pxCurrentTCB->ulNotifiedValue[ uxIndexToWait ] == 0UL )
+        {
+            /* Mark this task as waiting for a notification. */
+            pxCurrentTCB->ucNotifyState[ uxIndexToWait ] = taskWAITING_NOTIFICATION;
+
+            if( xTicksToWait > ( TickType_t ) 0 )
+            {
+                rt_thread_suspend( thread );
+                if ( ( rt_int32_t ) xTicksToWait > 0 )
+                {
+                    rt_timer_control(&(thread->thread_timer),
+                                     RT_TIMER_CTRL_SET_TIME,
+                                     &xTicksToWait);
+                    rt_timer_start(&(thread->thread_timer));
+                }
+                rt_hw_interrupt_enable(level);
+                rt_schedule();
+                /* Clear thread error. */
+                thread->error = RT_EOK;
+            }
+        }
+        rt_hw_interrupt_enable( level );
+
+        level = rt_hw_interrupt_disable();
+        ulReturn = pxCurrentTCB->ulNotifiedValue[ uxIndexToWait ];
+
+        if( ulReturn != 0UL )
+        {
+            if( xClearCountOnExit != pdFALSE )
+            {
+                pxCurrentTCB->ulNotifiedValue[ uxIndexToWait ] = 0UL;
+            }
+            else
+            {
+                pxCurrentTCB->ulNotifiedValue[ uxIndexToWait ] = ulReturn - ( uint32_t ) 1;
+            }
+        }
+
+        pxCurrentTCB->ucNotifyState[ uxIndexToWait ] = taskNOT_WAITING_NOTIFICATION;
+        rt_hw_interrupt_enable( level );
+
+        return ulReturn;
+    }
+
+#endif /* configUSE_TASK_NOTIFICATIONS */
+/*-----------------------------------------------------------*/
+
+#if ( configUSE_TASK_NOTIFICATIONS == 1 )
+
     BaseType_t xTaskGenericNotifyWait( UBaseType_t uxIndexToWait,
                                        uint32_t ulBitsToClearOnEntry,
                                        uint32_t ulBitsToClearOnExit,
@@ -628,7 +734,7 @@ char * pcTaskGetName( TaskHandle_t xTaskToQuery )
     {
         BaseType_t xReturn;
         TCB_t * pxCurrentTCB = ( TCB_t * ) rt_thread_self();
-        rt_thread_t thread = rt_thread_self();
+        rt_thread_t thread = ( rt_thread_t ) pxCurrentTCB;
         rt_base_t level;
 
         configASSERT( uxIndexToWait < configTASK_NOTIFICATION_ARRAY_ENTRIES );
@@ -794,6 +900,109 @@ char * pcTaskGetName( TaskHandle_t xTaskToQuery )
         rt_hw_interrupt_enable( level );
 
         return xReturn;
+    }
+
+#endif /* configUSE_TASK_NOTIFICATIONS */
+/*-----------------------------------------------------------*/
+
+#if ( configUSE_TASK_NOTIFICATIONS == 1 )
+
+    BaseType_t xTaskGenericNotifyFromISR( TaskHandle_t xTaskToNotify,
+                                          UBaseType_t uxIndexToNotify,
+                                          uint32_t ulValue,
+                                          eNotifyAction eAction,
+                                          uint32_t * pulPreviousNotificationValue,
+                                          BaseType_t * pxHigherPriorityTaskWoken )
+    {
+        BaseType_t xReturn;
+
+        xReturn = xTaskGenericNotify( xTaskToNotify, uxIndexToNotify, ulValue, eAction, pulPreviousNotificationValue );
+        if ( pxHigherPriorityTaskWoken != NULL )
+        {
+            *pxHigherPriorityTaskWoken = pdFALSE;
+        }
+
+        return xReturn;
+    }
+
+#endif /* configUSE_TASK_NOTIFICATIONS */
+/*-----------------------------------------------------------*/
+
+#if ( configUSE_TASK_NOTIFICATIONS == 1 )
+
+    void vTaskGenericNotifyGiveFromISR( TaskHandle_t xTaskToNotify,
+                                        UBaseType_t uxIndexToNotify,
+                                        BaseType_t * pxHigherPriorityTaskWoken )
+    {
+        xTaskNotifyGiveIndexed( xTaskToNotify, uxIndexToNotify );
+        if ( pxHigherPriorityTaskWoken != NULL )
+        {
+            *pxHigherPriorityTaskWoken = pdFALSE;
+        }
+    }
+
+#endif /* configUSE_TASK_NOTIFICATIONS */
+/*-----------------------------------------------------------*/
+
+#if ( configUSE_TASK_NOTIFICATIONS == 1 )
+
+    BaseType_t xTaskGenericNotifyStateClear( TaskHandle_t xTask,
+                                             UBaseType_t uxIndexToClear )
+    {
+        TCB_t * pxTCB;
+        BaseType_t xReturn;
+        rt_base_t level;
+
+        configASSERT( uxIndexToClear < configTASK_NOTIFICATION_ARRAY_ENTRIES );
+
+        /* If null is passed in here then it is the calling task that is having
+         * its notification state cleared. */
+        pxTCB = prvGetTCBFromHandle( xTask );
+
+        level = rt_hw_interrupt_disable();
+
+        if( pxTCB->ucNotifyState[ uxIndexToClear ] == taskNOTIFICATION_RECEIVED )
+        {
+            pxTCB->ucNotifyState[ uxIndexToClear ] = taskNOT_WAITING_NOTIFICATION;
+            xReturn = pdPASS;
+        }
+        else
+        {
+            xReturn = pdFAIL;
+        }
+
+        rt_hw_interrupt_enable( level );
+
+        return xReturn;
+    }
+
+#endif /* configUSE_TASK_NOTIFICATIONS */
+/*-----------------------------------------------------------*/
+
+#if ( configUSE_TASK_NOTIFICATIONS == 1 )
+
+    uint32_t ulTaskGenericNotifyValueClear( TaskHandle_t xTask,
+                                            UBaseType_t uxIndexToClear,
+                                            uint32_t ulBitsToClear )
+    {
+        TCB_t * pxTCB;
+        uint32_t ulReturn;
+        rt_base_t level;
+
+        /* If null is passed in here then it is the calling task that is having
+         * its notification state cleared. */
+        pxTCB = prvGetTCBFromHandle( xTask );
+
+        level = rt_hw_interrupt_disable();
+
+        /* Return the notification as it was before the bits were cleared,
+         * then clear the bit mask. */
+        ulReturn = pxTCB->ulNotifiedValue[ uxIndexToClear ];
+        pxTCB->ulNotifiedValue[ uxIndexToClear ] &= ~ulBitsToClear;
+
+        rt_hw_interrupt_enable( level );
+
+        return ulReturn;
     }
 
 #endif /* configUSE_TASK_NOTIFICATIONS */

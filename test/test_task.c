@@ -18,7 +18,7 @@ static StaticTask_t xTaskBuffer;
 StackType_t xStack[configMINIMAL_STACK_SIZE * 2];
 static BaseType_t num = 0;
 
-void vTask1Code(void * pvParameters)
+static void vTask1Code(void * pvParameters)
 {
     while (1)
     {
@@ -35,7 +35,7 @@ void vTask1Code(void * pvParameters)
     }
 }
 
-void vTask2Code(void * pvParameters)
+static void vTask2Code(void * pvParameters)
 {
     while (1)
     {

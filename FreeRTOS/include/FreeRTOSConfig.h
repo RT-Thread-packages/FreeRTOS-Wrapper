@@ -48,7 +48,6 @@
 #define configUSE_TICK_HOOK                     1
 #define configCPU_CLOCK_HZ                      ( SystemCoreClock )
 #define configTICK_RATE_HZ                      ( 1000 )
-#define configMAX_PRIORITIES                    ( 5 )
 #define configMINIMAL_STACK_SIZE                ( ( unsigned short ) 130 )
 #define configMAX_TASK_NAME_LEN                 ( 10 )
 #define configUSE_TRACE_FACILITY                1
@@ -84,7 +83,6 @@ FreeRTOS/Source/tasks.c for limitations. */
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
 #define INCLUDE_vTaskCleanUpResources   1
-#define INCLUDE_eTaskGetState           1
 #define INCLUDE_xTimerPendFunctionCall  1
 
 /* Cortex-M specific definitions. */
@@ -141,5 +139,7 @@ standard names. */
 #define INCLUDE_uxTaskGetStackHighWaterMark     1
 #define INCLUDE_uxTaskGetStackHighWaterMark2    1
 #define configUSE_TASK_NOTIFICATIONS            1
+#define INCLUDE_eTaskGetState                   1
+#define configMAX_PRIORITIES                    ( 32 )
 
 #endif /* FREERTOS_CONFIG_H */
