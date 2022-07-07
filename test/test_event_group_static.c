@@ -70,7 +70,7 @@ int event_group_static(void)
         rt_kprintf("create event group failed.\n");
         return -1;
     }
-    xTaskCreate( vTask1Code, "Task1", configMINIMAL_STACK_SIZE, NULL, TASK_PRIORITY - 1, &TaskHandle1 );
+    xTaskCreate( vTask1Code, "Task1", configMINIMAL_STACK_SIZE, NULL, TASK_PRIORITY + 1, &TaskHandle1 );
     if (TaskHandle1 == NULL)
     {
         rt_kprintf("Create task 1 failed\n");
