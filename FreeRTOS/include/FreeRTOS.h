@@ -1159,6 +1159,12 @@ typedef struct xSTATIC_EVENT_GROUP
     struct rt_event event;
 } StaticEventGroup_t;
 
+typedef struct xSTATIC_TIMER
+{
+    struct rt_timer timer;
+    void * pvTimerID;
+} StaticTimer_t;
+
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     }
