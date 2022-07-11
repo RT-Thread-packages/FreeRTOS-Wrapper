@@ -12,6 +12,13 @@ void vPortExitCritical( void )
     rt_hw_interrupt_enable(level);
 }
 
+void vPortEndScheduler( void )
+{
+    /* Not implemented in ports where there is nothing to return to.
+     * Artificially force an assert. */
+    RT_ASSERT( 0 );
+}
+
 BaseType_t rt_err_to_freertos(rt_err_t rt_err)
 {
     switch(-rt_err)

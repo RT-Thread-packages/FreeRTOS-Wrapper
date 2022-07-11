@@ -1136,6 +1136,9 @@ typedef struct xSTATIC_TCB
         uint32_t ulNotifiedValue[ configTASK_NOTIFICATION_ARRAY_ENTRIES ];
         uint8_t ucNotifyState[ configTASK_NOTIFICATION_ARRAY_ENTRIES ];
     #endif
+    #if ( INCLUDE_xTaskAbortDelay == 1 )
+        uint8_t ucDelayAborted;
+    #endif
 } StaticTask_t;
 
 typedef struct
