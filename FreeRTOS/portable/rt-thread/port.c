@@ -14,9 +14,7 @@ void vPortExitCritical( void )
 
 void vPortEndScheduler( void )
 {
-    /* Not implemented in ports where there is nothing to return to.
-     * Artificially force an assert. */
-    RT_ASSERT( 0 );
+    /* Not implemented in ports where there is nothing to return to. */
 }
 
 BaseType_t rt_err_to_freertos(rt_err_t rt_err)
