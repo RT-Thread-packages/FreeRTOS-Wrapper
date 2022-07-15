@@ -66,8 +66,14 @@ typedef struct tskTaskControlBlock
         volatile uint32_t ulNotifiedValue[ configTASK_NOTIFICATION_ARRAY_ENTRIES ];
         volatile uint8_t ucNotifyState[ configTASK_NOTIFICATION_ARRAY_ENTRIES ];
     #endif
+    #if ( INCLUDE_xTaskAbortDelay == 1 )
+        uint8_t ucDelayAborted;
+    #endif
 } tskTCB;
 typedef tskTCB TCB_t;
+
+/* Other file private variables. --------------------------------*/
+static volatile BaseType_t xSchedulerRunning = pdFALSE;
 
 /*-----------------------------------------------------------*/
 
@@ -187,6 +193,10 @@ static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
 #if ( configUSE_TASK_NOTIFICATIONS == 1 )
     rt_memset( ( void * ) &( pxNewTCB->ulNotifiedValue[ 0 ] ), 0x00, sizeof( pxNewTCB->ulNotifiedValue ) );
     rt_memset( ( void * ) &( pxNewTCB->ucNotifyState[ 0 ] ), 0x00, sizeof( pxNewTCB->ucNotifyState ) );
+#endif
+
+#if ( INCLUDE_xTaskAbortDelay == 1 )
+    pxNewTCB->ucDelayAborted = pdFALSE;
 #endif
 
     if ( pxCreatedTask != NULL )
@@ -463,6 +473,19 @@ static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
 #endif /* ( ( INCLUDE_xTaskResumeFromISR == 1 ) && ( INCLUDE_vTaskSuspend == 1 ) ) */
 /*-----------------------------------------------------------*/
 
+void vTaskStartScheduler( void )
+{
+    xSchedulerRunning = pdTRUE;
+}
+/*-----------------------------------------------------------*/
+
+void vTaskEndScheduler( void )
+{
+    xSchedulerRunning = pdFALSE;
+    vPortEndScheduler();
+}
+/*----------------------------------------------------------*/
+
 void vTaskSuspendAll( void )
 {
     rt_enter_critical();
@@ -542,6 +565,7 @@ char * pcTaskGetName( TaskHandle_t xTaskToQuery )
 
     BaseType_t xTaskAbortDelay( TaskHandle_t xTask )
     {
+        TCB_t * pxTCB = xTask;
         BaseType_t xReturn;
         rt_thread_t thread = ( rt_thread_t ) xTask;
         rt_bool_t need_schedule = RT_FALSE;
@@ -555,6 +579,7 @@ char * pcTaskGetName( TaskHandle_t xTaskToQuery )
         {
             rt_thread_resume( thread );
             thread->error = -RT_ETIMEOUT;
+            pxTCB->ucDelayAborted = pdTRUE;
             if ( thread->current_priority < rt_thread_self()->current_priority ){
                 need_schedule = RT_TRUE;
             }
@@ -645,6 +670,81 @@ char * pcTaskGetName( TaskHandle_t xTaskToQuery )
 #endif /* configUSE_APPLICATION_TASK_TAG */
 /*-----------------------------------------------------------*/
 
+void vTaskSetTimeOutState( TimeOut_t * const pxTimeOut )
+{
+    rt_base_t level;
+
+    configASSERT( pxTimeOut );
+    level = rt_hw_interrupt_disable();
+    pxTimeOut->xOverflowCount = 0;
+    pxTimeOut->xTimeOnEntering = ( TickType_t ) rt_tick_get();
+    rt_hw_interrupt_enable( level );
+}
+/*-----------------------------------------------------------*/
+
+void vTaskInternalSetTimeOutState( TimeOut_t * const pxTimeOut )
+{
+    /* For internal use only as it does not use a critical section. */
+    pxTimeOut->xOverflowCount = 0;
+    pxTimeOut->xTimeOnEntering = ( TickType_t ) rt_tick_get();;
+}
+/*-----------------------------------------------------------*/
+
+BaseType_t xTaskCheckForTimeOut( TimeOut_t * const pxTimeOut,
+                                 TickType_t * const pxTicksToWait )
+{
+    TCB_t * pxCurrentTCB = ( TCB_t * ) rt_thread_self();
+    BaseType_t xReturn;
+    rt_base_t level;
+
+    configASSERT( pxTimeOut );
+    configASSERT( pxTicksToWait );
+
+    level = rt_hw_interrupt_disable();
+    /* Minor optimisation.  The tick count cannot change in this block. */
+    const TickType_t xConstTickCount = ( TickType_t ) rt_tick_get();
+    const TickType_t xElapsedTime = xConstTickCount - pxTimeOut->xTimeOnEntering;
+
+#if ( INCLUDE_xTaskAbortDelay == 1 )
+    if( pxCurrentTCB->ucDelayAborted != ( uint8_t ) pdFALSE )
+    {
+        /* The delay was aborted, which is not the same as a time out,
+         * but has the same result. */
+        pxCurrentTCB->ucDelayAborted = pdFALSE;
+        xReturn = pdTRUE;
+    }
+    else
+#endif
+
+#if ( INCLUDE_vTaskSuspend == 1 )
+    if( *pxTicksToWait == portMAX_DELAY )
+    {
+        /* If INCLUDE_vTaskSuspend is set to 1 and the block time
+         * specified is the maximum block time then the task should block
+         * indefinitely, and therefore never time out. */
+        xReturn = pdFALSE;
+    }
+    else
+#endif
+
+    if( xElapsedTime < *pxTicksToWait )
+    {
+        /* Not a genuine timeout. Adjust parameters for time remaining. */
+        *pxTicksToWait -= xElapsedTime;
+        vTaskInternalSetTimeOutState( pxTimeOut );
+        xReturn = pdFALSE;
+    }
+    else
+    {
+        *pxTicksToWait = ( TickType_t ) 0;
+        xReturn = pdTRUE;
+    }
+    rt_hw_interrupt_enable( level );
+
+    return xReturn;
+}
+/*-----------------------------------------------------------*/
+
 #if ( ( INCLUDE_xTaskGetCurrentTaskHandle == 1 ) )
 
     TaskHandle_t xTaskGetCurrentTaskHandle( void )
@@ -660,6 +760,34 @@ char * pcTaskGetName( TaskHandle_t xTaskToQuery )
     }
 
 #endif /* ( ( INCLUDE_xTaskGetCurrentTaskHandle == 1 ) || ( configUSE_MUTEXES == 1 ) ) */
+/*-----------------------------------------------------------*/
+
+#if ( ( INCLUDE_xTaskGetSchedulerState == 1 ) )
+
+    BaseType_t xTaskGetSchedulerState( void )
+    {
+        BaseType_t xReturn;
+
+        if( xSchedulerRunning == pdFALSE )
+        {
+            xReturn = taskSCHEDULER_NOT_STARTED;
+        }
+        else
+        {
+            if( rt_critical_level() == 0 )
+            {
+                xReturn = taskSCHEDULER_RUNNING;
+            }
+            else
+            {
+                xReturn = taskSCHEDULER_SUSPENDED;
+            }
+        }
+
+        return xReturn;
+    }
+
+#endif /* ( ( INCLUDE_xTaskGetSchedulerState == 1 ) ) */
 /*-----------------------------------------------------------*/
 
 #if ( configUSE_TASK_NOTIFICATIONS == 1 )

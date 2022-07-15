@@ -105,13 +105,7 @@ void vPortInitialiseBlocks( void );
 size_t xPortGetFreeHeapSize( void );
 size_t xPortGetMinimumEverFreeHeapSize( void );
 
-#if ( configSTACK_ALLOCATION_FROM_SEPARATE_HEAP == 1 )
-    void * pvPortMallocStack( size_t xSize );
-    void vPortFreeStack( void * pv );
-#else
-    #define pvPortMallocStack    pvPortMalloc
-    #define vPortFreeStack       vPortFree
-#endif
+void vPortEndScheduler( void );
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus

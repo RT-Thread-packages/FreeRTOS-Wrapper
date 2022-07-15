@@ -141,5 +141,6 @@ standard names. */
 #define INCLUDE_eTaskGetState                   1
 #define configMAX_PRIORITIES                    ( 32 )
 #define configUSE_TIMERS                        1
+#define INCLUDE_xTaskGetSchedulerState          1
 
 #endif /* FREERTOS_CONFIG_H */

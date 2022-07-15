@@ -82,16 +82,6 @@ typedef struct tskTaskControlBlock * TaskHandle_t;
  */
 typedef BaseType_t (* TaskHookFunction_t)( void * );
 
-/* Actions that can be performed when vTaskNotify() is called. */
-typedef enum
-{
-    eNoAction = 0,            /* Notify the task without updating its notify value. */
-    eSetBits,                 /* Set bits in the task's notification value. */
-    eIncrement,               /* Increment the task's notification value. */
-    eSetValueWithOverwrite,   /* Set the task's notification value to a specific value even if the previous value has not yet been read by the task. */
-    eSetValueWithoutOverwrite /* Set the task's notification value if the previous value has been read by the task. */
-} eNotifyAction;
-
 /* Task states returned by eTaskGetState. */
 typedef enum
 {
@@ -102,6 +92,25 @@ typedef enum
     eDeleted,     /* The task being queried has been deleted, but its TCB has not yet been freed. */
     eInvalid      /* Used as an 'invalid state' value. */
 } eTaskState;
+
+/* Actions that can be performed when vTaskNotify() is called. */
+typedef enum
+{
+    eNoAction = 0,            /* Notify the task without updating its notify value. */
+    eSetBits,                 /* Set bits in the task's notification value. */
+    eIncrement,               /* Increment the task's notification value. */
+    eSetValueWithOverwrite,   /* Set the task's notification value to a specific value even if the previous value has not yet been read by the task. */
+    eSetValueWithoutOverwrite /* Set the task's notification value if the previous value has been read by the task. */
+} eNotifyAction;
+
+/*
+ * Used internally only.
+ */
+typedef struct xTIME_OUT
+{
+    BaseType_t xOverflowCount;
+    TickType_t xTimeOnEntering;
+} TimeOut_t;
 
 /**
  * task. h
@@ -162,6 +171,13 @@ typedef enum
  * \ingroup SchedulerControl
  */
 #define taskENABLE_INTERRUPTS()            portENABLE_INTERRUPTS()
+
+/* Definitions returned by xTaskGetSchedulerState().  taskSCHEDULER_SUSPENDED is
+ * 0 to generate more optimal code when configASSERT() is defined as the constant
+ * is used in assert() statements. */
+#define taskSCHEDULER_SUSPENDED      ( ( BaseType_t ) 0 )
+#define taskSCHEDULER_NOT_STARTED    ( ( BaseType_t ) 1 )
+#define taskSCHEDULER_RUNNING        ( ( BaseType_t ) 2 )
 
 /*-----------------------------------------------------------
 * TASK CREATION API
@@ -859,6 +875,95 @@ BaseType_t xTaskResumeFromISR( TaskHandle_t xTaskToResume );
 /*-----------------------------------------------------------
 * SCHEDULER CONTROL
 *----------------------------------------------------------*/
+
+/**
+ * task. h
+ * @code{c}
+ * void vTaskStartScheduler( void );
+ * @endcode
+ *
+ * Starts the real time kernel tick processing.  After calling the kernel
+ * has control over which tasks are executed and when.
+ *
+ * See the demo application file main.c for an example of creating
+ * tasks and starting the kernel.
+ *
+ * Example usage:
+ * @code{c}
+ * void vAFunction( void )
+ * {
+ *   // Create at least one task before starting the kernel.
+ *   xTaskCreate( vTaskCode, "NAME", STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL );
+ *
+ *   // Start the real time kernel with preemption.
+ *   vTaskStartScheduler ();
+ *
+ *   // Will not get here unless a task calls vTaskEndScheduler ()
+ * }
+ * @endcode
+ *
+ * \defgroup vTaskStartScheduler vTaskStartScheduler
+ * \ingroup SchedulerControl
+ */
+void vTaskStartScheduler( void );
+
+/**
+ * task. h
+ * @code{c}
+ * void vTaskEndScheduler( void );
+ * @endcode
+ *
+ * NOTE:  At the time of writing only the x86 real mode port, which runs on a PC
+ * in place of DOS, implements this function.
+ *
+ * Stops the real time kernel tick.  All created tasks will be automatically
+ * deleted and multitasking (either preemptive or cooperative) will
+ * stop.  Execution then resumes from the point where vTaskStartScheduler ()
+ * was called, as if vTaskStartScheduler () had just returned.
+ *
+ * See the demo application file main. c in the demo/PC directory for an
+ * example that uses vTaskEndScheduler ().
+ *
+ * vTaskEndScheduler () requires an exit function to be defined within the
+ * portable layer (see vPortEndScheduler () in port. c for the PC port).  This
+ * performs hardware specific operations such as stopping the kernel tick.
+ *
+ * vTaskEndScheduler () will cause all of the resources allocated by the
+ * kernel to be freed - but will not free resources allocated by application
+ * tasks.
+ *
+ * Example usage:
+ * @code{c}
+ * void vTaskCode( void * pvParameters )
+ * {
+ *   for( ;; )
+ *   {
+ *       // Task code goes here.
+ *
+ *       // At some point we want to end the real time kernel processing
+ *       // so call ...
+ *       vTaskEndScheduler ();
+ *   }
+ * }
+ *
+ * void vAFunction( void )
+ * {
+ *   // Create at least one task before starting the kernel.
+ *   xTaskCreate( vTaskCode, "NAME", STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL );
+ *
+ *   // Start the real time kernel with preemption.
+ *   vTaskStartScheduler ();
+ *
+ *   // Will only get here when the vTaskCode () task has called
+ *   // vTaskEndScheduler ().  When we get here we are back to single task
+ *   // execution.
+ * }
+ * @endcode
+ *
+ * \defgroup vTaskEndScheduler vTaskEndScheduler
+ * \ingroup SchedulerControl
+ */
+void vTaskEndScheduler( void );
 
 /**
  * task. h
@@ -1997,10 +2102,122 @@ uint32_t ulTaskGenericNotifyValueClear( TaskHandle_t xTask,
 #define ulTaskNotifyValueClearIndexed( xTask, uxIndexToClear, ulBitsToClear ) \
     ulTaskGenericNotifyValueClear( ( xTask ), ( uxIndexToClear ), ( ulBitsToClear ) )
 
+/**
+ * task.h
+ * @code{c}
+ * void vTaskSetTimeOutState( TimeOut_t * const pxTimeOut );
+ * @endcode
+ *
+ * Capture the current time for future use with xTaskCheckForTimeOut().
+ *
+ * @param pxTimeOut Pointer to a timeout object into which the current time
+ * is to be captured.  The captured time includes the tick count and the number
+ * of times the tick count has overflowed since the system first booted.
+ * \defgroup vTaskSetTimeOutState vTaskSetTimeOutState
+ * \ingroup TaskCtrl
+ */
+void vTaskSetTimeOutState( TimeOut_t * const pxTimeOut );
+
+/**
+ * task.h
+ * @code{c}
+ * BaseType_t xTaskCheckForTimeOut( TimeOut_t * const pxTimeOut, TickType_t * const pxTicksToWait );
+ * @endcode
+ *
+ * Determines if pxTicksToWait ticks has passed since a time was captured
+ * using a call to vTaskSetTimeOutState().  The captured time includes the tick
+ * count and the number of times the tick count has overflowed.
+ *
+ * @param pxTimeOut The time status as captured previously using
+ * vTaskSetTimeOutState. If the timeout has not yet occurred, it is updated
+ * to reflect the current time status.
+ * @param pxTicksToWait The number of ticks to check for timeout i.e. if
+ * pxTicksToWait ticks have passed since pxTimeOut was last updated (either by
+ * vTaskSetTimeOutState() or xTaskCheckForTimeOut()), the timeout has occurred.
+ * If the timeout has not occurred, pxTicksToWait is updated to reflect the
+ * number of remaining ticks.
+ *
+ * @return If timeout has occurred, pdTRUE is returned. Otherwise pdFALSE is
+ * returned and pxTicksToWait is updated to reflect the number of remaining
+ * ticks.
+ *
+ * @see https://www.FreeRTOS.org/xTaskCheckForTimeOut.html
+ *
+ * Example Usage:
+ * @code{c}
+ *  // Driver library function used to receive uxWantedBytes from an Rx buffer
+ *  // that is filled by a UART interrupt. If there are not enough bytes in the
+ *  // Rx buffer then the task enters the Blocked state until it is notified that
+ *  // more data has been placed into the buffer. If there is still not enough
+ *  // data then the task re-enters the Blocked state, and xTaskCheckForTimeOut()
+ *  // is used to re-calculate the Block time to ensure the total amount of time
+ *  // spent in the Blocked state does not exceed MAX_TIME_TO_WAIT. This
+ *  // continues until either the buffer contains at least uxWantedBytes bytes,
+ *  // or the total amount of time spent in the Blocked state reaches
+ *  // MAX_TIME_TO_WAIT - at which point the task reads however many bytes are
+ *  // available up to a maximum of uxWantedBytes.
+ *
+ *  size_t xUART_Receive( uint8_t *pucBuffer, size_t uxWantedBytes )
+ *  {
+ *  size_t uxReceived = 0;
+ *  TickType_t xTicksToWait = MAX_TIME_TO_WAIT;
+ *  TimeOut_t xTimeOut;
+ *
+ *      // Initialize xTimeOut.  This records the time at which this function
+ *      // was entered.
+ *      vTaskSetTimeOutState( &xTimeOut );
+ *
+ *      // Loop until the buffer contains the wanted number of bytes, or a
+ *      // timeout occurs.
+ *      while( UART_bytes_in_rx_buffer( pxUARTInstance ) < uxWantedBytes )
+ *      {
+ *          // The buffer didn't contain enough data so this task is going to
+ *          // enter the Blocked state. Adjusting xTicksToWait to account for
+ *          // any time that has been spent in the Blocked state within this
+ *          // function so far to ensure the total amount of time spent in the
+ *          // Blocked state does not exceed MAX_TIME_TO_WAIT.
+ *          if( xTaskCheckForTimeOut( &xTimeOut, &xTicksToWait ) != pdFALSE )
+ *          {
+ *              //Timed out before the wanted number of bytes were available,
+ *              // exit the loop.
+ *              break;
+ *          }
+ *
+ *          // Wait for a maximum of xTicksToWait ticks to be notified that the
+ *          // receive interrupt has placed more data into the buffer.
+ *          ulTaskNotifyTake( pdTRUE, xTicksToWait );
+ *      }
+ *
+ *      // Attempt to read uxWantedBytes from the receive buffer into pucBuffer.
+ *      // The actual number of bytes read (which might be less than
+ *      // uxWantedBytes) is returned.
+ *      uxReceived = UART_read_from_receive_buffer( pxUARTInstance,
+ *                                                  pucBuffer,
+ *                                                  uxWantedBytes );
+ *
+ *      return uxReceived;
+ *  }
+ * @endcode
+ * \defgroup xTaskCheckForTimeOut xTaskCheckForTimeOut
+ * \ingroup TaskCtrl
+ */
+BaseType_t xTaskCheckForTimeOut( TimeOut_t * const pxTimeOut,
+                                 TickType_t * const pxTicksToWait );
+
+/*-----------------------------------------------------------
+* SCHEDULER INTERNALS AVAILABLE FOR PORTING PURPOSES
+*----------------------------------------------------------*/
+
 /*
  * Return the handle of the calling task.
  */
 TaskHandle_t xTaskGetCurrentTaskHandle( void );
+
+/*
+ * Returns the scheduler state as taskSCHEDULER_RUNNING,
+ * taskSCHEDULER_NOT_STARTED or taskSCHEDULER_SUSPENDED.
+ */
+BaseType_t xTaskGetSchedulerState( void );
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
