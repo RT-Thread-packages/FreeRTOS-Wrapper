@@ -481,7 +481,6 @@ void vTaskStartScheduler( void )
 
 void vTaskEndScheduler( void )
 {
-    rt_hw_interrupt_disable();
     xSchedulerRunning = pdFALSE;
     vPortEndScheduler();
 }
