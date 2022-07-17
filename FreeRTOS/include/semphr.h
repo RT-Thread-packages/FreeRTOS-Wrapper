@@ -1127,4 +1127,62 @@ typedef QueueHandle_t SemaphoreHandle_t;
  */
 #define vSemaphoreDelete( xSemaphore )                   vQueueDelete( ( QueueHandle_t ) ( xSemaphore ) )
 
+/**
+ * semphr.h
+ * @code{c}
+ * TaskHandle_t xSemaphoreGetMutexHolder( SemaphoreHandle_t xMutex );
+ * @endcode
+ *
+ * If xMutex is indeed a mutex type semaphore, return the current mutex holder.
+ * If xMutex is not a mutex type semaphore, or the mutex is available (not held
+ * by a task), return NULL.
+ *
+ * Note: This is a good way of determining if the calling task is the mutex
+ * holder, but not a good way of determining the identity of the mutex holder as
+ * the holder may change between the function exiting and the returned value
+ * being tested.
+ */
+#define xSemaphoreGetMutexHolder( xSemaphore )           xQueueGetMutexHolder( ( xSemaphore ) )
+
+/**
+ * semphr.h
+ * @code{c}
+ * TaskHandle_t xSemaphoreGetMutexHolderFromISR( SemaphoreHandle_t xMutex );
+ * @endcode
+ *
+ * If xMutex is indeed a mutex type semaphore, return the current mutex holder.
+ * If xMutex is not a mutex type semaphore, or the mutex is available (not held
+ * by a task), return NULL.
+ *
+ */
+#define xSemaphoreGetMutexHolderFromISR( xSemaphore )    xQueueGetMutexHolderFromISR( ( xSemaphore ) )
+
+/**
+ * semphr.h
+ * @code{c}
+ * UBaseType_t uxSemaphoreGetCount( SemaphoreHandle_t xSemaphore );
+ * @endcode
+ *
+ * If the semaphore is a counting semaphore then uxSemaphoreGetCount() returns
+ * its current count value.  If the semaphore is a binary semaphore then
+ * uxSemaphoreGetCount() returns 1 if the semaphore is available, and 0 if the
+ * semaphore is not available.
+ *
+ */
+#define uxSemaphoreGetCount( xSemaphore )                uxQueueMessagesWaiting( ( QueueHandle_t ) ( xSemaphore ) )
+
+/**
+ * semphr.h
+ * @code{c}
+ * UBaseType_t uxSemaphoreGetCountFromISR( SemaphoreHandle_t xSemaphore );
+ * @endcode
+ *
+ * If the semaphore is a counting semaphore then uxSemaphoreGetCountFromISR() returns
+ * its current count value.  If the semaphore is a binary semaphore then
+ * uxSemaphoreGetCountFromISR() returns 1 if the semaphore is available, and 0 if the
+ * semaphore is not available.
+ *
+ */
+#define uxSemaphoreGetCountFromISR( xSemaphore )         uxQueueMessagesWaitingFromISR( ( QueueHandle_t ) ( xSemaphore ) )
+
 #endif /* SEMAPHORE_H */

@@ -216,6 +216,48 @@ BaseType_t xQueueGenericReset( QueueHandle_t xQueue,
 #endif /* configUSE_MUTEXES */
 /*-----------------------------------------------------------*/
 
+#if ( ( configUSE_MUTEXES == 1 ) && ( INCLUDE_xSemaphoreGetMutexHolder == 1 ) )
+
+    TaskHandle_t xQueueGetMutexHolder( QueueHandle_t xSemaphore )
+    {
+        TaskHandle_t pxReturn;
+        struct rt_ipc_object *pipc;
+        rt_uint8_t type;
+        rt_base_t level;
+
+        configASSERT( xSemaphore );
+
+        pipc = xSemaphore->rt_ipc;
+        RT_ASSERT( pipc != RT_NULL );
+        type = rt_object_get_type( &pipc->parent );
+
+        if ( type == RT_Object_Class_Mutex )
+        {
+            level = rt_hw_interrupt_disable();
+            pxReturn = ( TaskHandle_t ) ( ( rt_mutex_t ) pipc )->owner;
+            rt_hw_interrupt_enable( level );
+        }
+        else
+        {
+            pxReturn = NULL;
+        }
+
+        return pxReturn;
+    }
+
+#endif /* if ( ( configUSE_MUTEXES == 1 ) && ( INCLUDE_xSemaphoreGetMutexHolder == 1 ) ) */
+/*-----------------------------------------------------------*/
+
+#if ( ( configUSE_MUTEXES == 1 ) && ( INCLUDE_xSemaphoreGetMutexHolder == 1 ) )
+
+    TaskHandle_t xQueueGetMutexHolderFromISR( QueueHandle_t xSemaphore )
+    {
+        return xQueueGetMutexHolder( xSemaphore );
+    }
+
+#endif /* if ( ( configUSE_MUTEXES == 1 ) && ( INCLUDE_xSemaphoreGetMutexHolder == 1 ) ) */
+/*-----------------------------------------------------------*/
+
 #if ( configUSE_RECURSIVE_MUTEXES == 1 )
 
     BaseType_t xQueueGiveMutexRecursive( QueueHandle_t xMutex )
@@ -515,6 +557,80 @@ BaseType_t xQueueReceiveFromISR( QueueHandle_t xQueue,
 }
 /*-----------------------------------------------------------*/
 
+UBaseType_t uxQueueMessagesWaiting( const QueueHandle_t xQueue )
+{
+    UBaseType_t uxReturn = 0;
+    struct rt_ipc_object *pipc;
+    rt_uint8_t type;
+    rt_base_t level;
+
+    configASSERT( xQueue );
+
+    pipc = xQueue->rt_ipc;
+    RT_ASSERT( pipc != RT_NULL );
+    type = rt_object_get_type( &pipc->parent );
+
+    level = rt_hw_interrupt_disable();
+
+    if ( type == RT_Object_Class_Mutex )
+    {
+        uxReturn = ( ( rt_mutex_t ) pipc )->value;
+    }
+    else if ( type == RT_Object_Class_Semaphore )
+    {
+        uxReturn = ( ( rt_sem_t ) pipc )->value;
+    }
+    else if ( type == RT_Object_Class_MessageQueue )
+    {
+        uxReturn = ( ( rt_mq_t ) pipc )->entry;
+    }
+
+    rt_hw_interrupt_enable( level );
+
+    return uxReturn;
+}
+/*-----------------------------------------------------------*/
+
+UBaseType_t uxQueueSpacesAvailable( const QueueHandle_t xQueue )
+{
+    UBaseType_t uxReturn = 0;
+    struct rt_ipc_object *pipc;
+    rt_uint8_t type;
+    rt_base_t level;
+
+    configASSERT( xQueue );
+
+    pipc = xQueue->rt_ipc;
+    RT_ASSERT( pipc != RT_NULL );
+    type = rt_object_get_type( &pipc->parent );
+
+    level = rt_hw_interrupt_disable();
+
+    if ( type == RT_Object_Class_Mutex )
+    {
+        uxReturn = 1 - ( ( rt_mutex_t ) pipc )->value;
+    }
+    else if ( type == RT_Object_Class_Semaphore )
+    {
+        uxReturn = ( ( struct rt_semaphore_wrapper * ) pipc )->max_value - ( ( rt_sem_t ) pipc )->value;
+    }
+    else if ( type == RT_Object_Class_MessageQueue )
+    {
+        uxReturn = ( ( rt_mq_t ) pipc )->max_msgs - ( ( rt_mq_t ) pipc )->entry;
+    }
+
+    rt_hw_interrupt_enable( level );
+
+    return uxReturn;
+}
+/*-----------------------------------------------------------*/
+
+UBaseType_t uxQueueMessagesWaitingFromISR( const QueueHandle_t xQueue )
+{
+    return uxQueueMessagesWaiting( xQueue );
+}
+/*-----------------------------------------------------------*/
+
 void vQueueDelete( QueueHandle_t xQueue )
 {
     Queue_t * const pxQueue = xQueue;
@@ -572,5 +688,43 @@ void vQueueDelete( QueueHandle_t xQueue )
         RT_KERNEL_FREE( pxQueue );
     #endif
     }
+}
+/*-----------------------------------------------------------*/
+
+BaseType_t xQueueIsQueueEmptyFromISR( const QueueHandle_t xQueue )
+{
+    BaseType_t xReturn;
+
+    configASSERT( pxQueue );
+
+    if( uxQueueMessagesWaiting( xQueue ) == ( UBaseType_t ) 0 )
+    {
+        xReturn = pdTRUE;
+    }
+    else
+    {
+        xReturn = pdFALSE;
+    }
+
+    return xReturn;
+}
+/*-----------------------------------------------------------*/
+
+BaseType_t xQueueIsQueueFullFromISR( const QueueHandle_t xQueue )
+{
+    BaseType_t xReturn;
+
+    configASSERT( pxQueue );
+
+    if ( uxQueueSpacesAvailable( xQueue ) == ( UBaseType_t ) 0 )
+    {
+        xReturn = pdTRUE;
+    }
+    else
+    {
+        xReturn = pdFALSE;
+    }
+
+    return xReturn;
 }
 /*-----------------------------------------------------------*/
