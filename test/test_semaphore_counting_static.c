@@ -100,16 +100,16 @@ int semaphore_counting_static()
         rt_kprintf("create static semaphore failed.\n");
         return -1;
     }
-    xTaskCreate( vTask1Code, "Task1", configMINIMAL_STACK_SIZE, NULL, TASK_PRIORITY, &TaskHandle1 );
-    if (TaskHandle1 == NULL)
-    {
-        rt_kprintf("Create task 1 failed\n");
-        return -1;
-    }
     xTaskCreate( vTask2Code, "Task2", configMINIMAL_STACK_SIZE, NULL, TASK_PRIORITY + 1, &TaskHandle2 );
     if (TaskHandle2 == NULL)
     {
         rt_kprintf("Create task 2 failed\n");
+        return -1;
+    }
+    xTaskCreate( vTask1Code, "Task1", configMINIMAL_STACK_SIZE, NULL, TASK_PRIORITY, &TaskHandle1 );
+    if (TaskHandle1 == NULL)
+    {
+        rt_kprintf("Create task 1 failed\n");
         return -1;
     }
 

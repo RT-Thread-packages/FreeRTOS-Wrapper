@@ -36,6 +36,8 @@
 #endif
 /* *INDENT-ON* */
 
+#include "task.h"
+
 /**
  * Type by which queues are referenced.  For example, a call to xQueueCreate()
  * returns an QueueHandle_t variable that can then be used as a parameter to
@@ -651,6 +653,42 @@ BaseType_t xQueueReceive( QueueHandle_t xQueue,
 /**
  * queue. h
  * @code{c}
+ * UBaseType_t uxQueueMessagesWaiting( const QueueHandle_t xQueue );
+ * @endcode
+ *
+ * Return the number of messages stored in a queue.
+ *
+ * @param xQueue A handle to the queue being queried.
+ *
+ * @return The number of messages available in the queue.
+ *
+ * \defgroup uxQueueMessagesWaiting uxQueueMessagesWaiting
+ * \ingroup QueueManagement
+ */
+UBaseType_t uxQueueMessagesWaiting( const QueueHandle_t xQueue );
+
+/**
+ * queue. h
+ * @code{c}
+ * UBaseType_t uxQueueSpacesAvailable( const QueueHandle_t xQueue );
+ * @endcode
+ *
+ * Return the number of free spaces available in a queue.  This is equal to the
+ * number of items that can be sent to the queue before the queue becomes full
+ * if no items are removed.
+ *
+ * @param xQueue A handle to the queue being queried.
+ *
+ * @return The number of spaces available in the queue.
+ *
+ * \defgroup uxQueueMessagesWaiting uxQueueMessagesWaiting
+ * \ingroup QueueManagement
+ */
+UBaseType_t uxQueueSpacesAvailable( const QueueHandle_t xQueue );
+
+/**
+ * queue. h
+ * @code{c}
  * void vQueueDelete( QueueHandle_t xQueue );
  * @endcode
  *
@@ -1058,6 +1096,14 @@ BaseType_t xQueueReceiveFromISR( QueueHandle_t xQueue,
                                  BaseType_t * const pxHigherPriorityTaskWoken );
 
 /*
+ * Utilities to query queues that are safe to use from an ISR.  These utilities
+ * should be used only from witin an ISR, or within a critical section.
+ */
+BaseType_t xQueueIsQueueEmptyFromISR( const QueueHandle_t xQueue );
+BaseType_t xQueueIsQueueFullFromISR( const QueueHandle_t xQueue );
+UBaseType_t uxQueueMessagesWaitingFromISR( const QueueHandle_t xQueue );
+
+/*
  * For internal use only.  Use xSemaphoreCreateMutex(),
  * xSemaphoreCreateCounting() or xSemaphoreGetMutexHolder() instead of calling
  * these functions directly.
@@ -1072,6 +1118,8 @@ QueueHandle_t xQueueCreateCountingSemaphoreStatic( const UBaseType_t uxMaxCount,
                                                    StaticQueue_t * pxStaticQueue );
 BaseType_t xQueueSemaphoreTake( QueueHandle_t xQueue,
                                 TickType_t xTicksToWait );
+TaskHandle_t xQueueGetMutexHolder( QueueHandle_t xSemaphore );
+TaskHandle_t xQueueGetMutexHolderFromISR( QueueHandle_t xSemaphore );
 
 /*
  * For internal use only.  Use xSemaphoreTakeMutexRecursive() or
