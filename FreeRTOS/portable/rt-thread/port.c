@@ -1,15 +1,24 @@
 #include <FreeRTOS.h>
 
 static rt_base_t level = 0;
+static rt_base_t critical_nesting = 0;
 
 void vPortEnterCritical( void )
 {
-    level = rt_hw_interrupt_disable();
+    if ( critical_nesting == 0 )
+    {
+        level = rt_hw_interrupt_disable();
+    }
+    critical_nesting += 1;
 }
 
 void vPortExitCritical( void )
 {
-    rt_hw_interrupt_enable(level);
+    critical_nesting -= 1;
+    if ( critical_nesting == 0 )
+    {
+        rt_hw_interrupt_enable( level );
+    }
 }
 
 void vPortEndScheduler( void )
