@@ -113,6 +113,13 @@ typedef struct xTIME_OUT
 } TimeOut_t;
 
 /**
+ * Defines the priority used by the idle task.  This must not be modified.
+ *
+ * \ingroup TaskUtils
+ */
+#define tskIDLE_PRIORITY    ( ( UBaseType_t ) 0U )
+
+/**
  * task. h
  *
  * Macro for forcing a context switch.

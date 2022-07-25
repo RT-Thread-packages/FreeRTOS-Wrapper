@@ -352,7 +352,7 @@ BaseType_t xQueueGenericSend( QueueHandle_t xQueue,
     rt_err_t err = -RT_ERROR;
 
     configASSERT( pxQueue );
-    #if ( ( INCLUDE_xTaskGetSchedulerState == 1 ) || ( configUSE_TIMERS == 1 ) )
+    #if ( INCLUDE_xTaskGetSchedulerState == 1 )
         {
             configASSERT( !( ( xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED ) && ( xTicksToWait != 0 ) ) );
         }
@@ -429,7 +429,7 @@ BaseType_t xQueueGiveFromISR( QueueHandle_t xQueue,
     struct rt_ipc_object *pipc;
     rt_uint8_t type;
     rt_base_t level;
-    rt_err_t err = -RT_ERROR
+    rt_err_t err = -RT_ERROR;
 
     configASSERT( pxQueue );
 
@@ -468,7 +468,7 @@ BaseType_t xQueueReceive( QueueHandle_t xQueue,
     configASSERT( ( pxQueue ) );
 
     /* Cannot block if the scheduler is suspended. */
-    #if ( ( INCLUDE_xTaskGetSchedulerState == 1 ) || ( configUSE_TIMERS == 1 ) )
+    #if ( INCLUDE_xTaskGetSchedulerState == 1 )
         {
             configASSERT( !( ( xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED ) && ( xTicksToWait != 0 ) ) );
         }
@@ -498,7 +498,7 @@ BaseType_t xQueueSemaphoreTake( QueueHandle_t xQueue,
     configASSERT( ( pxQueue ) );
 
     /* Cannot block if the scheduler is suspended. */
-    #if ( ( INCLUDE_xTaskGetSchedulerState == 1 ) || ( configUSE_TIMERS == 1 ) )
+    #if ( INCLUDE_xTaskGetSchedulerState == 1 )
         {
             configASSERT( !( ( xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED ) && ( xTicksToWait != 0 ) ) );
         }
@@ -527,7 +527,7 @@ BaseType_t xQueueReceiveFromISR( QueueHandle_t xQueue,
     Queue_t * const pxQueue = xQueue;
     struct rt_ipc_object *pipc;
     rt_uint8_t type;
-    rt_err_t err = -RT_ERROR
+    rt_err_t err = -RT_ERROR;
 
     configASSERT( pxQueue );
 
@@ -690,7 +690,7 @@ BaseType_t xQueueIsQueueEmptyFromISR( const QueueHandle_t xQueue )
 {
     BaseType_t xReturn;
 
-    configASSERT( pxQueue );
+    configASSERT( xQueue );
 
     if( uxQueueMessagesWaiting( xQueue ) == ( UBaseType_t ) 0 )
     {
@@ -709,7 +709,7 @@ BaseType_t xQueueIsQueueFullFromISR( const QueueHandle_t xQueue )
 {
     BaseType_t xReturn;
 
-    configASSERT( pxQueue );
+    configASSERT( xQueue );
 
     if ( uxQueueSpacesAvailable( xQueue ) == ( UBaseType_t ) 0 )
     {
