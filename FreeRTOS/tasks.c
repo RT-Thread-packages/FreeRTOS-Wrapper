@@ -286,7 +286,7 @@ static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
         rt_thread_t thread = ( rt_thread_t ) xTask;
         rt_base_t level;
 
-        configASSERT( pxTCB );
+        configASSERT( xTask );
 
         level = rt_hw_interrupt_disable();
 

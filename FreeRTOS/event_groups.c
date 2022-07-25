@@ -31,6 +31,7 @@
 
 /* FreeRTOS includes. */
 #include "FreeRTOS.h"
+#include "task.h"
 #include "event_groups.h"
 
 typedef struct EventGroupDef_t
@@ -92,7 +93,7 @@ EventBits_t xEventGroupWaitBits( EventGroupHandle_t xEventGroup,
      * itself, and that at least one bit is being requested. */
     configASSERT( xEventGroup );
     configASSERT( uxBitsToWaitFor != 0 );
-    #if ( ( INCLUDE_xTaskGetSchedulerState == 1 ) || ( configUSE_TIMERS == 1 ) )
+    #if ( INCLUDE_xTaskGetSchedulerState == 1 )
         {
             configASSERT( !( ( xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED ) && ( xTicksToWait != 0 ) ) );
         }
