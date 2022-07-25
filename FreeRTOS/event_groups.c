@@ -124,6 +124,44 @@ EventBits_t xEventGroupWaitBits( EventGroupHandle_t xEventGroup,
 }
 /*-----------------------------------------------------------*/
 
+EventBits_t xEventGroupClearBits( EventGroupHandle_t xEventGroup,
+                                  const EventBits_t uxBitsToClear )
+{
+    rt_event_t event = ( rt_event_t ) xEventGroup;
+    EventBits_t uxReturn;
+    rt_base_t level;
+
+    configASSERT( xEventGroup );
+
+    level = rt_hw_interrupt_disable();
+    uxReturn = ( EventBits_t ) event->set;
+    event->set &= ~( ( rt_uint32_t ) uxBitsToClear );
+    rt_hw_interrupt_enable( level );
+
+    return uxReturn;
+}
+/*-----------------------------------------------------------*/
+
+BaseType_t xEventGroupClearBitsFromISR( EventGroupHandle_t xEventGroup,
+                                        const EventBits_t uxBitsToClear )
+{
+    return xEventGroupClearBits( xEventGroup, uxBitsToClear );
+}
+
+EventBits_t xEventGroupGetBitsFromISR( EventGroupHandle_t xEventGroup )
+{
+    rt_event_t event = ( rt_event_t ) xEventGroup;
+    EventBits_t uxReturn;
+    rt_base_t level;
+
+    level = rt_hw_interrupt_disable();
+    uxReturn = ( EventBits_t ) event->set;
+    rt_hw_interrupt_enable( level );
+
+    return uxReturn;
+}
+/*-----------------------------------------------------------*/
+
 EventBits_t xEventGroupSetBits( EventGroupHandle_t xEventGroup,
                                 const EventBits_t uxBitsToSet )
 {

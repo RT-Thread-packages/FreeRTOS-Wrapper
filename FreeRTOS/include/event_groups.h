@@ -301,6 +301,120 @@ EventBits_t xEventGroupWaitBits( EventGroupHandle_t xEventGroup,
 /**
  * event_groups.h
  * @code{c}
+ *  EventBits_t xEventGroupClearBits( EventGroupHandle_t xEventGroup, const EventBits_t uxBitsToClear );
+ * @endcode
+ *
+ * Clear bits within an event group.  This function cannot be called from an
+ * interrupt.
+ *
+ * @param xEventGroup The event group in which the bits are to be cleared.
+ *
+ * @param uxBitsToClear A bitwise value that indicates the bit or bits to clear
+ * in the event group.  For example, to clear bit 3 only, set uxBitsToClear to
+ * 0x08.  To clear bit 3 and bit 0 set uxBitsToClear to 0x09.
+ *
+ * @return The value of the event group before the specified bits were cleared.
+ *
+ * Example usage:
+ * @code{c}
+ * #define BIT_0 ( 1 << 0 )
+ * #define BIT_4 ( 1 << 4 )
+ *
+ * void aFunction( EventGroupHandle_t xEventGroup )
+ * {
+ * EventBits_t uxBits;
+ *
+ *      // Clear bit 0 and bit 4 in xEventGroup.
+ *      uxBits = xEventGroupClearBits(
+ *                              xEventGroup,    // The event group being updated.
+ *                              BIT_0 | BIT_4 );// The bits being cleared.
+ *
+ *      if( ( uxBits & ( BIT_0 | BIT_4 ) ) == ( BIT_0 | BIT_4 ) )
+ *      {
+ *          // Both bit 0 and bit 4 were set before xEventGroupClearBits() was
+ *          // called.  Both will now be clear (not set).
+ *      }
+ *      else if( ( uxBits & BIT_0 ) != 0 )
+ *      {
+ *          // Bit 0 was set before xEventGroupClearBits() was called.  It will
+ *          // now be clear.
+ *      }
+ *      else if( ( uxBits & BIT_4 ) != 0 )
+ *      {
+ *          // Bit 4 was set before xEventGroupClearBits() was called.  It will
+ *          // now be clear.
+ *      }
+ *      else
+ *      {
+ *          // Neither bit 0 nor bit 4 were set in the first place.
+ *      }
+ * }
+ * @endcode
+ * \defgroup xEventGroupClearBits xEventGroupClearBits
+ * \ingroup EventGroup
+ */
+EventBits_t xEventGroupClearBits( EventGroupHandle_t xEventGroup,
+                                  const EventBits_t uxBitsToClear );
+
+/**
+ * event_groups.h
+ * @code{c}
+ *  BaseType_t xEventGroupClearBitsFromISR( EventGroupHandle_t xEventGroup, const EventBits_t uxBitsToSet );
+ * @endcode
+ *
+ * A version of xEventGroupClearBits() that can be called from an interrupt.
+ *
+ * Setting bits in an event group is not a deterministic operation because there
+ * are an unknown number of tasks that may be waiting for the bit or bits being
+ * set.  FreeRTOS does not allow nondeterministic operations to be performed
+ * while interrupts are disabled, so protects event groups that are accessed
+ * from tasks by suspending the scheduler rather than disabling interrupts.  As
+ * a result event groups cannot be accessed directly from an interrupt service
+ * routine.  Therefore xEventGroupClearBitsFromISR() sends a message to the
+ * timer task to have the clear operation performed in the context of the timer
+ * task.
+ *
+ * @param xEventGroup The event group in which the bits are to be cleared.
+ *
+ * @param uxBitsToClear A bitwise value that indicates the bit or bits to clear.
+ * For example, to clear bit 3 only, set uxBitsToClear to 0x08.  To clear bit 3
+ * and bit 0 set uxBitsToClear to 0x09.
+ *
+ * @return If the request to execute the function was posted successfully then
+ * pdPASS is returned, otherwise pdFALSE is returned.  pdFALSE will be returned
+ * if the timer service queue was full.
+ *
+ * Example usage:
+ * @code{c}
+ * #define BIT_0 ( 1 << 0 )
+ * #define BIT_4 ( 1 << 4 )
+ *
+ * // An event group which it is assumed has already been created by a call to
+ * // xEventGroupCreate().
+ * EventGroupHandle_t xEventGroup;
+ *
+ * void anInterruptHandler( void )
+ * {
+ *      // Clear bit 0 and bit 4 in xEventGroup.
+ *      xResult = xEventGroupClearBitsFromISR(
+ *                          xEventGroup,     // The event group being updated.
+ *                          BIT_0 | BIT_4 ); // The bits being set.
+ *
+ *      if( xResult == pdPASS )
+ *      {
+ *          // The message was posted successfully.
+ *      }
+ * }
+ * @endcode
+ * \defgroup xEventGroupClearBitsFromISR xEventGroupClearBitsFromISR
+ * \ingroup EventGroup
+ */
+BaseType_t xEventGroupClearBitsFromISR( EventGroupHandle_t xEventGroup,
+                                        const EventBits_t uxBitsToClear );
+
+/**
+ * event_groups.h
+ * @code{c}
  *  EventBits_t xEventGroupSetBits( EventGroupHandle_t xEventGroup, const EventBits_t uxBitsToSet );
  * @endcode
  *
@@ -448,6 +562,41 @@ EventBits_t xEventGroupSetBits( EventGroupHandle_t xEventGroup,
 BaseType_t xEventGroupSetBitsFromISR( EventGroupHandle_t xEventGroup,
                                       const EventBits_t uxBitsToSet,
                                       BaseType_t * pxHigherPriorityTaskWoken );
+
+/**
+ * event_groups.h
+ * @code{c}
+ *  EventBits_t xEventGroupGetBits( EventGroupHandle_t xEventGroup );
+ * @endcode
+ *
+ * Returns the current value of the bits in an event group.  This function
+ * cannot be used from an interrupt.
+ *
+ * @param xEventGroup The event group being queried.
+ *
+ * @return The event group bits at the time xEventGroupGetBits() was called.
+ *
+ * \defgroup xEventGroupGetBits xEventGroupGetBits
+ * \ingroup EventGroup
+ */
+#define xEventGroupGetBits( xEventGroup )    xEventGroupClearBits( xEventGroup, 0 )
+
+/**
+ * event_groups.h
+ * @code{c}
+ *  EventBits_t xEventGroupGetBitsFromISR( EventGroupHandle_t xEventGroup );
+ * @endcode
+ *
+ * A version of xEventGroupGetBits() that can be called from an ISR.
+ *
+ * @param xEventGroup The event group being queried.
+ *
+ * @return The event group bits at the time xEventGroupGetBitsFromISR() was called.
+ *
+ * \defgroup xEventGroupGetBitsFromISR xEventGroupGetBitsFromISR
+ * \ingroup EventGroup
+ */
+EventBits_t xEventGroupGetBitsFromISR( EventGroupHandle_t xEventGroup );
 
 /**
  * event_groups.h
