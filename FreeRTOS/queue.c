@@ -402,11 +402,6 @@ BaseType_t xQueueGenericSendFromISR( QueueHandle_t xQueue,
     rt_err_t err = -RT_ERROR;
 
     configASSERT( pxQueue );
-    #if ( ( INCLUDE_xTaskGetSchedulerState == 1 ) || ( configUSE_TIMERS == 1 ) )
-        {
-            configASSERT( !( ( xTaskGetSchedulerState() == taskSCHEDULER_SUSPENDED ) && ( xTicksToWait != 0 ) ) );
-        }
-    #endif
 
     pipc = pxQueue->rt_ipc;
     RT_ASSERT( pipc != RT_NULL );
