@@ -34,7 +34,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-//TODO: check configMAX_PRIORITIES == RT_THREAD_PRIORITY_MAX
 #define FREERTOS_PRIORITY_TO_RTTHREAD(priority)    ( configMAX_PRIORITIES - 1 - ( priority ) )
 #define RTTHREAD_PRIORITY_TO_FREERTOS(priority)    ( RT_THREAD_PRIORITY_MAX - 1 - ( priority ) )
 
