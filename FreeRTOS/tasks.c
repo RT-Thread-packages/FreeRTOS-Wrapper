@@ -165,6 +165,25 @@ static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
 #endif /* configSUPPORT_DYNAMIC_ALLOCATION */
 /*-----------------------------------------------------------*/
 
+#ifdef ESP_PLATFORM
+#if ( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
+
+    BaseType_t xTaskCreatePinnedToCore( TaskFunction_t pvTaskCode,
+                            const char * const pcName, /*lint !e971 Unqualified char types are allowed for strings and single characters only. */
+                            const uint32_t usStackDepth,
+                            void * const pvParameters,
+                            UBaseType_t uxPriority,
+                            TaskHandle_t * const pvCreatedTask,
+                            const BaseType_t xCoreID)
+    {
+        ( void ) xCoreID;
+        return xTaskCreate( pvTaskCode, pcName, usStackDepth, pvParameters, uxPriority, pvCreatedTask );
+    }
+
+#endif /* configSUPPORT_DYNAMIC_ALLOCATION */
+#endif
+/*-----------------------------------------------------------*/
+
 static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
                                   const char * const pcName,
                                   const uint32_t ulStackDepth,
@@ -1180,3 +1199,52 @@ BaseType_t xTaskCheckForTimeOut( TimeOut_t * const pxTimeOut,
 
 #endif /* INCLUDE_uxTaskGetStackHighWaterMark */
 /*-----------------------------------------------------------*/
+
+
+#ifdef ESP_PLATFORM
+BaseType_t xTaskGetAffinity( TaskHandle_t xTask )
+{
+    ( void ) xTask;
+    return 0;
+}
+
+TaskHandle_t xTaskGetCurrentTaskHandleForCPU( BaseType_t cpuid )
+{
+    ( void ) cpuid;
+    return xTaskGetCurrentTaskHandle();
+}
+
+TaskHandle_t xTaskGetIdleTaskHandleForCPU( UBaseType_t cpuid )
+{
+    ( void ) cpuid;
+    return xTaskGetIdleTaskHandle();
+}
+
+/* Unimplemented */
+#include "esp_log.h"
+static const char *TAG = "freertos";
+#if ( configNUM_THREAD_LOCAL_STORAGE_POINTERS > 0 )
+void vTaskSetThreadLocalStoragePointer( TaskHandle_t xTaskToSet,
+                                            BaseType_t xIndex,
+                                            void * pvValue )
+{
+    ESP_LOGE(TAG, "vTaskSetThreadLocalStoragePointer unimplemented");
+    configASSERT(0);
+}
+void * pvTaskGetThreadLocalStoragePointer( TaskHandle_t xTaskToQuery,
+                                               BaseType_t xIndex )
+{
+    ESP_LOGE(TAG, "pvTaskGetThreadLocalStoragePointer unimplemented");
+    configASSERT(0);
+    return NULL;
+}
+#if ( configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS )
+typedef void (*TlsDeleteCallbackFunction_t)( int, void * );
+void vTaskSetThreadLocalStoragePointerAndDelCallback( TaskHandle_t xTaskToSet, BaseType_t xIndex, void *pvValue, TlsDeleteCallbackFunction_t pvDelCallback)
+{
+    ESP_LOGE(TAG, "vTaskSetThreadLocalStoragePointerAndDelCallback unimplemented");
+    configASSERT(0);
+}
+#endif
+#endif
+#endif

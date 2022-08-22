@@ -1163,6 +1163,25 @@ BaseType_t xQueueGiveMutexRecursive( QueueHandle_t xMutex );
 BaseType_t xQueueGenericReset( QueueHandle_t xQueue,
                                BaseType_t xNewQueue );
 
+#ifdef ESP_PLATFORM
+/* Unimplemented */
+typedef struct QueueDefinition   * QueueSetHandle_t;
+typedef struct QueueDefinition   * QueueSetMemberHandle_t;
+QueueSetHandle_t xQueueCreateSet( const UBaseType_t uxEventQueueLength );
+BaseType_t xQueueAddToSet( QueueSetMemberHandle_t xQueueOrSemaphore,
+                           QueueSetHandle_t xQueueSet );
+BaseType_t xQueueRemoveFromSet( QueueSetMemberHandle_t xQueueOrSemaphore,
+                                QueueSetHandle_t xQueueSet );
+QueueSetMemberHandle_t xQueueSelectFromSet( QueueSetHandle_t xQueueSet,
+                                            const TickType_t xTicksToWait );
+QueueSetMemberHandle_t xQueueSelectFromSetFromISR( QueueSetHandle_t xQueueSet );
+BaseType_t xQueuePeek( QueueHandle_t xQueue,
+                       void * const pvBuffer,
+                       TickType_t xTicksToWait );
+BaseType_t xQueueOverwrite(QueueHandle_t xQueue, const void * pvItemToQueue);
+BaseType_t xQueueOverwriteFromISR(QueueHandle_t xQueue, const void * pvItemToQueue, BaseType_t *pxHigherPriorityTaskWoken);
+#endif
+
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     }

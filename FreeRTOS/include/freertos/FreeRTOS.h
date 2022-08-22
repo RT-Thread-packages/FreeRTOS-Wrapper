@@ -67,8 +67,15 @@
 /* Definitions specific to the port being used. */
 #include "portable.h"
 
-/* Read only */
-#define configUSE_NEWLIB_REENTRANT    0
+/* Must be defaulted before configUSE_NEWLIB_REENTRANT is used below. */
+#ifndef configUSE_NEWLIB_REENTRANT
+    #define configUSE_NEWLIB_REENTRANT    0
+#endif
+
+/* Required if struct _reent is used. */
+#if ( configUSE_NEWLIB_REENTRANT == 1 )
+    #include <reent.h>
+#endif
 
 /*
  * Check all the required application specific macros have been defined.

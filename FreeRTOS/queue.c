@@ -723,3 +723,68 @@ BaseType_t xQueueIsQueueFullFromISR( const QueueHandle_t xQueue )
     return xReturn;
 }
 /*-----------------------------------------------------------*/
+
+#ifdef ESP_PLATFORM
+/* Unimplemented */
+#include "esp_log.h"
+static const char *TAG = "freertos";
+QueueSetHandle_t xQueueCreateSet( const UBaseType_t uxEventQueueLength )
+{
+    ESP_LOGE(TAG, "xQueueCreateSet unimplemented");
+    configASSERT(0);
+    return NULL;
+}
+BaseType_t xQueueAddToSet( QueueSetMemberHandle_t xQueueOrSemaphore,
+                           QueueSetHandle_t xQueueSet )
+{
+    ESP_LOGE(TAG, "xQueueAddToSet unimplemented");
+    configASSERT(0);
+    return pdFAIL;
+}
+
+BaseType_t xQueueRemoveFromSet( QueueSetMemberHandle_t xQueueOrSemaphore,
+                                QueueSetHandle_t xQueueSet )
+{
+    ESP_LOGE(TAG, "xQueueRemoveFromSet unimplemented");
+    configASSERT(0);
+    return pdFAIL;
+}
+
+QueueSetMemberHandle_t xQueueSelectFromSet( QueueSetHandle_t xQueueSet,
+                                            const TickType_t xTicksToWait )
+{
+    ESP_LOGE(TAG, "xQueueSelectFromSet unimplemented");
+    configASSERT(0);
+    return NULL;
+}
+
+QueueSetMemberHandle_t xQueueSelectFromSetFromISR( QueueSetHandle_t xQueueSet )
+{
+    ESP_LOGE(TAG, "xQueueSelectFromSetFromISR unimplemented");
+    configASSERT(0);
+    return NULL;
+}
+
+BaseType_t xQueuePeek( QueueHandle_t xQueue,
+                       void * const pvBuffer,
+                       TickType_t xTicksToWait )
+{
+    ESP_LOGE(TAG, "xQueuePeek unimplemented");
+    configASSERT(0);
+    return pdFAIL;
+}
+
+BaseType_t xQueueOverwrite(QueueHandle_t xQueue, const void * pvItemToQueue)
+{
+    ESP_LOGE(TAG, "xQueueOverwrite unimplemented");
+    configASSERT(0);
+    return pdFAIL;
+}
+
+BaseType_t xQueueOverwriteFromISR(QueueHandle_t xQueue, const void * pvItemToQueue, BaseType_t *pxHigherPriorityTaskWoken)
+{
+    ESP_LOGE(TAG, "xQueueOverwriteFromISR unimplemented");
+    configASSERT(0);
+    return pdFAIL;
+}
+#endif

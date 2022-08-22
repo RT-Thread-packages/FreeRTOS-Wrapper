@@ -63,6 +63,10 @@
  * array. */
 #define tskDEFAULT_INDEX_TO_NOTIFY     ( 0 )
 
+#ifdef ESP_PLATFORM
+#define tskNO_AFFINITY  ( 0x7FFFFFFF )
+#endif
+
 /**
  * task. h
  *
@@ -291,6 +295,19 @@ typedef struct xTIME_OUT
                             void * const pvParameters,
                             UBaseType_t uxPriority,
                             TaskHandle_t * const pxCreatedTask );
+#endif
+
+#ifdef ESP_PLATFORM
+#if( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
+    BaseType_t xTaskCreatePinnedToCore( TaskFunction_t pvTaskCode,
+                                        const char * const pcName,
+                                        const uint32_t usStackDepth,
+                                        void * const pvParameters,
+                                        UBaseType_t uxPriority,
+                                        TaskHandle_t * const pvCreatedTask,
+                                        const BaseType_t xCoreID);
+
+#endif
 #endif
 
 /**
@@ -2225,6 +2242,24 @@ TaskHandle_t xTaskGetCurrentTaskHandle( void );
  * taskSCHEDULER_NOT_STARTED or taskSCHEDULER_SUSPENDED.
  */
 BaseType_t xTaskGetSchedulerState( void );
+
+#ifdef ESP_PLATFORM
+BaseType_t xTaskGetAffinity( TaskHandle_t xTask );
+TaskHandle_t xTaskGetCurrentTaskHandleForCPU( BaseType_t cpuid );
+TaskHandle_t xTaskGetIdleTaskHandleForCPU( UBaseType_t cpuid );
+/* Unimplemented */
+#if ( configNUM_THREAD_LOCAL_STORAGE_POINTERS > 0 )
+void vTaskSetThreadLocalStoragePointer( TaskHandle_t xTaskToSet,
+                                            BaseType_t xIndex,
+                                            void * pvValue );
+void * pvTaskGetThreadLocalStoragePointer( TaskHandle_t xTaskToQuery,
+                                               BaseType_t xIndex );
+#if ( configTHREAD_LOCAL_STORAGE_DELETE_CALLBACKS )
+typedef void (*TlsDeleteCallbackFunction_t)( int, void * );
+void vTaskSetThreadLocalStoragePointerAndDelCallback( TaskHandle_t xTaskToSet, BaseType_t xIndex, void *pvValue, TlsDeleteCallbackFunction_t pvDelCallback);
+#endif
+#endif
+#endif
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
