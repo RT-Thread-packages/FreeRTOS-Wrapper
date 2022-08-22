@@ -57,6 +57,8 @@
 #endif
 /* *INDENT-ON* */
 
+#ifdef configUSE_FREERTOS_PROVIDED_HEAP
+
 /* Used by heap_5.c to define the start address and size of each memory region
  * that together comprise the total FreeRTOS heap space. */
 typedef struct HeapRegion
@@ -105,6 +107,21 @@ void vPortInitialiseBlocks( void );
 size_t xPortGetFreeHeapSize( void );
 size_t xPortGetMinimumEverFreeHeapSize( void );
 
+#else  // configUSE_FREERTOS_PROVIDED_HEAP
+
+/*
+ * Map to the memory management routines required for the port.
+ *
+ * Note that libc standard malloc/free are also available for
+ * non-FreeRTOS-specific code, and behave the same as
+ * pvPortMalloc()/vPortFree().
+ */
+#define pvPortMalloc malloc
+#define vPortFree free
+#define xPortGetFreeHeapSize esp_get_free_heap_size
+#define xPortGetMinimumEverFreeHeapSize esp_get_minimum_free_heap_size
+
+#endif
 void vPortEndScheduler( void );
 
 /* *INDENT-OFF* */

@@ -34,6 +34,7 @@
 #define configUSE_TIME_SLICING                  1
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
 #define configUSE_16_BIT_TICKS                  0
+#define configUSE_FREERTOS_PROVIDED_HEAP        1
 
 /* The following read-only options are controlled by rtconfig.h. */
 #define configTICK_RATE_HZ                      RT_TICK_PER_SECOND

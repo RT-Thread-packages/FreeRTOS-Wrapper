@@ -68,6 +68,7 @@
 /*-----------------------------------------------------------*/
 
 /* Architecture specifics. */
+    #define portTICK_PERIOD_MS      ((TickType_t) (1000 / configTICK_RATE_HZ))
     #define portBYTE_ALIGNMENT      RT_ALIGN_SIZE
     #define portPOINTER_SIZE_TYPE   rt_size_t
 /*-----------------------------------------------------------*/
