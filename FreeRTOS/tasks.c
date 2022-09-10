@@ -494,6 +494,10 @@ static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
 void vTaskStartScheduler( void )
 {
     xSchedulerRunning = pdTRUE;
+#ifdef ESP_PLATFORM
+    extern int rtthread_startup(void);
+    rtthread_startup();
+#endif
 }
 /*-----------------------------------------------------------*/
 
@@ -1219,6 +1223,19 @@ TaskHandle_t xTaskGetIdleTaskHandleForCPU( UBaseType_t cpuid )
     ( void ) cpuid;
     return xTaskGetIdleTaskHandle();
 }
+
+#if ( configINCLUDE_FREERTOS_TASK_C_ADDITIONS_H == 1 )
+
+    #include "freertos_tasks_c_additions.h"
+
+    #ifdef FREERTOS_TASKS_C_ADDITIONS_INIT
+        static void freertos_tasks_c_additions_init( void )
+        {
+            FREERTOS_TASKS_C_ADDITIONS_INIT();
+        }
+    #endif
+
+#endif /* if ( configINCLUDE_FREERTOS_TASK_C_ADDITIONS_H == 1 ) */
 
 /* Unimplemented */
 #include "esp_log.h"

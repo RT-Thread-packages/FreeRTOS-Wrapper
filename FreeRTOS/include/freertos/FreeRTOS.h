@@ -755,6 +755,20 @@
     #define traceSTREAM_BUFFER_RECEIVE_FROM_ISR( xStreamBuffer, xReceivedLength )
 #endif
 
+#ifdef ESP_PLATFORM
+#ifndef traceISR_EXIT_TO_SCHEDULER
+    #define traceISR_EXIT_TO_SCHEDULER()
+#endif
+
+#ifndef traceISR_EXIT
+    #define traceISR_EXIT()
+#endif
+
+#ifndef traceISR_ENTER
+    #define traceISR_ENTER(_n_)
+#endif
+#endif // ESP_PLATFORM
+
 #ifndef configGENERATE_RUN_TIME_STATS
     #define configGENERATE_RUN_TIME_STATS    0
 #endif

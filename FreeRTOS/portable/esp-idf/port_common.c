@@ -69,9 +69,7 @@ void esp_startup_start_app_common(void)
     esp_gdbstub_init();
 #endif // CONFIG_ESP_SYSTEM_GDBSTUB_RUNTIME
 
-#ifdef CONFIG_IDF_RTOS_RTTHREAD
-    app_main();
-#else
+#if !defined CONFIG_IDF_RTOS_RTTHREAD
     portBASE_TYPE res = xTaskCreatePinnedToCore(&main_task, "main",
                                                 ESP_TASK_MAIN_STACK, NULL,
                                                 ESP_TASK_MAIN_PRIO, NULL, ESP_TASK_MAIN_CORE);

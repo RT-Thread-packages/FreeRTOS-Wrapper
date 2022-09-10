@@ -340,6 +340,13 @@ FORCE_INLINE_ATTR bool xPortCanYield(void)
 
 BaseType_t rt_err_to_freertos(rt_err_t rt_err);
 
+#if CONFIG_APPTRACE_SV_ENABLE
+extern int xPortSwitchFlag;
+#define os_task_switch_is_pended(_cpu_) (xPortSwitchFlag)
+#else
+#define os_task_switch_is_pended(_cpu_) (false)
+#endif
+
 #ifdef __cplusplus
 }
 #endif

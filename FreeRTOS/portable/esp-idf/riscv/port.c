@@ -56,7 +56,11 @@
 #include "portmacro.h"
 #include "esp_memory_utils.h"
 
+/* ---------------------------------------------------- Variables ------------------------------------------------------
+ *
+ * ------------------------------------------------------------------------------------------------------------------ */
 
+static const char *TAG = "cpu_start";
 
 /* ---------------------------------------------- Port Implementations -------------------------------------------------
  *
@@ -66,7 +70,7 @@
 
 BaseType_t xPortInIsrContext(void)
 {
-    rreturn (BaseType_t)rt_interrupt_get_nest();
+    return (BaseType_t)rt_interrupt_get_nest();
 }
 
 BaseType_t IRAM_ATTR xPortInterruptedFromISRContext(void)
