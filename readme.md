@@ -6,7 +6,7 @@
 这是一个针对RT-Thread国产操作系统的FreeRTOS操作系统兼容层，可以让基于FreeRTOS操作系统的项目快速、无感地迁移到RT-Thread操作系统上。项目基于FreeRTOS V10.4.6版本。
 
 # 2 FreeRTOS功能支持情况
-兼容层对FreeRTOS的支持情况记录在[issue](https://github.com/RT-Thread-packages/FreeRTOS-Wrapper/issues/22)中记录。一些支持的函数在功能和使用方法上和FreeRTOS略有不同，在迁移过程中需要注意。
+兼容层对FreeRTOS的支持情况记录在[issue](https://github.com/RT-Thread-packages/FreeRTOS-Wrapper/discussions/31)中记录。一些支持的函数在功能和使用方法上和FreeRTOS略有不同，在迁移过程中需要注意。
 ### vTaskSuspend
 `vTaskSuspend`只支持挂起当前运行的线程，在使用时`xTaskToSuspend`参数必须为`NULL`。
 ### xQueueSendToFront
