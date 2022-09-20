@@ -148,4 +148,5 @@ Task 1 receive data 10 from queue
 
 # 4 参考资料
 RT-Thread文档 [https://www.rt-thread.org/document/site/#/rt-thread-version/rt-thread-standard/README](https://www.rt-thread.org/document/site/#/rt-thread-version/rt-thread-standard/README)
+
 FreeRTOS文档 [https://www.freertos.org/a00106.html](https://www.freertos.org/a00106.html)
