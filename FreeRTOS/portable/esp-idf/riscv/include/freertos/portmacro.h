@@ -333,6 +333,8 @@ FORCE_INLINE_ATTR bool xPortCanYield(void)
     return (threshold <= 1);
 }
 
+#define FREERTOS_PRIORITY_TO_RTTHREAD(priority)    ( configMAX_PRIORITIES - 1 - ( priority ) )
+#define RTTHREAD_PRIORITY_TO_FREERTOS(priority)    ( RT_THREAD_PRIORITY_MAX - 1 - ( priority ) )
 /* Use this macro to calculate the buffer size when allocating a queue statically
  * To ensure the buffer can fit the desired number of messages
  */
