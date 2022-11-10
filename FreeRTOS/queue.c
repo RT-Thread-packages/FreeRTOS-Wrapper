@@ -569,7 +569,14 @@ UBaseType_t uxQueueMessagesWaiting( const QueueHandle_t xQueue )
 
     if ( type == RT_Object_Class_Mutex )
     {
-        uxReturn = ( ( rt_mutex_t ) pipc )->value;
+        if ( ( ( rt_mutex_t ) pipc )->owner == RT_NULL )
+        {
+            uxReturn = 1;
+        }
+        else
+        {
+            uxReturn = 0;
+        }
     }
     else if ( type == RT_Object_Class_Semaphore )
     {
@@ -603,7 +610,14 @@ UBaseType_t uxQueueSpacesAvailable( const QueueHandle_t xQueue )
 
     if ( type == RT_Object_Class_Mutex )
     {
-        uxReturn = 1 - ( ( rt_mutex_t ) pipc )->value;
+        if ( ( ( rt_mutex_t ) pipc )->owner == RT_NULL )
+        {
+            uxReturn = 0;
+        }
+        else
+        {
+            uxReturn = 1;
+        }
     }
     else if ( type == RT_Object_Class_Semaphore )
     {
