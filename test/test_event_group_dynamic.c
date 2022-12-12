@@ -63,7 +63,7 @@ static void vTask2Code(void * pvParameters)
 int event_group_dynamic(void)
 {
     xEventGroup = xEventGroupCreate();
-    xEventGroupDelete(xEventGroup);
+    vEventGroupDelete(xEventGroup);
     xEventGroup = xEventGroupCreate();
     if (xEventGroup == NULL)
     {
