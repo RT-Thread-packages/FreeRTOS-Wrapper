@@ -26,7 +26,11 @@
 static SemaphoreHandle_t dynamic_sem = RT_NULL;
 static rt_timer_t timer1;
 
+#ifdef rt_align
 rt_align(RT_ALIGN_SIZE)
+#else
+ALIGN(RT_ALIGN_SIZE)
+#endif
 static char thread1_stack[1024];
 static struct rt_thread thread1;
 static void rt_thread1_entry(void *parameter)
