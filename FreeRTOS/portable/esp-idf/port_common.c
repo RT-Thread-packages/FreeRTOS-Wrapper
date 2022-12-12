@@ -47,7 +47,9 @@ volatile unsigned port_xSchedulerRunning[portNUM_PROCESSORS] = {0};
     #error "FreeRTOS and system configuration mismatch regarding the use of multiple cores."
 #endif
 
+#if !defined CONFIG_IDF_RTOS_RTTHREAD
 static void main_task(void* args);
+#endif
 
 #ifdef CONFIG_ESP_SYSTEM_GDBSTUB_RUNTIME
 void esp_gdbstub_init(void);
@@ -87,6 +89,7 @@ static bool other_cpu_startup_idle_hook_cb(void)
 }
 #endif
 
+#if !defined CONFIG_IDF_RTOS_RTTHREAD
 static void main_task(void* args)
 {
 #if !CONFIG_FREERTOS_UNICORE
@@ -133,3 +136,4 @@ static void main_task(void* args)
     app_main();
     vTaskDelete(NULL);
 }
+#endif
