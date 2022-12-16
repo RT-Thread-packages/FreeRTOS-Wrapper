@@ -10,7 +10,7 @@
 #include <FreeRTOS.h>
 #include <task.h>
 
-#define TASK_PRIORITY         8
+#define TASK_PRIORITY         (FINSH_THREAD_PRIORITY + 1)
 
 static TaskHandle_t TaskHandle1 = NULL;
 static TaskHandle_t TaskHandle2 = NULL;

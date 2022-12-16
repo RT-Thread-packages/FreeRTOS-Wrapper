@@ -20,7 +20,7 @@
 #include <event_groups.h>
 #include <task.h>
 
-#define TASK_PRIORITY         8
+#define TASK_PRIORITY         (FINSH_THREAD_PRIORITY + 1)
 #define BIT_0                 ( 1 << 0 )
 #define BIT_4                 ( 1 << 4 )
 

@@ -19,7 +19,7 @@
 #include <FreeRTOS.h>
 #include <semphr.h>
 
-#define THREAD_PRIORITY         25
+#define THREAD_PRIORITY         (FINSH_THREAD_PRIORITY + 1)
 #define THREAD_TIMESLICE        5
 
 /* Semaphore handle */

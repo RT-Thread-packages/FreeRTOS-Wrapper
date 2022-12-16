@@ -21,7 +21,7 @@
 #include <semphr.h>
 #include <task.h>
 
-#define TASK_PRIORITY         25
+#define TASK_PRIORITY         (FINSH_THREAD_PRIORITY + 1)
 
 /* Semaphore handle */
 static SemaphoreHandle_t dynamic_sem = NULL;

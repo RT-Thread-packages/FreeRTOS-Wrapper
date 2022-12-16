@@ -19,7 +19,7 @@
 #include <FreeRTOS.h>
 #include <queue.h>
 
-#define THREAD_PRIORITY         25
+#define THREAD_PRIORITY         (FINSH_THREAD_PRIORITY + 1)
 #define THREAD_TIMESLICE        5
 #define QUEUE_LENGTH            1
 #define ITEM_SIZE               sizeof( uint32_t )

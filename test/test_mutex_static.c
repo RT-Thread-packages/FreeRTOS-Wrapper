@@ -20,7 +20,7 @@
 #include <semphr.h>
 #include <task.h>
 
-#define TASK_PRIORITY         8
+#define TASK_PRIORITY         (FINSH_THREAD_PRIORITY + 1)
 
 /* mutex handler */
 static SemaphoreHandle_t static_mutex = NULL;

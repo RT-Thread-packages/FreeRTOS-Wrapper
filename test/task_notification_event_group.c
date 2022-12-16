@@ -19,7 +19,7 @@
 #include <FreeRTOS.h>
 #include <task.h>
 
-#define TASK_PRIORITY         25
+#define TASK_PRIORITY         (FINSH_THREAD_PRIORITY + 1)
 #define BIT_0                 ( 1 << 0 )
 #define BIT_1                 ( 1 << 1 )
 

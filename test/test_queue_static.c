@@ -20,7 +20,7 @@
 #include <queue.h>
 #include <task.h>
 
-#define TASK_PRIORITY         8
+#define TASK_PRIORITY         (FINSH_THREAD_PRIORITY + 1)
 #define QUEUE_LENGTH          10
 #define ITEM_SIZE             sizeof( uint32_t )
 

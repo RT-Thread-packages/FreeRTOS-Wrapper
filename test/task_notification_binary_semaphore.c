@@ -19,7 +19,7 @@
 #include <FreeRTOS.h>
 #include <task.h>
 
-#define TASK_PRIORITY         25
+#define TASK_PRIORITY         (FINSH_THREAD_PRIORITY + 1)
 
 static TaskHandle_t xHandle = NULL;
 static rt_timer_t timer1;

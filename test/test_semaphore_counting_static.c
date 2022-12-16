@@ -22,7 +22,7 @@
 #include <task.h>
 #include <task.h>
 
-#define TASK_PRIORITY         25
+#define TASK_PRIORITY         (FINSH_THREAD_PRIORITY + 1)
 
 /* Semaphore handle */
 static SemaphoreHandle_t static_sem = RT_NULL;
