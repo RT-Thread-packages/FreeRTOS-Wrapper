@@ -14,8 +14,10 @@
 - RT-Thread操作系统的Arduino生态兼容层：https://github.com/RTduino/RTduino
 
 ## 2 FreeRTOS的API支持情况
+
 兼容层对FreeRTOS API的支持情况如下：
-### 任务控制
+
+### 2.1 任务控制
 - [x] xTaskCreate
 - [x] xTaskCreateStatic
 - [ ] [xTaskCreateRestrictedStatic](https://www.freertos.org/xtaskcreaterestrictedstaticfreertos-mpu-specific.html)
@@ -51,7 +53,7 @@
 - [x] xTaskCallApplicationTaskTag
 - [x] vTaskSetTimeoutState
 - [x] xTaskGetCheckForTimeout
-### 内核控制
+### 2.2 内核控制
 - [x] [taskYIELD](https://www.freertos.org/a00020.html#taskYIELD)
 - [x] [taskENTER_CRITICAL](https://www.freertos.org/taskENTER_CRITICAL_taskEXIT_CRITICAL.html)
 - [x] [taskEXIT_CRITICAL](https://www.freertos.org/taskENTER_CRITICAL_taskEXIT_CRITICAL.html)
@@ -65,7 +67,7 @@
 - [x] [xTaskResumeAll](https://www.freertos.org/a00135.html)
 - [ ] [vTaskStepTick](https://www.freertos.org/vTaskStepTick.html)
 - [ ] [xTaskCatchUpTicks](https://www.freertos.org/xTaskCatchUpTicks.html)
-### 任务通知
+### 2.3 任务通知
 - [x] [xTaskNotifyGive](https://www.freertos.org/xTaskNotifyGive.html)
 - [x] [vTaskNotifyGiveFromISR](https://www.freertos.org/vTaskNotifyGiveFromISR.html)
 - [x] [ulTaskNotifyTake](https://www.freertos.org/ulTaskNotifyTake.html)
@@ -76,7 +78,7 @@
 - [x] [xTaskNotifyWait](https://www.freertos.org/xTaskNotifyWait.html)
 - [x] [xTaskNotifyStateClear](https://www.freertos.org/xTaskNotifyStateClear.html)
 - [x] [ulTaskNotifyValueClear](https://www.freertos.org/ulTasknotifyValueClear.html)
-### 消息队列
+### 2.4 消息队列
 - [x] [xQueueCreate](https://www.freertos.org/a00116.html)
 - [x] [xQueueCreateStatic](https://www.freertos.org/xQueueCreateStatic.html)
 - [x] [vQueueDelete](https://www.freertos.org/a00018.html#vQueueDelete)
@@ -101,7 +103,7 @@
 - [ ] [vQueueAddToRegistry](https://www.freertos.org/vQueueAddToRegistry.html)
 - [ ] [vQueueUnregisterQueue](https://www.freertos.org/vQueueUnregisterQueue.html)
 - [ ] [pcQueueGetName](https://www.freertos.org/pcQueueGetName.html)
-### 信号量/互斥量
+### 2.5 信号量/互斥量
 - [x] [xSemaphoreCreateBinary](https://www.freertos.org/xSemaphoreCreateBinary.html)
 - [x] [xSemaphoreCreateBinaryStatic](https://www.freertos.org/xSemaphoreCreateBinaryStatic.html)
 - [x] [vSemaphoreCreateBinary](https://www.freertos.org/a00121.html)
@@ -120,7 +122,7 @@
 - [x] [xSemaphoreGive](https://www.freertos.org/a00123.html)
 - [x] [xSemaphoreGiveRecursive](https://www.freertos.org/xSemaphoreGiveRecursive.html)
 - [x] [xSemaphoreGiveFromISR](https://www.freertos.org/a00124.html)
-### 定时器
+### 2.6 定时器
 - [x] [xTimerCreate](https://www.freertos.org/FreeRTOS-timers-xTimerCreate.html)
 - [x] [xTimerCreateStatic](https://www.freertos.org/xTimerCreateStatic.html)
 - [x] [xTimerIsTimerActive](https://www.freertos.org/FreeRTOS-timers-xTimerIsTimerActive.html)
@@ -143,7 +145,7 @@
 - [x] [xTimerGetPeriod](https://www.freertos.org/FreeRTOS-timers-xTimerGetPeriod.html)
 - [x] [xTimerGetExpiryTime](https://www.freertos.org/FreeRTOS-timers-xTimerGetExpiryTime.html)
 - [x] [uxTimerGetReloadMode](https://www.freertos.org/uxTimerGetReloadMode.html)
-### 事件集
+### 2.7 事件集
 - [x] [xEventGroupCreate](https://www.freertos.org/xEventGroupCreate.html)
 - [x] [xEventGroupCreateStatic](https://www.freertos.org/xEventGroupCreateStatic.html)
 - [x] [vEventGroupDelete](https://www.freertos.org/vEventGroupDelete.html)
@@ -155,7 +157,7 @@
 - [x] [xEventGroupGetBits](https://www.freertos.org/xEventGroupGetBits.html)
 - [x] [xEventGroupGetBitsFromISR](https://www.freertos.org/xEventGroupGetBitsFromISR.html)
 - [ ] [xEventGroupSync](https://www.freertos.org/xEventGroupSync.html)
-### 不支持的功能
+### 2.8 不支持的功能
 - [ ] [消息队列集](https://www.freertos.org/RTOS-queue-sets.html)
 - [ ] [流缓冲区](https://www.freertos.org/RTOS-stream-buffer-API.html)
 - [ ] [消息缓冲区](https://www.freertos.org/RTOS-message-buffer-API.html)
@@ -324,3 +326,9 @@ Task 1 receive data 10 from queue
 RT-Thread文档 [https://www.rt-thread.org/document/site/#/rt-thread-version/rt-thread-standard/README](https://www.rt-thread.org/document/site/#/rt-thread-version/rt-thread-standard/README)
 
 FreeRTOS文档 [https://www.freertos.org/a00106.html](https://www.freertos.org/a00106.html)
+
+## 6 维护
+
+主页：https://github.com/RT-Thread-packages/FreeRTOS-Wrapper
+
+维护：[唐照洲](https://github.com/tangzz98)
