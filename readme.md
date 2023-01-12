@@ -239,7 +239,9 @@ vTaskStartScheduler();
 使用兼容层时，任何使用`xTaskCreate`创建的线程若优先级比`CONFIG_RT_MAIN_THREAD_PRIORITY`更高，会立即开始执行。`vTaskStartScheduler`只是为了提供对应用的兼容，没有任何实际效果。在使用兼容层时，创建线程要特别注意，确保在调用`xTaskCreate`时，该线程所需的所有资源已经完成初始化，可以正常运行。
 
 ## 4 使用方法
-通过Env工具将兼容层加入到工程中：
+
+通过Env工具或RT-Thread Studio将FreeRTOS兼容层加入到工程中：
+
 ```shell
 RT-Thread online packages
     system packages --->
@@ -247,7 +249,7 @@ RT-Thread online packages
             Version (latest)
 ```
 
-使用`scons --menuconfig`配置RT-Thread内核，以下选项会影响到FreeRTOS兼容层：
+以下选项会影响到FreeRTOS兼容层：
 
 ```c
 RT_USING_TIMER_SOFT /* 使用FreeRTOS定时器时必须开启*/
