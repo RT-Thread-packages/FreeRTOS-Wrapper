@@ -3,7 +3,7 @@
 ## 让基于FreeRTOS开发的应用层无感地迁移到RT-Thread操作系统
 
 ## 1 概述
-这是一个针对RT-Thread国产操作系统的FreeRTOS操作系统兼容层，可以让原有基于FreeRTOS操作系统的项目快速、无感地迁移到RT-Thread操作系统上，实现在RT-Thread操作系统上无感的使用FreeRTOS的API，同时可以使用RT-Thread的丰富组件。项目基于FreeRTOS V10.4.6版本。
+这是一个针对RT-Thread国产操作系统的FreeRTOS操作系统兼容层，可以让原有基于FreeRTOS操作系统的项目快速、无感地迁移到RT-Thread操作系统上，实现在RT-Thread操作系统上无感的使用FreeRTOS的API，同时可以使用RT-Thread的丰富组件。项目基于FreeRTOS V10.4.6版本。目前已经支撑多款基于FreeRTOS编写的SDK落地RT-Thread。
 
 ### 1.1 RT-Thread的其他RTOS兼容层
 
