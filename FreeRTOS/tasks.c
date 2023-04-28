@@ -147,7 +147,7 @@ static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
                 prvInitialiseNewTask( pxTaskCode, pcName, ( uint32_t ) usStackDepth, pvParameters, uxPriority, pxCreatedTask, pxNewTCB, ( StackType_t * ) stack_start );
                 xReturn = pdPASS;
                 /* Mark as dynamic */
-                ( ( struct rt_thread * ) pxNewTCB )->type &= ~RT_Object_Class_Static;
+                ( ( struct rt_thread * ) pxNewTCB )-> parent.type &= ~RT_Object_Class_Static;
                 rt_thread_startup( ( rt_thread_t ) pxNewTCB );
             }
             else
@@ -556,7 +556,7 @@ UBaseType_t uxTaskGetNumberOfTasks( void )
 char * pcTaskGetName( TaskHandle_t xTaskToQuery )
 {
     rt_thread_t thread = ( rt_thread_t ) prvGetTCBFromHandle( xTaskToQuery );
-    return &( thread->name[ 0 ] );
+    return &( thread->parent.name[ 0 ] );
 }
 /*-----------------------------------------------------------*/
 
