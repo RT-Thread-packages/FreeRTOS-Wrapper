@@ -1,25 +1,25 @@
-# FreeRTOS Wrapper for RT-Tread
+# RT-Thread操作系统的FreeRTOS兼容层
 ## FreeRTOS Application Compatibility Layer (ACL) for RT-Thread
-## Allow Seamless Migration of FreeRTOS Applications to RT-Thread
+## 让基于FreeRTOS开发的应用层无感地迁移到RT-Thread操作系统
 
-[中文](readme_zh.md) | English
+中文 | [English](readme.md)
 
-## 1 Overview
-This is a FreeRTOS application compatibility layer (ACL) for RT-Thread operating system. It allows developers to quickly and seamlessly migrate their existing FreeRTOS applications  to RT-Thread. Developers can use the same FreeRTOS API on their new RT-Thread applications, and take advantage of the feature-rich software components and packages offered by RT-Thread. The ACL is based on FreeRTOS V10.4.6. As of now it has supported migrations of multiple FreeRTOS-based SDK to RT-Thread.
+## 1 概述
+这是一个针对RT-Thread国产操作系统的FreeRTOS操作系统兼容层，可以让原有基于FreeRTOS操作系统的项目快速、无感地迁移到RT-Thread操作系统上，实现在RT-Thread操作系统上无感的使用FreeRTOS的API，同时可以使用RT-Thread的丰富组件。项目基于FreeRTOS V10.4.6版本。目前已经支撑多款基于FreeRTOS编写的SDK落地RT-Thread。
 
-### 1.1 RT-Thread Application Compatibility Layer (ACL) for Other RTOS
+### 1.1 RT-Thread的其他RTOS兼容层
 
-- μCOS-III ACL for RT-Thread：https://github.com/mysterywolf/RT-Thread-wrapper-of-uCOS-III
-- μCOS-II ACL for RT-Thread：https://github.com/mysterywolf/RT-Thread-wrapper-of-uCOS-II
-- RTX(CMSIS-RTOS1) ACL for RT-Thread：https://github.com/RT-Thread-packages/CMSIS_RTOS1
-- RTX5(CMSIS-RTOS2) ACL for RT-Thread：https://github.com/RT-Thread-packages/CMSIS_RTOS2
-- Arduino Ecosystem Compatibility Layer for RT-Thread：https://github.com/RTduino/RTduino
+- RT-Thread操作系统的μCOS-III兼容层：https://github.com/mysterywolf/RT-Thread-wrapper-of-uCOS-III
+- RT-Thread操作系统的μCOS-II兼容层：https://github.com/mysterywolf/RT-Thread-wrapper-of-uCOS-II
+- RT-Thread操作系统的RTX(即CMSIS-RTOS1)兼容层：https://github.com/RT-Thread-packages/CMSIS_RTOS1
+- RT-Thread操作系统的RTX5(即CMSIS-RTOS2)兼容层：https://github.com/RT-Thread-packages/CMSIS_RTOS2
+- RT-Thread操作系统的Arduino生态兼容层：https://github.com/RTduino/RTduino
 
-## 2 FreeRTOS API Support
+## 2 FreeRTOS的API支持情况
 
-Below is the current status of FreeRTOS API support offered by the FreeRTOS wrapper：
+兼容层对FreeRTOS API的支持情况如下：
 
-### 2.1 Task Control
+### 2.1 任务控制
 - [x] xTaskCreate
 - [x] xTaskCreateStatic
 - [ ] [xTaskCreateRestrictedStatic](https://www.freertos.org/xtaskcreaterestrictedstaticfreertos-mpu-specific.html)
@@ -29,7 +29,7 @@ Below is the current status of FreeRTOS API support offered by the FreeRTOS wrap
 - [x] xTaskDelayUntil 
 - [x] uxTaskPriorityGet
 - [x] vTaskPrioritySet
-- [x] vTaskSuspend (Only support suspending the currently running task)
+- [x] vTaskSuspend (只支持挂起当前线程)
 - [x] vTaskResume
 - [x] xTaskResumeFromISR
 - [x] xTaskAbortDelay
@@ -55,7 +55,7 @@ Below is the current status of FreeRTOS API support offered by the FreeRTOS wrap
 - [x] xTaskCallApplicationTaskTag
 - [x] vTaskSetTimeoutState
 - [x] xTaskGetCheckForTimeout
-### 2.2 RTOS Kernel Control
+### 2.2 内核控制
 - [x] [taskYIELD](https://www.freertos.org/a00020.html#taskYIELD)
 - [x] [taskENTER_CRITICAL](https://www.freertos.org/taskENTER_CRITICAL_taskEXIT_CRITICAL.html)
 - [x] [taskEXIT_CRITICAL](https://www.freertos.org/taskENTER_CRITICAL_taskEXIT_CRITICAL.html)
@@ -69,7 +69,7 @@ Below is the current status of FreeRTOS API support offered by the FreeRTOS wrap
 - [x] [xTaskResumeAll](https://www.freertos.org/a00135.html)
 - [ ] [vTaskStepTick](https://www.freertos.org/vTaskStepTick.html)
 - [ ] [xTaskCatchUpTicks](https://www.freertos.org/xTaskCatchUpTicks.html)
-### 2.3 Direct to Task Notifications
+### 2.3 任务通知
 - [x] [xTaskNotifyGive](https://www.freertos.org/xTaskNotifyGive.html)
 - [x] [vTaskNotifyGiveFromISR](https://www.freertos.org/vTaskNotifyGiveFromISR.html)
 - [x] [ulTaskNotifyTake](https://www.freertos.org/ulTaskNotifyTake.html)
@@ -80,7 +80,7 @@ Below is the current status of FreeRTOS API support offered by the FreeRTOS wrap
 - [x] [xTaskNotifyWait](https://www.freertos.org/xTaskNotifyWait.html)
 - [x] [xTaskNotifyStateClear](https://www.freertos.org/xTaskNotifyStateClear.html)
 - [x] [ulTaskNotifyValueClear](https://www.freertos.org/ulTasknotifyValueClear.html)
-### 2.4 Queues
+### 2.4 消息队列
 - [x] [xQueueCreate](https://www.freertos.org/a00116.html)
 - [x] [xQueueCreateStatic](https://www.freertos.org/xQueueCreateStatic.html)
 - [x] [vQueueDelete](https://www.freertos.org/a00018.html#vQueueDelete)
@@ -88,7 +88,7 @@ Below is the current status of FreeRTOS API support offered by the FreeRTOS wrap
 - [x] [xQueueSendFromISR](https://www.freertos.org/a00119.html)
 - [x] [xQueueSendToBack](https://www.freertos.org/xQueueSendToBack.html)
 - [x] [xQueueSendToBackFromISR](https://www.freertos.org/xQueueSendToBackFromISR.html)
-- [x] [xQueueSendToFront](https://www.freertos.org/xQueueSendToFront.html) (Time out not supported)
+- [x] [xQueueSendToFront](https://www.freertos.org/xQueueSendToFront.html) (不支持设置超时)
 - [x] [xQueueSendToFrontFromISR](https://www.freertos.org/xQueueSendToFrontFromISR.html)
 - [x] [xQueueReceive](https://www.freertos.org/a00118.html)
 - [x] [xQueueReceiveFromISR](https://www.freertos.org/a00120.html)
@@ -105,7 +105,7 @@ Below is the current status of FreeRTOS API support offered by the FreeRTOS wrap
 - [ ] [vQueueAddToRegistry](https://www.freertos.org/vQueueAddToRegistry.html)
 - [ ] [vQueueUnregisterQueue](https://www.freertos.org/vQueueUnregisterQueue.html)
 - [ ] [pcQueueGetName](https://www.freertos.org/pcQueueGetName.html)
-### 2.5 Semaphore / Mutexes
+### 2.5 信号量/互斥量
 - [x] [xSemaphoreCreateBinary](https://www.freertos.org/xSemaphoreCreateBinary.html)
 - [x] [xSemaphoreCreateBinaryStatic](https://www.freertos.org/xSemaphoreCreateBinaryStatic.html)
 - [x] [vSemaphoreCreateBinary](https://www.freertos.org/a00121.html)
@@ -124,7 +124,7 @@ Below is the current status of FreeRTOS API support offered by the FreeRTOS wrap
 - [x] [xSemaphoreGive](https://www.freertos.org/a00123.html)
 - [x] [xSemaphoreGiveRecursive](https://www.freertos.org/xSemaphoreGiveRecursive.html)
 - [x] [xSemaphoreGiveFromISR](https://www.freertos.org/a00124.html)
-### 2.6 Software Timers
+### 2.6 定时器
 - [x] [xTimerCreate](https://www.freertos.org/FreeRTOS-timers-xTimerCreate.html)
 - [x] [xTimerCreateStatic](https://www.freertos.org/xTimerCreateStatic.html)
 - [x] [xTimerIsTimerActive](https://www.freertos.org/FreeRTOS-timers-xTimerIsTimerActive.html)
@@ -147,7 +147,7 @@ Below is the current status of FreeRTOS API support offered by the FreeRTOS wrap
 - [x] [xTimerGetPeriod](https://www.freertos.org/FreeRTOS-timers-xTimerGetPeriod.html)
 - [x] [xTimerGetExpiryTime](https://www.freertos.org/FreeRTOS-timers-xTimerGetExpiryTime.html)
 - [x] [uxTimerGetReloadMode](https://www.freertos.org/uxTimerGetReloadMode.html)
-### 2.7 Event Groups
+### 2.7 事件集
 - [x] [xEventGroupCreate](https://www.freertos.org/xEventGroupCreate.html)
 - [x] [xEventGroupCreateStatic](https://www.freertos.org/xEventGroupCreateStatic.html)
 - [x] [vEventGroupDelete](https://www.freertos.org/vEventGroupDelete.html)
@@ -159,46 +159,46 @@ Below is the current status of FreeRTOS API support offered by the FreeRTOS wrap
 - [x] [xEventGroupGetBits](https://www.freertos.org/xEventGroupGetBits.html)
 - [x] [xEventGroupGetBitsFromISR](https://www.freertos.org/xEventGroupGetBitsFromISR.html)
 - [ ] [xEventGroupSync](https://www.freertos.org/xEventGroupSync.html)
-### 2.8 Unsupported Features
-- [ ] [Queue Sets](https://www.freertos.org/RTOS-queue-sets.html)
-- [ ] [Stream Buffers](https://www.freertos.org/RTOS-stream-buffer-API.html)
-- [ ] [Message Buffers](https://www.freertos.org/RTOS-message-buffer-API.html)
+### 2.8 不支持的功能
+- [ ] [消息队列集](https://www.freertos.org/RTOS-queue-sets.html)
+- [ ] [流缓冲区](https://www.freertos.org/RTOS-stream-buffer-API.html)
+- [ ] [消息缓冲区](https://www.freertos.org/RTOS-message-buffer-API.html)
 - [ ] [MPU](https://www.freertos.org/FreeRTOS-MPU-specific.html)
-- [ ] [Co-routines](https://www.freertos.org/croutineapi.html)
-- [ ] [Hook Functions](https://www.freertos.org/a00016.html)
-- [ ] [Trace Hook Macros](https://www.freertos.org/rtos-trace-macros.html)
+- [ ] [协程](https://www.freertos.org/croutineapi.html)
+- [ ] [钩子函数](https://www.freertos.org/a00016.html)
+- [ ] [跟踪功能](https://www.freertos.org/rtos-trace-macros.html)
 
-## 3 Differences between FreeRTOS and RT-Thread
-Similar to FreeRTOS, RT-Thread is a real-time operating system supporting multiple architectures, including ARM, RISC-V, etc. RT-Thread offers the typical task control APIs, software timer, and various task synchronization mechanisms including semaphores, mutexes, message queues and event groups. However, there are some subtle differences between implementations of similar features in FreeRTOS and RT-Thread. These differences are detailed below and care needs to be taken when using the following APIs.
+## 3 使用注意事项
+一些函数在功能和使用方法上和FreeRTOS略有不同，在迁移过程中需要注意。
 
-### 3.1 Tasks, Queues and Mutexes
+### 3.1线程、消息队列与互斥量
 
 #### 3.1.1 vTaskSuspend
-`vTaskSuspend` only supports suspending the currently-running task. When using `xTaskToSuspend`, the `xTaskToSuspend` must be `NULL`. Otherwise an assertion will be triggered.
+`vTaskSuspend`只支持挂起当前运行的线程，在使用时`xTaskToSuspend`参数必须为`NULL`。否则会触发断言。
 
 #### 3.1.2 xQueueSendToFront
-`xQueueSendToFront` does not support specifying a time out. When calling the API the `xTicksToWait` parameter is ignored. If the queue is full `errQUEUE_FULL` will be returned immediately.
+`xQueueSendToFront`不支持设置超时，使用时`xTicksToWait`参数会被忽略，消息队列没有空间时会立即返回`errQUEUE_FULL`。
 
 #### 3.1.3 xQueueCreateStatic
-Please follow the example below to create a static queue. This will ensure enough memory is allocated to store the specified number of queue items.
+静态消息队列需要参考以下的例子创建，确保为消息队列分配的内存足够大：
 ```c
 #define QUEUE_LENGTH 10
 #define ITEM_SIZE sizeof( uint32_t )
 
-/* This is how the memory of a static queue is allocated in a FreeRTOS application. Because of differences between implementation details of queues in RT-Thread and FreeRTOS, memory allocated using this approach is not sufficient to store QUEUE_LENGTH number of elements. */
+/* 以下是在原版FreeRTOS分配内存的方法，由于RT-Thread消息队列内部的实现与FreeRTOS不同，这样分配的内存不够存放QUEUE_LENGTH个消息 */
 //uint8_t ucQueueStorage[ QUEUE_LENGTH * ITEM_SIZE ];
-/* Need to use the QUEUE_BUFFER_SIZE macro to allocate memory */
+/* 要使用QUEUE_BUFFER_SIZE宏分配内存 */
 uint8_t ucQueueStorage[ QUEUE_BUFFER_SIZE(QUEUE_LENGTH, ITEM_SIZE)];
 StaticQueue_t xQueueBuffer;
 QueueHandle_t xQueue1;
 xQueue1 = xQueueCreate( QUEUE_LENGTH, ITEM_SIZE, &( ucQueueStorage[ 0 ] ), &xQueueBuffer );
 ```
-#### 3.1.4 Mutex and Recursive Mutex
-FreeRTOS offers two types of Mutexes: Mutex and Recursive Mutex. Recursive Mutexes can be taken repeatedly by the same task, while Mutexes cannot. All Mutexes in RT-Thread can be taken repeatedly. Therefore, the FreeRTOS wrapper does not distinguish between Mutexes and Recursive Mutexes. Mutexes created using either `xSemaphoreCreateMutex` or `xSemaphoreCreateRecursiveMutex` can be taken repeatedly.
-### 3.2 Timers
-Unlike FreeRTOS, RT-Thread does not send timer commands to the timer task using a message queue. When using any timer APIs that requires setting a time out in the FreeRTOS wrapper, such as `xTimerStart( xTimer, xTicksToWait )`, the `xTicksToWait` parameter is ignored and all such functions return immediately.
-### 3.3 FromISR Functions
-FreeRTOS distinguish those APIs that can be used from ISR and those that cannot. Those can be used from ISR has the word `FromISR` in their names. Is using these APIs from ISR wakes up a higher priority task, a FreeRTOS application normally needs to invoke the scheuler manually, as shown in the following example:
+#### 3.1.4 Mutex和Recursive Mutex
+FreeRTOS提供了两种互斥量，Mutex和Recursive Mutex。Recursive Mutex可以由同一个线程重复获取，Mutex不可以。RT-Thread提供的互斥量是可以重复获取的，因此兼容层也不对Mutex和Recursive Mutex做区分。用`xSemaphoreCreateMutex`和`xSemaphoreCreateRecursiveMutex`创建的互斥量都是可以重复获取的。
+### 3.2 定时器
+和FreeRTOS不同，RT-Thread不使用一个消息队列向定时器线程传递命令。使用兼容层时任何需要设置超时的定时器函数，如`xTimerStart( xTimer, xTicksToWait )`，`xTicksToWait`参数会被忽略，函数会立即完成命令并返回。
+### 3.3 FromISR函数
+FreeRTOS为一些函数提供了在中断中使用的FromISR版本，如果这些函数唤醒了更高优先级的线程，需要手动调度，如下所示：
 ```c
 BaseType_t xHigherPrioritTaskWoken = pdFALSE;
 xQueueSendToFrontFromISR( xRxQueue, &cIn, &xHigherPriorityTaskWoken );
@@ -207,29 +207,29 @@ if( xHigherPriorityTaskWoken )
   taskYIELD ();
 }
 ```
-RT-Thread does not provide a `FromISR` version for its APIs. RT-Thread APIs can be used from ISR and they invoke the scheduler automatically. Therefore when using the FreeRTOS wrapper, you do not need to manually invoke the scheduler after using FromISR APIs. `xHigherPriorityTaskWoken` is always set to `pdFALSE`.
-### 3.4 Heap
-The FreeRTOS wrapper preserves the five heap allocation algorithms of FreeRTOS. By default `heap_3` is used, and `pvPortMalloc/vPortFree` invokes `RT_KERNEL_MALLOC/RT_KERNEL_FREE` to allocate memory from the system heap maintained by RT-Thread. When using `heap_3` the heap size is controlled by RT-Thread BSP configurations and you cannot change it by setting `configTOTAL_HEAP_SIZE` in `FreeRTOSConfig.h`.
-If you want to use other heap allocation algorithms you need to modify `FreeRTOS/sSConscript` and choose the source file accordingly
+RT-Thread不为函数提供FromISR版本，函数可以在中断调用并在内部完成调度。因此在兼容层中使用FromISR函数后不需要手动调度，`xHigherPriorityTaskWoken`总会被设置成`pdFALSE`。
+### 3.4 内存堆
+兼容层保留了FreeRTOS的五种内存分配算法，默认使用`heap_3`，`pvPortMalloc/vPortFree`内部调用`RT_KERNEL_MALLOC/RT_KERNEL_FREE`在RT-Thread内部的内存堆分配。这种情况下内存堆的大小由RT-Thread BSP配置决定，无法在`FreeRTOSConfig.h`中通过`configTOTAL_HEAP_SIZE`设置。
+若使用其他算法，需要修改`FreeRTOS/sSConscript`，选择相应的源文件
 
 ```c
-#You can replace heap_3 with heap_1, etc
+#可将heap_3.c替换成heap_1.c等
 src += Glob(os.path.join("portable", "MemMang", "heap_3.c"))
 ```
-When using algorithms other than `heap_3` you can set the heap size using `configTOTAL_HEAP_SIZE` in `FreeRTOS/portable/rt-thread/FreeRTOSConfig.h`. When using `pvPortMalloc/vPortFree`, memory is allocated from a heap maintained by the FreeRTOS wrapper, separate from the RT-Thread system heap, with a size of `configTOTAL_HEAP_SIZE`. Other memory allocations without invoking `pvPortMalloc/vPortFree`, including the allocations made by the FreeRTOS wrapper APIs internally, are satisfied using the RT-Thread system heap.
+在`FreeRTOS/portable/rt-thread/FreeRTOSConfig.h`中通过`configTOTAL_HEAP_SIZE`设置内存堆大小。应用调用`pvPortMalloc/vPortFree`会在一块独立于RT-Thread，大小为`configTOTAL_HEAP_SIZE`的内存堆中分配，RT-Thread内部的内存堆仍然存在，兼容层函数内部分配内存都在RT-Thread的内存堆完成。
 
-### 3.5 Task Priority
-In RT-Thread a smaller numerical value indicates a higher task priority. On the contrary, in FreeRTOS a larger numerical value indicates a higher priority. When using the FreeRTOS wrapper APIs such as `xTaskCreate`, task priority is specified using FreeRTOS rules.Care needs to be taken when both RT-Thread and FreeRTOS task APIs are used in the same application. You can use the following two macros to convert between RT-Thread and FreeRTOS task priority:
+### 3.5 线程优先级
+RT-Thread线程优先级数值越小时优先级越高，而FreeRTOS线程优先级数值越大优先级越高。在使用兼容层的FreeRTOS API，如`xTaskCreate`，使用FreeRTOS的规则为线程指定优先级即可。若在应用中将RT-Thread和FreeRTOS API混合使用，在指定线程优先级时要特别注意。可以使用以下两个宏对RT-Thread和FreeRTOS线程优先级做转换：
 ```c
 #define FREERTOS_PRIORITY_TO_RTTHREAD(priority)    ( configMAX_PRIORITIES - 1 - ( priority ) )
 #define RTTHREAD_PRIORITY_TO_FREERTOS(priority)    ( RT_THREAD_PRIORITY_MAX - 1 - ( priority ) )
 ```
 
-### 3.6 Task Stack Size
-The unit of FreeRTOS task stack size is `sizeof(StackType_t)`, while it is `sizeof(rt_uint8_t)` for RT-Thread. Do not confuse between the two and stick to FreeRTOS rules when creating tasks using FreeRTOS APIs.
+### 3.6 线程堆栈大小
+FreeRTOS线程堆栈大小的单位为`sizeof(StackType_t)`，RT-Thread线程堆栈大小为`sizeof(rt_uint8_t)`。使用FreeRTOS API创建线程时一定要遵守FreeRTOS的规则，切勿混淆。
 
 ### 3.7 vTaskStartScheduler
-The startup procedure of RT-Thread is different from FreeRTOS. When using the FreeRTOS wrapper, the `main` function is run in the context of a task, whose priority is `CONFIG_RT_MAIN_THREAD_PRIORITY`. (This is specified using RT-Thread SCons configuration. A smaller numerical value indicates a higher priority.) At this time the scheduler is already started. The code for creating a task and starting the scheduler normally looks like the following in a FreeRTOS application：
+由于RT-Thread和FreeRTOS的内核启动流程不同，使用兼容层时，`main`函数是在一个线程中运行，该线程优先级为`CONFIG_RT_MAIN_THREAD_PRIORITY`。（此选项通过SCons配置，数值越小优先级越高。），此时调度器已经开启。一般的FreeRTOS应用采用以下的方式创建线程：
 
 ```c
 xTaskCreate(pxTask1Code, ......);
@@ -238,11 +238,11 @@ xTaskCreate(pxTask2Code, ......);
 vTaskStartScheduler();
 ```
 
-When using the application compatibility layer, if you use `xTaskCreate` to create any task that has a priority higher than `CONFIG_RT_MAIN_THREAD_PRIORITY`, it will execute immediately. `vTaskStartScheduler` is only a dummy function. Care needs to be taken when creating tasks using the FreeRTOS wrapper. You need to make sure all resources needed for the task are initialized and the task can execute normally when creating tasks using  `xTaskCreate`.
+使用兼容层时，任何使用`xTaskCreate`创建的线程若优先级比`CONFIG_RT_MAIN_THREAD_PRIORITY`更高，会立即开始执行。`vTaskStartScheduler`只是为了提供对应用的兼容，没有任何实际效果。在使用兼容层时，创建线程要特别注意，确保在调用`xTaskCreate`时，该线程所需的所有资源已经完成初始化，可以正常运行。
 
-## 4 Usage
+## 4 使用方法
 
-First use Env tool or RT-Thread Studio to add the FreeRTOS wrapper to your project:
+通过Env工具或RT-Thread Studio将FreeRTOS兼容层加入到工程中：
 
 ```shell
 RT-Thread online packages
@@ -251,35 +251,35 @@ RT-Thread online packages
             Version (latest)
 ```
 
-These configuration operations will impact the FreeRTOS wrapper
+以下选项会影响到FreeRTOS兼容层：
 
 ```c
-RT_USING_TIMER_SOFT /* Must enable when using FreeRTOS timers */
-RT_TIMER_THREAD_PRIO  /* Timer task priority. Smaller numerical value indicates higher priority. */
-RT_TIMER_THREAD_STACK_SIZE  /* Timer thread stack size. Unit is sizeof(rt_uint8_t). */
-RT_USING_MUTEX  /* Must enable when using FreeRTOS mutexes */
-RT_USING_SEMAPHORE  /* Must enable when using FreeRTOS semaphores */
-RT_USING_HEAP /* Must enable when using FreeRTOS heap or dynamic allocation */
-RT_TICK_PER_SECOND  /* equivalent to FreeRTOS configTICK_RATE_HZ */
-RT_THREAD_PRIORITY_MAX /* equivalent to FreeRTOS configMAX_PRIORITIES */
-RT_NAME_MAX /* equivalent to FreeRTOS configMAX_TASK_NAME_LEN */
+RT_USING_TIMER_SOFT /* 使用FreeRTOS定时器时必须开启*/
+RT_TIMER_THREAD_PRIO  /* 定时器线程优先级。与FreeRTOS相反，该选项数值越小优先级越高 */
+RT_TIMER_THREAD_STACK_SIZE  /* 定时器线程栈大小，单位为sizeof(rt_uint8_t) */
+RT_USING_MUTEX  /* 使用FreeRTOS互斥量时必须开启*/
+RT_USING_SEMAPHORE  /* 使用FreeRTOS信号量时必须开启*/
+RT_USING_HEAP /* 使用FreeRTOS动态内存分配时必须开启*/
+RT_TICK_PER_SECOND  /* 相当于FreeRTOS configTICK_RATE_HZ */
+RT_THREAD_PRIORITY_MAX /* 相当于FreeRTOS configMAX_PRIORITIES */
+RT_NAME_MAX /* 相当于FreeRTOS configMAX_TASK_NAME_LEN */
 ```
 
-You can find a `FreeRTOSConfig.h` template in `FreeRTOS/portable/rt-thread`. Most configuration options are read-only or depend on RT-Thread configurations. Those can be modified are detailed below:
+在`FreeRTOS/portable/rt-thread`提供了`FreeRTOSConfig.h`模版。大部分内容不可以修改或依赖RT-Thread内核的配置，可以手动修改的内容如下：
 
 ```c
-/* You can choose not to use recursive mutex */
+/* 可以选择不使用recursive mutex */
 #ifdef RT_USING_MUTEX
     #define configUSE_RECURSIVE_MUTEXES         1
     #define configUSE_MUTEXES                   1
 #endif
 
-/* You can choose not to use counting semaphore */
+/* 可以选择不使用counting semaphore */
 #ifdef RT_USING_SEMAPHORE
     #define configUSE_COUNTING_SEMAPHORES       1
 #endif
 
-/* If not using heap_3, you can configure heap size using configTOTAL_HEAP_SIZE */
+/* 若不使用heap_3，可以通过configTOTAL_HEAP_SIZE配置内存堆大小 */
 #define configSUPPORT_STATIC_ALLOCATION         1
 #ifdef RT_USING_HEAP
     #define configSUPPORT_DYNAMIC_ALLOCATION    1
@@ -289,7 +289,7 @@ You can find a `FreeRTOSConfig.h` template in `FreeRTOS/portable/rt-thread`. Mos
 
 #define configMINIMAL_STACK_SIZE                128
 
-/* Optional functions or features */
+/* 可以选择的函数和功能 */
 #define INCLUDE_vTaskPrioritySet                1
 #define INCLUDE_uxTaskPriorityGet               1
 #define INCLUDE_vTaskDelete                     1
@@ -310,7 +310,7 @@ You can find a `FreeRTOSConfig.h` template in `FreeRTOS/portable/rt-thread`. Mos
 #define configUSE_TASK_NOTIFICATIONS            1
 #define configTASK_NOTIFICATION_ARRAY_ENTRIES   3
 ```
-Some examples are provided under the `test` directory. You can copy them to the `application` folder under the BSP directory. After building with SCons and downloading the application, you can enter relevant msh commands from the serial monitor and observe the behavior of these examples:
+在`test`目录下提供了一些例程，可以将它们加入BSP目录下的`applications`文件夹中。使用SCons编译并烧录后，可以连接串口，输入相应的msh命令，观察例程的执行结果：
 ```shell
 msh />queue_dynamic
 Task 1 receive data 0 from queue
@@ -326,13 +326,13 @@ Task 1 receive data 9 from queue
 Task 1 receive data 10 from queue
 ```
 
-## 5 Reference
-RT-Thread documentation [https://www.rt-thread.org/document/site/#/rt-thread-version/rt-thread-standard/README](https://www.rt-thread.org/document/site/#/rt-thread-version/rt-thread-standard/README)
+## 5 参考资料
+RT-Thread文档 [https://www.rt-thread.org/document/site/#/rt-thread-version/rt-thread-standard/README](https://www.rt-thread.org/document/site/#/rt-thread-version/rt-thread-standard/README)
 
-FreeRTOS documentation [https://www.freertos.org/a00106.html](https://www.freertos.org/a00106.html)
+FreeRTOS文档 [https://www.freertos.org/a00106.html](https://www.freertos.org/a00106.html)
 
-## 6 Maintaining
+## 6 维护
 
-Homepage：https://github.com/RT-Thread-packages/FreeRTOS-Wrapper
+主页：https://github.com/RT-Thread-packages/FreeRTOS-Wrapper
 
-Maintainer：[Zhaozhou Tang](https://github.com/tangzz98)
+维护：[唐照洲](https://github.com/tangzz98)
