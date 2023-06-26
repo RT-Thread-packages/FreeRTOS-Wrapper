@@ -480,6 +480,12 @@ BaseType_t xQueueReceive( QueueHandle_t xQueue,
     if ( type == RT_Object_Class_MessageQueue )
     {
         err = rt_mq_recv( ( rt_mq_t ) pipc, pvBuffer, ( ( rt_mq_t ) pipc )->msg_size, ( rt_int32_t ) xTicksToWait );
+#if RT_VER_NUM >= 0x50001
+        if (( rt_ssize_t ) err > 0)
+        {
+            err = RT_EOK;
+        }
+#endif
     }
 
     return rt_err_to_freertos( err );
@@ -542,6 +548,12 @@ BaseType_t xQueueReceiveFromISR( QueueHandle_t xQueue,
     else if ( type == RT_Object_Class_MessageQueue )
     {
         err = rt_mq_recv( ( rt_mq_t ) pipc, pvBuffer, ( ( rt_mq_t ) pipc )->msg_size, RT_WAITING_NO );
+#if RT_VER_NUM >= 0x50001
+        if (( rt_ssize_t ) err > 0)
+        {
+            err = RT_EOK;
+        }
+#endif
     }
     if ( pxHigherPriorityTaskWoken != NULL )
     {
