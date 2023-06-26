@@ -481,7 +481,7 @@ BaseType_t xQueueReceive( QueueHandle_t xQueue,
     {
         err = ( rt_err_t ) rt_mq_recv( ( rt_mq_t ) pipc, pvBuffer, ( ( rt_mq_t ) pipc )->msg_size, ( rt_int32_t ) xTicksToWait );
 #if RT_VER_NUM >= 0x50001
-        if (( rt_ssize_t ) err > 0)
+        if (( rt_ssize_t ) err >= 0)
         {
             err = RT_EOK;
         }
