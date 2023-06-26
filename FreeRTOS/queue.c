@@ -479,7 +479,7 @@ BaseType_t xQueueReceive( QueueHandle_t xQueue,
     type = rt_object_get_type( &pipc->parent );
     if ( type == RT_Object_Class_MessageQueue )
     {
-        err = rt_mq_recv( ( rt_mq_t ) pipc, pvBuffer, ( ( rt_mq_t ) pipc )->msg_size, ( rt_int32_t ) xTicksToWait );
+        err = ( rt_err_t ) rt_mq_recv( ( rt_mq_t ) pipc, pvBuffer, ( ( rt_mq_t ) pipc )->msg_size, ( rt_int32_t ) xTicksToWait );
 #if RT_VER_NUM >= 0x50001
         if (( rt_ssize_t ) err > 0)
         {
@@ -547,7 +547,7 @@ BaseType_t xQueueReceiveFromISR( QueueHandle_t xQueue,
     }
     else if ( type == RT_Object_Class_MessageQueue )
     {
-        err = rt_mq_recv( ( rt_mq_t ) pipc, pvBuffer, ( ( rt_mq_t ) pipc )->msg_size, RT_WAITING_NO );
+        err = ( rt_err_t ) rt_mq_recv( ( rt_mq_t ) pipc, pvBuffer, ( ( rt_mq_t ) pipc )->msg_size, RT_WAITING_NO );
 #if RT_VER_NUM >= 0x50001
         if (( rt_ssize_t ) err > 0)
         {
