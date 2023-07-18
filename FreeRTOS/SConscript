@@ -3,6 +3,7 @@ from building import *
 
 cwd = GetCurrentDir()
 src	= Glob('*.c')
+CPPPATH = [os.path.join(cwd, "include", "freertos"), os.path.join(cwd, "include")]
 
 if (GetDepend(['PKG_USING_ESP_IDF']) or GetDepend(['BSP_USING_LOCAL_ESP_IDF'])):
   src += Split("""
@@ -10,16 +11,17 @@ if (GetDepend(['PKG_USING_ESP_IDF']) or GetDepend(['BSP_USING_LOCAL_ESP_IDF'])):
     portable/esp-idf/riscv/port.c
     portable/esp-idf/port_common.c
   """)
-  CPPPATH = Split("""
-    include
-    include/freertos
+  CPPPATH += Split("""
     portable/esp-idf/riscv/include
     portable/esp-idf/riscv/include/freertos
   """)
-else :
+
+if GetDepend('PKG_FREERTOS_WRAPPER_USING_RTTHREAD') :
   src += Glob(os.path.join("portable", "rt-thread", "*.c"))
+  CPPPATH += [ os.path.join(cwd, "portable", "rt-thread")]
+
+if GetDepend('PKG_FREERTOS_WRAPPER_USING_MEMANG') :
   src += Glob(os.path.join("portable", "MemMang", "heap_3.c"))
-  CPPPATH = [os.path.join(cwd, "include", "freertos"), os.path.join(cwd, "portable", "rt-thread")]
 
 group = DefineGroup('FreeRTOS', src, depend = [''], CPPPATH = CPPPATH)
 
