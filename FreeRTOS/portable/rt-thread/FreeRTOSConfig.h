@@ -29,6 +29,10 @@
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
 
+#ifdef PKG_FREERTOS_USING_PRELOAD_CONFIG
+#include <FreeRTOSPreloadConfig.h>
+#endif
+
 /* The following options are read-only */
 #define configUSE_PREEMPTION                    1
 #define configUSE_TIME_SLICING                  1
