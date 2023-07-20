@@ -5,9 +5,6 @@ cwd = GetCurrentDir()
 objs = []
 list = os.listdir(cwd)
 
-if (GetDepend(['PKG_USING_ESP_IDF']) or GetDepend(['BSP_USING_LOCAL_ESP_IDF'])):
-    Return('objs')
-
 for d in list:
     path = os.path.join(cwd, d)
     if os.path.isfile(os.path.join(path, 'SConscript')):
