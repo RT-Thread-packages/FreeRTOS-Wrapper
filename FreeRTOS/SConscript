@@ -4,9 +4,19 @@ from building import *
 cwd = GetCurrentDir()
 src	= Glob('*.c')
 src += Glob(os.path.join("portable", "rt-thread", "*.c"))
-src += Glob(os.path.join("portable", "MemMang", "heap_3.c"))
 
 CPPPATH = [os.path.join(cwd, "include", "freertos"), os.path.join(cwd, "portable", "rt-thread")]
+
+if GetDepend('PKG_FREERTOS_USING_MEMMANG_HEAP1'):
+    src += [os.path.join("portable", "MemMang", "heap_1.c")]
+elif GetDepend('PKG_FREERTOS_USING_MEMMANG_HEAP2'):
+    src += [os.path.join("portable", "MemMang", "heap_2.c")]
+elif GetDepend('PKG_FREERTOS_USING_MEMMANG_HEAP3'):
+    src += [os.path.join("portable", "MemMang", "heap_3.c")]
+elif GetDepend('PKG_FREERTOS_USING_MEMMANG_HEAP4'):
+    src += [os.path.join("portable", "MemMang", "heap_4.c")]
+elif GetDepend('PKG_FREERTOS_USING_MEMMANG_HEAP5'):
+    src += [os.path.join("portable", "MemMang", "heap_5.c")]
 
 group = DefineGroup('FreeRTOS', src, depend = [''], CPPPATH = CPPPATH)
 
