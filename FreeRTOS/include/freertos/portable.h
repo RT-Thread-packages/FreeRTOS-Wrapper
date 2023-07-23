@@ -120,8 +120,8 @@ size_t xPortGetMinimumEverFreeHeapSize( void );
  * non-FreeRTOS-specific code, and behave the same as
  * pvPortMalloc()/vPortFree().
  */
-#define pvPortMalloc malloc
-#define vPortFree free
+#define pvPortMalloc rt_malloc
+#define vPortFree rt_free
 #define xPortGetFreeHeapSize esp_get_free_heap_size
 #define xPortGetMinimumEverFreeHeapSize esp_get_minimum_free_heap_size
 

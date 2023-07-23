@@ -42,11 +42,9 @@ typedef void (* TaskFunction_t)( void * );
     #define pdMS_TO_TICKS( xTimeInMs )    ( ( TickType_t ) rt_tick_from_millisecond( (rt_int32_t) xTimeInMs ) )
 #endif
 
-#ifdef ESP_PLATFORM
 #ifndef pdTICKS_TO_MS
     #define pdTICKS_TO_MS( xTicks )   ( ( uint32_t ) ( xTicks ) * 1000 / configTICK_RATE_HZ )
 #endif
-#endif // ESP_PLATFORM
 
 #define pdFALSE                                  ( ( BaseType_t ) 0 )
 #define pdTRUE                                   ( ( BaseType_t ) 1 )

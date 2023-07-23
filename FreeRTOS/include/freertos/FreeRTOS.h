@@ -59,7 +59,9 @@
 #include <rthw.h>
 
 /* Application specific configuration options. */
-#include "FreeRTOSConfig.h"
+#ifdef PKG_FREERTOS_USING_CONFIG_H
+    #include <FreeRTOSConfig.h>
+#endif
 
 /* Basic FreeRTOS definitions. */
 #include "projdefs.h"
@@ -77,27 +79,62 @@
     #include <reent.h>
 #endif
 
+/* RT-Thread inherent definations */
+#define configUSE_PREEMPTION                    1
+#define configUSE_TIME_SLICING                  1
+#define configUSE_PORT_OPTIMISED_TASK_SELECTION 1
+#define configUSE_16_BIT_TICKS                  0
+
+#define configTICK_RATE_HZ                      RT_TICK_PER_SECOND
+#define configMAX_PRIORITIES                    RT_THREAD_PRIORITY_MAX
+#define configMAX_TASK_NAME_LEN                 RT_NAME_MAX
+#define configASSERT( x )                       RT_ASSERT( x )
+#define configASSERT_DEFINED                    1
+#ifndef configMINIMAL_STACK_SIZE
+    #define configMINIMAL_STACK_SIZE            128
+#endif
+
+#if defined(PKG_FREERTOS_USING_MEMMANG_HEAP1) ||
+    defined(PKG_FREERTOS_USING_MEMMANG_HEAP2) ||
+    defined(PKG_FREERTOS_USING_MEMMANG_HEAP4)
+    #ifndef configTOTAL_HEAP_SIZE
+        #define configTOTAL_HEAP_SIZE               10240
+    #endif
+    #ifndef configAPPLICATION_ALLOCATED_HEAP
+        #define configAPPLICATION_ALLOCATED_HEAP    0
+    #endif
+#endif
+
+#if defined(PKG_FREERTOS_USING_MEMMANG_HEAP4) ||
+    defined(PKG_FREERTOS_USING_MEMMANG_HEAP5)
+    #ifndef configUSE_FREERTOS_PROVIDED_HEAP
+        #define configUSE_FREERTOS_PROVIDED_HEAP    1
+    #endif
+#endif
+
+/* Hook functions are not supported by RT-Thread */
+#define configUSE_IDLE_HOOK                     0
+#define configUSE_TICK_HOOK                     0
+#define configCHECK_FOR_STACK_OVERFLOW          0
+#define configUSE_MALLOC_FAILED_HOOK            0
+#define configUSE_DAEMON_TASK_STARTUP_HOOK      0
+
+/* The following features are not supported by RT-Thread */
+#define INCLUDE_xTimerPendFunctionCall          0
+#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 0
+#define configUSE_CO_ROUTINES                   0
+#define configQUEUE_REGISTRY_SIZE               0
+#define configUSE_QUEUE_SETS                    0
+#define configUSE_TICKLESS_IDLE                 0
+#define configGENERATE_RUN_TIME_STATS           0
+#define configUSE_TRACE_FACILITY                0
+#define configUSE_STATS_FORMATTING_FUNCTIONS    0
+
 /*
  * Check all the required application specific macros have been defined.
  * These macros are application specific and (as downloaded) are defined
  * within FreeRTOSConfig.h.
  */
-
-#ifndef configMINIMAL_STACK_SIZE
-    #error Missing definition:  configMINIMAL_STACK_SIZE must be defined in FreeRTOSConfig.h.  configMINIMAL_STACK_SIZE defines the size (in words) of the stack allocated to the idle task.  Refer to the demo project provided for your port for a suitable value.
-#endif
-
-#ifndef configMAX_PRIORITIES
-    #error Missing definition:  configMAX_PRIORITIES must be defined in FreeRTOSConfig.h.  See the Configuration section of the FreeRTOS API documentation for details.
-#endif
-
-#if configMAX_PRIORITIES < 1
-    #error configMAX_PRIORITIES must be defined to be greater than or equal to 1.
-#endif
-
-#ifndef configUSE_PREEMPTION
-    #error Missing definition:  configUSE_PREEMPTION must be defined in FreeRTOSConfig.h as either 1 or 0.  See the Configuration section of the FreeRTOS API documentation for details.
-#endif
 
 #ifndef configUSE_IDLE_HOOK
     #error Missing definition:  configUSE_IDLE_HOOK must be defined in FreeRTOSConfig.h as either 1 or 0.  See the Configuration section of the FreeRTOS API documentation for details.
@@ -107,28 +144,24 @@
     #error Missing definition:  configUSE_TICK_HOOK must be defined in FreeRTOSConfig.h as either 1 or 0.  See the Configuration section of the FreeRTOS API documentation for details.
 #endif
 
-#ifndef configUSE_16_BIT_TICKS
-    #error Missing definition:  configUSE_16_BIT_TICKS must be defined in FreeRTOSConfig.h as either 1 or 0.  See the Configuration section of the FreeRTOS API documentation for details.
-#endif
-
 #ifndef configUSE_CO_ROUTINES
     #define configUSE_CO_ROUTINES    0
 #endif
 
 #ifndef INCLUDE_vTaskPrioritySet
-    #define INCLUDE_vTaskPrioritySet    0
+    #define INCLUDE_vTaskPrioritySet    1
 #endif
 
 #ifndef INCLUDE_uxTaskPriorityGet
-    #define INCLUDE_uxTaskPriorityGet    0
+    #define INCLUDE_uxTaskPriorityGet    1
 #endif
 
 #ifndef INCLUDE_vTaskDelete
-    #define INCLUDE_vTaskDelete    0
+    #define INCLUDE_vTaskDelete    1
 #endif
 
 #ifndef INCLUDE_vTaskSuspend
-    #define INCLUDE_vTaskSuspend    0
+    #define INCLUDE_vTaskSuspend    1
 #endif
 
 #ifdef INCLUDE_xTaskDelayUntil
@@ -154,23 +187,23 @@
 #endif
 
 #ifndef INCLUDE_xTaskDelayUntil
-    #define INCLUDE_xTaskDelayUntil    0
+    #define INCLUDE_xTaskDelayUntil    1
 #endif
 
 #ifndef INCLUDE_vTaskDelay
-    #define INCLUDE_vTaskDelay    0
+    #define INCLUDE_vTaskDelay    1
 #endif
 
 #ifndef INCLUDE_xTaskGetIdleTaskHandle
-    #define INCLUDE_xTaskGetIdleTaskHandle    0
+    #define INCLUDE_xTaskGetIdleTaskHandle    1
 #endif
 
 #ifndef INCLUDE_xTaskAbortDelay
-    #define INCLUDE_xTaskAbortDelay    0
+    #define INCLUDE_xTaskAbortDelay    1
 #endif
 
 #ifndef INCLUDE_xQueueGetMutexHolder
-    #define INCLUDE_xQueueGetMutexHolder    0
+    #define INCLUDE_xQueueGetMutexHolder    1
 #endif
 
 #ifndef INCLUDE_xSemaphoreGetMutexHolder
@@ -178,19 +211,19 @@
 #endif
 
 #ifndef INCLUDE_xTaskGetHandle
-    #define INCLUDE_xTaskGetHandle    0
+    #define INCLUDE_xTaskGetHandle    1
 #endif
 
 #ifndef INCLUDE_uxTaskGetStackHighWaterMark
-    #define INCLUDE_uxTaskGetStackHighWaterMark    0
+    #define INCLUDE_uxTaskGetStackHighWaterMark    1
 #endif
 
 #ifndef INCLUDE_uxTaskGetStackHighWaterMark2
-    #define INCLUDE_uxTaskGetStackHighWaterMark2    0
+    #define INCLUDE_uxTaskGetStackHighWaterMark2    1
 #endif
 
 #ifndef INCLUDE_eTaskGetState
-    #define INCLUDE_eTaskGetState    0
+    #define INCLUDE_eTaskGetState    1
 #endif
 
 #ifndef INCLUDE_xTaskResumeFromISR
@@ -202,11 +235,11 @@
 #endif
 
 #ifndef INCLUDE_xTaskGetSchedulerState
-    #define INCLUDE_xTaskGetSchedulerState    0
+    #define INCLUDE_xTaskGetSchedulerState    1
 #endif
 
 #ifndef INCLUDE_xTaskGetCurrentTaskHandle
-    #define INCLUDE_xTaskGetCurrentTaskHandle    0
+    #define INCLUDE_xTaskGetCurrentTaskHandle    1
 #endif
 
 #if configUSE_CO_ROUTINES != 0
@@ -220,7 +253,7 @@
 #endif
 
 #ifndef configUSE_APPLICATION_TASK_TAG
-    #define configUSE_APPLICATION_TASK_TAG    0
+    #define configUSE_APPLICATION_TASK_TAG    1
 #endif
 
 #ifndef configNUM_THREAD_LOCAL_STORAGE_POINTERS
@@ -228,19 +261,35 @@
 #endif
 
 #ifndef configUSE_RECURSIVE_MUTEXES
-    #define configUSE_RECURSIVE_MUTEXES    0
+    #ifdef RT_USING_MUTEX
+        #define configUSE_RECURSIVE_MUTEXES    1
+    #else
+        #define configUSE_RECURSIVE_MUTEXES    0
+    #endif
 #endif
 
 #ifndef configUSE_MUTEXES
-    #define configUSE_MUTEXES    0
+    #ifdef RT_USING_MUTEX
+        #define configUSE_MUTEXES    1
+    #else
+        #define configUSE_MUTEXES    0
+    #endif
 #endif
 
 #ifndef configUSE_TIMERS
-    #define configUSE_TIMERS    0
+    #ifdef RT_USING_TIMER_SOFT
+        #define configUSE_TIMERS    1
+    #else
+        #define configUSE_TIMERS    0
+    #endif
 #endif
 
 #ifndef configUSE_COUNTING_SEMAPHORES
-    #define configUSE_COUNTING_SEMAPHORES    0
+    #ifdef RT_USING_SEMAPHORE
+        #define configUSE_COUNTING_SEMAPHORES    1
+    #else
+        #define configUSE_COUNTING_SEMAPHORES    0
+    #endif
 #endif
 
 #ifndef configUSE_ALTERNATIVE_API
@@ -251,23 +300,8 @@
     #define portCRITICAL_NESTING_IN_TCB    0
 #endif
 
-#ifndef configMAX_TASK_NAME_LEN
-    #define configMAX_TASK_NAME_LEN    16
-#endif
-
 #ifndef configIDLE_SHOULD_YIELD
     #define configIDLE_SHOULD_YIELD    1
-#endif
-
-#if configMAX_TASK_NAME_LEN < 1
-    #error configMAX_TASK_NAME_LEN must be set to a minimum of 1 in FreeRTOSConfig.h
-#endif
-
-#ifndef configASSERT
-    #define configASSERT( x )
-    #define configASSERT_DEFINED    0
-#else
-    #define configASSERT_DEFINED    1
 #endif
 
 /* configPRECONDITION should be defined as configASSERT.
@@ -292,19 +326,9 @@
 
 /* The timers module relies on xTaskGetSchedulerState(). */
 #if configUSE_TIMERS == 1
-
-    #ifndef configTIMER_TASK_PRIORITY
-        #error If configUSE_TIMERS is set to 1 then configTIMER_TASK_PRIORITY must also be defined.
-    #endif /* configTIMER_TASK_PRIORITY */
-
-    #ifndef configTIMER_QUEUE_LENGTH
-        #error If configUSE_TIMERS is set to 1 then configTIMER_QUEUE_LENGTH must also be defined.
-    #endif /* configTIMER_QUEUE_LENGTH */
-
-    #ifndef configTIMER_TASK_STACK_DEPTH
-        #error If configUSE_TIMERS is set to 1 then configTIMER_TASK_STACK_DEPTH must also be defined.
-    #endif /* configTIMER_TASK_STACK_DEPTH */
-
+    #define configTIMER_TASK_PRIORITY           (RT_THREAD_PRIORITY_MAX - 1 - RT_TIMER_THREAD_PRIO)
+    #define configTIMER_QUEUE_LENGTH            0 /* RT-Thread does not use a timer queue. This option is not used. */
+    #define configTIMER_TASK_STACK_DEPTH        RT_TIMER_THREAD_STACK_SIZE
 #endif /* configUSE_TIMERS */
 
 #ifndef portSET_INTERRUPT_MASK_FROM_ISR
@@ -847,10 +871,6 @@
     #define portDONT_DISCARD
 #endif
 
-#ifndef configUSE_TIME_SLICING
-    #define configUSE_TIME_SLICING    1
-#endif
-
 #ifndef configINCLUDE_APPLICATION_DEFINED_PRIVILEGED_FUNCTIONS
     #define configINCLUDE_APPLICATION_DEFINED_PRIVILEGED_FUNCTIONS    0
 #endif
@@ -879,20 +899,16 @@
     #define portASSERT_IF_IN_ISR()
 #endif
 
-#ifndef configUSE_PORT_OPTIMISED_TASK_SELECTION
-    #define configUSE_PORT_OPTIMISED_TASK_SELECTION    0
-#endif
-
 #ifndef configAPPLICATION_ALLOCATED_HEAP
     #define configAPPLICATION_ALLOCATED_HEAP    0
 #endif
 
 #ifndef configUSE_TASK_NOTIFICATIONS
-    #define configUSE_TASK_NOTIFICATIONS    1
+    #define configUSE_TASK_NOTIFICATIONS        1
 #endif
 
 #ifndef configTASK_NOTIFICATION_ARRAY_ENTRIES
-    #define configTASK_NOTIFICATION_ARRAY_ENTRIES    1
+    #define configTASK_NOTIFICATION_ARRAY_ENTRIES    3
 #endif
 
 #if configTASK_NOTIFICATION_ARRAY_ENTRIES < 1
@@ -908,13 +924,16 @@
 #endif
 
 #ifndef configSUPPORT_STATIC_ALLOCATION
-    /* Defaults to 0 for backward compatibility. */
-    #define configSUPPORT_STATIC_ALLOCATION    0
+    #define configSUPPORT_STATIC_ALLOCATION    1
 #endif
 
+//TODO: using rt-thread rt_malloc/rt_free by default
 #ifndef configSUPPORT_DYNAMIC_ALLOCATION
-    /* Defaults to 1 for backward compatibility. */
-    #define configSUPPORT_DYNAMIC_ALLOCATION    1
+    #ifdef RT_USING_HEAP
+        #define configSUPPORT_DYNAMIC_ALLOCATION    1
+    #else
+        #define configSUPPORT_DYNAMIC_ALLOCATION    0
+    #endif
 #endif
 
 #ifndef configSTACK_DEPTH_TYPE
