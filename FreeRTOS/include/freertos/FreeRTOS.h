@@ -94,8 +94,8 @@
     #define configMINIMAL_STACK_SIZE            128
 #endif
 
-#if defined(PKG_FREERTOS_USING_MEMMANG_HEAP1) ||
-    defined(PKG_FREERTOS_USING_MEMMANG_HEAP2) ||
+#if defined(PKG_FREERTOS_USING_MEMMANG_HEAP1) || \
+    defined(PKG_FREERTOS_USING_MEMMANG_HEAP2) || \
     defined(PKG_FREERTOS_USING_MEMMANG_HEAP4)
     #ifndef configTOTAL_HEAP_SIZE
         #define configTOTAL_HEAP_SIZE               10240
@@ -105,7 +105,7 @@
     #endif
 #endif
 
-#if defined(PKG_FREERTOS_USING_MEMMANG_HEAP4) ||
+#if defined(PKG_FREERTOS_USING_MEMMANG_HEAP4) || \
     defined(PKG_FREERTOS_USING_MEMMANG_HEAP5)
     #ifndef configUSE_FREERTOS_PROVIDED_HEAP
         #define configUSE_FREERTOS_PROVIDED_HEAP    1
@@ -121,7 +121,6 @@
 
 /* The following features are not supported by RT-Thread */
 #define INCLUDE_xTimerPendFunctionCall          0
-#define configNUM_THREAD_LOCAL_STORAGE_POINTERS 0
 #define configUSE_CO_ROUTINES                   0
 #define configQUEUE_REGISTRY_SIZE               0
 #define configUSE_QUEUE_SETS                    0
