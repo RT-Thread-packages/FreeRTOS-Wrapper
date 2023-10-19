@@ -326,12 +326,18 @@ Task 1 receive data 9 from queue
 Task 1 receive data 10 from queue
 ```
 
-## 5 参考资料
+## 5 注意事项 & 补充说明
+
+1、部分函数需要根据芯片/SDK来实现，如出现编译问题可参考[bsp/ESP32_C3](https://github.com/RT-Thread/rt-thread/tree/master/bsp/ESP32_C3)和[RT-Thread-packages/esp-idf](https://github.com/RT-Thread-packages/esp-idf/tree/master/components/freertos/FreeRTOS-Kernel)。
+
+2、在`menuconfig`页面中可以开启`PKG_FREERTOS_USING_CONFIG_H`宏定义，该宏定义允许用户自定义相关`freertos`配置，具体使用案例可以参考[bsp/ESP32_C3/idf_port/include/freertos/FreeRTOSConfig.h](https://github.com/RT-Thread/rt-thread/blob/master/bsp/ESP32_C3/idf_port/include/freertos/FreeRTOSConfig.h)，注意只有部分配置宏定义可以被覆盖，详见`FreeRTOS/include/freertos/FreeRTOS.h`。
+
+## 6 参考资料
 RT-Thread文档 [https://www.rt-thread.org/document/site/#/rt-thread-version/rt-thread-standard/README](https://www.rt-thread.org/document/site/#/rt-thread-version/rt-thread-standard/README)
 
 FreeRTOS文档 [https://www.freertos.org/a00106.html](https://www.freertos.org/a00106.html)
 
-## 6 维护
+## 7 维护
 
 主页：https://github.com/RT-Thread-packages/FreeRTOS-Wrapper
 
