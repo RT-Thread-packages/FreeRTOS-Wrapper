@@ -57,7 +57,7 @@
     typedef rt_base_t        BaseType_t;
     typedef rt_ubase_t       UBaseType_t;
     typedef rt_tick_t        TickType_t;
-    #define portMAX_DELAY    ( TickType_t ) RT_TICK_MAX
+    #define portMAX_DELAY    ( TickType_t ) ((RT_TICK_MAX / 2) - 1)
 
     struct rt_semaphore_wrapper
     {
