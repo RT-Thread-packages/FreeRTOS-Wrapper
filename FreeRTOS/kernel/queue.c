@@ -29,8 +29,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "FreeRTOS.h"
-#include "queue.h"
+#include <FreeRTOS.h>
+#include <FreeRTOS-Kernel/queue.h>
 
 /* Semaphores do not actually store or copy data, so have an item size of
  * zero. */

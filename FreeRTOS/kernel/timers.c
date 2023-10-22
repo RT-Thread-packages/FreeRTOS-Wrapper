@@ -29,10 +29,10 @@
 /* Standard includes. */
 #include <stdlib.h>
 
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
-#include "timers.h"
+#include <FreeRTOS.h>
+#include <FreeRTOS-Kernel/task.h>
+#include <FreeRTOS-Kernel/queue.h>
+#include <FreeRTOS-Kernel/timers.h>
 
 /* This entire source file will be skipped if the application is not configured
  * to include software timer functionality.  This #if is closed at the very bottom
