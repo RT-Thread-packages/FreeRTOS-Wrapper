@@ -30,9 +30,9 @@
 #include <stdlib.h>
 
 /* FreeRTOS includes. */
-#include "FreeRTOS.h"
-#include "task.h"
-#include "event_groups.h"
+#include <FreeRTOS.h>
+#include <FreeRTOS-Kernel/task.h>
+#include <FreeRTOS-Kernel/event_groups.h>
 
 typedef struct EventGroupDef_t
 {

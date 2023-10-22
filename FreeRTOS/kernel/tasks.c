@@ -31,8 +31,8 @@
 #include <string.h>
 
 /* FreeRTOS includes. */
-#include "FreeRTOS.h"
-#include "task.h"
+#include <FreeRTOS.h>
+#include <<FreeRTOS-Kernel/task.h>
 
 /* Values that can be assigned to the ucNotifyState member of the TCB. */
 #define taskNOT_WAITING_NOTIFICATION              ( ( uint8_t ) 0 ) /* Must be zero as it is the initialised value. */
