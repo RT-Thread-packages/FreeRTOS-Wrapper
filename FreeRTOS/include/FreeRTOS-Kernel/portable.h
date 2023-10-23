@@ -33,7 +33,7 @@
 #ifndef PORTABLE_H
 #define PORTABLE_H
 
-#include "FreeRTOS-Kernel/portmacro.h"
+#include <rt-thread/portmacro.h>
 
 #if portBYTE_ALIGNMENT == 32
     #define portBYTE_ALIGNMENT_MASK    ( 0x001f )
