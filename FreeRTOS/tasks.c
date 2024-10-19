@@ -308,8 +308,11 @@ static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
         configASSERT( xTask );
 
         level = rt_hw_interrupt_disable();
-
+#if defined(RT_VERSION_CHECK) && (RTTHREAD_VERSION < RT_VERSION_CHECK(5, 2, 0))
         switch ( thread->stat & RT_THREAD_STAT_MASK )
+#else
+        switch ( RT_SCHED_CTX(thread).stat & RT_THREAD_STAT_MASK )
+#endif
         {
             case RT_THREAD_READY:
             {
@@ -361,7 +364,11 @@ static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
         rt_base_t level;
 
         level = rt_hw_interrupt_disable();
+#if defined(RT_VERSION_CHECK) && (RTTHREAD_VERSION < RT_VERSION_CHECK(5, 2, 0))
         uxReturn = thread->current_priority;
+#else
+        uxReturn = RT_SCHED_PRIV(thread).current_priority;
+#endif
         rt_hw_interrupt_enable( level );
 
         return RTTHREAD_PRIORITY_TO_FREERTOS( uxReturn );
@@ -403,7 +410,11 @@ static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
         level = rt_hw_interrupt_disable();
 
         thread = ( rt_thread_t ) prvGetTCBFromHandle( xTask );
+#if defined(RT_VERSION_CHECK) && (RTTHREAD_VERSION < RT_VERSION_CHECK(5, 2, 0))
         current_priority = thread->current_priority;
+#else
+        current_priority = RT_SCHED_PRIV(thread).current_priority;
+#endif
         if ( current_priority != uxNewPriority )
         {
             rt_thread_control( thread, RT_THREAD_CTRL_CHANGE_PRIORITY, &uxNewPriority);
@@ -411,7 +422,11 @@ static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
             {
                 /* The priority of a task other than the currently running task is being raised.
                  * Need to schedule if the priority is raised above that of the running task */
+#if defined(RT_VERSION_CHECK) && (RTTHREAD_VERSION < RT_VERSION_CHECK(5, 2, 0))
                 if ( thread != rt_current_thread && uxNewPriority <= rt_current_thread->current_priority )
+#else
+                if ( thread != rt_current_thread && uxNewPriority <= RT_SCHED_PRIV(rt_current_thread).current_priority )
+#endif
                 {
                     need_schedule = RT_TRUE;
                 }
@@ -465,7 +480,11 @@ static void prvInitialiseNewTask( TaskFunction_t pxTaskCode,
         {
             level = rt_hw_interrupt_disable();
             /* A task with higher priority than the current running task is ready */
+#if defined(RT_VERSION_CHECK) && (RTTHREAD_VERSION < RT_VERSION_CHECK(5, 2, 0))
             if ( rt_thread_resume( thread ) == RT_EOK && thread->current_priority <= rt_thread_self()->current_priority )
+#else
+            if ( rt_thread_resume( thread ) == RT_EOK && RT_SCHED_PRIV(thread).current_priority <= RT_SCHED_PRIV(rt_thread_self()).current_priority )
+#endif
             {
                 need_schedule = RT_TRUE;
             }
@@ -607,7 +626,12 @@ char * pcTaskGetName( TaskHandle_t xTaskToQuery )
             rt_thread_resume( thread );
             thread->error = -RT_ETIMEOUT;
             pxTCB->ucDelayAborted = pdTRUE;
-            if ( thread->current_priority < rt_thread_self()->current_priority ){
+#if defined(RT_VERSION_CHECK) && (RTTHREAD_VERSION < RT_VERSION_CHECK(5, 2, 0))
+            if ( thread->current_priority < rt_thread_self()->current_priority )
+#else
+            if ( RT_SCHED_PRIV(thread).current_priority < RT_SCHED_PRIV(rt_thread_self()).current_priority )
+#endif
+            {
                 need_schedule = RT_TRUE;
             }
             xReturn = pdPASS;
@@ -1044,8 +1068,11 @@ BaseType_t xTaskCheckForTimeOut( TimeOut_t * const pxTimeOut,
         if( ucOriginalNotifyState == taskWAITING_NOTIFICATION )
         {
             rt_thread_resume( ( rt_thread_t ) pxTCB );
-
+#if defined(RT_VERSION_CHECK) && (RTTHREAD_VERSION < RT_VERSION_CHECK(5, 2, 0))
             if( ( ( rt_thread_t ) pxTCB )->current_priority < rt_thread_self()->current_priority )
+#else
+            if( RT_SCHED_PRIV( ( rt_thread_t ) pxTCB ).current_priority < RT_SCHED_PRIV( rt_thread_self() ).current_priority )
+#endif
             {
                 /* The notified task has a priority above the currently
                  * executing task so a schedule is required. */
