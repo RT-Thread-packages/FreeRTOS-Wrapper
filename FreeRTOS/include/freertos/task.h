@@ -34,6 +34,9 @@
     #error "include FreeRTOS.h must appear in source files before include task.h"
 #endif
 
+/* The event-list helpers below take a List_t pointer. */
+#include "list.h"
+
 /* *INDENT-OFF* */
 #ifdef __cplusplus
     extern "C" {
@@ -1097,6 +1100,24 @@ void vTaskSuspendAll( void );
  * \ingroup SchedulerControl
  */
 BaseType_t xTaskResumeAll( void );
+
+/*-----------------------------------------------------------
+* EVENT LISTS
+*----------------------------------------------------------*/
+/*
+ * FreeRTOS V11 exposes these task event-list helpers, which ESP-IDF v6.1's
+ * components/esp_ringbuf calls after including <freertos/task.h>.  The
+ * RT-Thread port does not use FreeRTOS event lists internally, so only the
+ * declarations live here; a consumer that needs them provides the
+ * implementation on top of the wrapper's list implementation.
+ *
+ * vTaskInternalSetTimeOutState() is implemented in the wrapper's tasks.c but
+ * was never declared in the public header.
+ */
+void vTaskPlaceOnEventList( List_t * const pxEventList,
+                            TickType_t xTicksToWait );
+BaseType_t xTaskRemoveFromEventList( List_t * const pxEventList );
+void vTaskInternalSetTimeOutState( TimeOut_t * const pxTimeOut );
 
 /*-----------------------------------------------------------
 * TASK UTILITIES

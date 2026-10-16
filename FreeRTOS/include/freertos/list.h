@@ -175,6 +175,21 @@ typedef struct xLIST
 } List_t;
 
 /*
+ * FreeRTOS V11 exposes the list object under the name StaticList_t for
+ * statically allocated objects.  The RT-Thread port keeps the V10 list
+ * layout, so the type is a plain alias.  ESP-IDF v6.1 headers
+ * (components/esp_ringbuf/include/freertos/ringbuf.h) refer to it after
+ * including <freertos/list.h>.
+ *
+ * The guard macro is shared with ports that already define the type locally,
+ * so that only one of the two typedefs is ever compiled.
+ */
+#ifndef RT_FREERTOS_WRAPPER_STATIC_LIST_T
+    #define RT_FREERTOS_WRAPPER_STATIC_LIST_T
+    typedef List_t StaticList_t;
+#endif
+
+/*
  * Access macro to set the owner of a list item.  The owner of a list item
  * is the object (usually a TCB) that contains the list item.
  *
