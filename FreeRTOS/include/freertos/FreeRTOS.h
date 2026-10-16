@@ -870,6 +870,14 @@
     #define portDONT_DISCARD
 #endif
 
+/* FreeRTOS V11 annotates privileged (kernel) functions with this macro; ports
+ * without privilege levels define it away.  The RT-Thread port has none, and
+ * ESP-IDF v6.1 headers (esp_ringbuf, esp_timer) reference the macro, so make
+ * sure it is always defined.  A port may still override it in its portmacro.h. */
+#ifndef PRIVILEGED_FUNCTION
+    #define PRIVILEGED_FUNCTION
+#endif
+
 #ifndef configINCLUDE_APPLICATION_DEFINED_PRIVILEGED_FUNCTIONS
     #define configINCLUDE_APPLICATION_DEFINED_PRIVILEGED_FUNCTIONS    0
 #endif
@@ -1206,6 +1214,37 @@ typedef struct xSTATIC_TIMER
     struct rt_timer timer;
     void * pvTimerID;
 } StaticTimer_t;
+
+/*
+ * ESP-IDF v6.1's <freertos/stream_buffer.h> refers to StaticStreamBuffer_t and
+ * StaticMessageBuffer_t, which FreeRTOS V11 declares in FreeRTOS.h.  The
+ * RT-Thread port implements no stream buffers, so the types only have to exist
+ * for the headers to parse; the layout mirrors the FreeRTOS V11 kernel but is
+ * never instantiated by the wrapper.
+ *
+ * The guard macro is shared with ports that already define the type locally,
+ * so that only one of the two definitions is ever compiled.
+ */
+#ifndef RT_FREERTOS_WRAPPER_STATIC_STREAM_BUFFER_T
+    #define RT_FREERTOS_WRAPPER_STATIC_STREAM_BUFFER_T
+    typedef struct xSTATIC_STREAM_BUFFER
+    {
+        size_t uxDummy1[ 4 ];
+        void * pvDummy2[ 3 ];
+        uint8_t ucDummy3;
+        #if ( configUSE_TRACE_FACILITY == 1 )
+            UBaseType_t uxDummy4;
+        #endif
+        #if ( configUSE_SB_COMPLETED_CALLBACK == 1 )
+            void * pvDummy5[ 2 ];
+        #endif
+        /* The port lock.  RT-Thread ports do not define a portMUX_TYPE, so a
+         * pointer-sized placeholder keeps the type portable. */
+        void * pvDummyLock;
+    } StaticStreamBuffer_t;
+    /* Message buffers are built on stream buffers. */
+    typedef StaticStreamBuffer_t StaticMessageBuffer_t;
+#endif
 
 /* *INDENT-OFF* */
 #ifdef __cplusplus
